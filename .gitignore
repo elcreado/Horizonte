@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+.env
+node_modules/
+dist/
+.ruff_cache/
+.pytest_cache/
+
+.local-logs/
+
+.env.example
+.editorconfig

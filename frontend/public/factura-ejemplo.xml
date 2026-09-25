@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Ejemplo sintético de extracción; sin firma ni validación DIAN. -->
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+ xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+ xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
+ <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+ <cbc:ID>DEMO-XML-001</cbc:ID>
+ <cbc:UUID>00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001</cbc:UUID>
+ <cbc:IssueDate>2026-09-23</cbc:IssueDate>
+ <cbc:DueDate>2026-10-15</cbc:DueDate>
+ <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+ <cac:AccountingSupplierParty><cac:Party><cac:PartyTaxScheme>
+  <cbc:RegistrationName>Café Horizonte · Demo</cbc:RegistrationName>
+  <cbc:CompanyID>SYNTHETIC-001</cbc:CompanyID>
+ </cac:PartyTaxScheme></cac:Party></cac:AccountingSupplierParty>
+ <cac:AccountingCustomerParty><cac:Party><cac:PartyTaxScheme>
+  <cbc:RegistrationName>Cliente de demostración</cbc:RegistrationName>
+  <cbc:CompanyID>SYNTHETIC-CLIENT</cbc:CompanyID>
+ </cac:PartyTaxScheme></cac:Party></cac:AccountingCustomerParty>
+ <cac:LegalMonetaryTotal>
+  <cbc:TaxExclusiveAmount currencyID="COP">100000.00</cbc:TaxExclusiveAmount>
+  <cbc:TaxInclusiveAmount currencyID="COP">119000.00</cbc:TaxInclusiveAmount>
+  <cbc:PayableAmount currencyID="COP">119000.00</cbc:PayableAmount>
+ </cac:LegalMonetaryTotal>
+</Invoice>

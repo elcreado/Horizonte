@@ -1,0 +1,3 @@
+external_id,date,amount,description
+csv-ejemplo-001,2026-09-01,150000.00,Venta de prueba
+csv-ejemplo-002,2026-09-02,-45000.00,Compra de insumos de prueba
