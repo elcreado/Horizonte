@@ -57,7 +57,7 @@ def dashboard(request, company_id):
             "balance": str(balance),
             "horizon": horizon,
             "method": "Escenario de obligaciones · sin modelo estadístico",
-            "notice": "Datos sintéticos. Se asume cobro y pago puntual. No incluye flujos variables ni probabilidades.",
+            "notice": "Escenario basado en saldos declarados y obligaciones pendientes. Se asume cobro y pago puntual. No incluye flujos variables ni probabilidades.",
             "receivable": str(
                 sum(
                     (o.outstanding_amount for o in upcoming if o.direction == "in"),

@@ -166,7 +166,7 @@ function App() {
       {company && <AccountBalances key={company} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
       {company && <BankConnections key={company} company={company} onChanged={() => setFinancialRevision(n => n + 1)} />}
       {company && <ImportPanel key={company} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      {data && <><LiquidityAlert key={company} company={company} alert={data.liquidity_alert} onChanged={() => setFinancialRevision(n => n + 1)} /><Coverage data={data.coverage} /><div className="notice"><strong>DEMO SINTÉTICA</strong> {data.notice} Corte: {dateLabel(data.as_of)}.</div>
+      {data && <><LiquidityAlert key={company} company={company} alert={data.liquidity_alert} onChanged={() => setFinancialRevision(n => n + 1)} /><Coverage data={data.coverage} /><div className="notice"><strong>ESCENARIO DE OBLIGACIONES</strong> {data.notice} Corte: {dateLabel(data.as_of)}.</div>
         <section className="cards" aria-label="Resumen financiero">
           {[['Saldo disponible', data.balance], [`Por cobrar · ${horizon} días`, data.receivable], [`Por pagar · ${horizon} días`, data.payable]].map(([label, value]) => <article key={label}><p>{label}</p><strong>{money(value)}</strong><small>COP · pesos colombianos</small></article>)}
           <article className={data.first_deficit ? 'risk' : ''}><p>Escenario de liquidez</p><strong>{data.first_deficit ? `Déficit: ${dateLabel(data.first_deficit)}` : 'Sin déficit previsto'}</strong><small>Según las obligaciones registradas</small></article>
