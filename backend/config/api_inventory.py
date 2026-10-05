@@ -21,6 +21,7 @@ from .merchant_contracts import apply_merchant_contract
 from .movement_contracts import apply_movement_contract
 from .obligation_contract import apply_obligation_contract
 from .platform_contracts import apply_platform_contract
+from .settlement_contract import apply_settlement_contract
 from .team_contracts import apply_team_contract
 from .threshold_contract import apply_threshold_contract
 
@@ -100,6 +101,7 @@ def build_inventory() -> dict:
             apply_dashboard_contract(path, method, operation)
             apply_experimental_forecast_contract(path, method, operation)
             apply_obligation_contract(path, method, operation)
+            apply_settlement_contract(path, method, operation)
             apply_forecast_runs_contract(path, method, operation)
             operations[method] = operation
         paths[path] = operations

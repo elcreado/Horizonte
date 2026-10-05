@@ -35,6 +35,8 @@ def string_input(serializer_class) -> dict:
                     schema[f"x-decimal-{keyword}"] = str(bound)
         elif isinstance(field, serializers.DateField):
             schema = {"type": "string", "format": "date"}
+        elif isinstance(field, serializers.UUIDField):
+            schema = {"type": "string", "format": "uuid"}
         elif isinstance(field, serializers.CharField):
             schema = {"type": "string"}
             if field.max_length is not None:

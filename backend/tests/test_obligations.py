@@ -58,6 +58,15 @@ class ObligationTests(TestCase):
         attempt = uuid.uuid4()
         first = self.pay(request_id=attempt)
         self.assertEqual(first.status_code, 201)
+        paths = build_inventory()["paths"]
+        base_contract = "/api/companies/{company_id}/obligations/{obligation_id}/settlements/"
+        contract = paths[base_contract]
+        schema = contract["post"]["responses"]["201"]["content"]["application/json"]["schema"]
+        self.assertEqual(set(first.json()), set(schema["properties"]))
+        self.assertIsNone(first.json()["reversed_at"])
+        listing = self.client.get(self.url).json()
+        self.assertIsInstance(listing, list)
+        self.assertEqual(set(listing[0]), set(schema["properties"]))
         self.assertEqual(self.pay(request_id=attempt).status_code, 200)
         self.obligation.refresh_from_db()
         self.assertEqual(self.obligation.outstanding_amount, Decimal("100"))
@@ -65,8 +74,20 @@ class ObligationTests(TestCase):
         self.account.refresh_from_db()
         self.assertEqual(self.account.balance, Decimal("500"))
         reverse = f"{self.url}{first.json()['id']}/reverse/"
+        reversed_response = self.client.post(reverse)
+        self.assertEqual(reversed_response.status_code, 200)
+        reverse_contract = paths[base_contract + "{settlement_id}/reverse/"]["post"]
+        reverse_schema = reverse_contract["responses"]["200"]["content"]["application/json"][
+            "schema"
+        ]
+        self.assertEqual(set(reversed_response.json()), set(reverse_schema["properties"]))
+        self.assertIsInstance(reversed_response.json()["reversed_at"], str)
         self.assertEqual(self.client.post(reverse).status_code, 200)
-        self.assertEqual(self.client.post(reverse).status_code, 200)
+        self.obligation.refresh_from_db()
+        self.assertEqual(self.obligation.outstanding_amount, Decimal("150"))
+        repeated = self.pay(request_id=attempt)
+        self.assertEqual(repeated.status_code, 200)
+        self.assertIsNotNone(repeated.json()["reversed_at"])
         self.obligation.refresh_from_db()
         self.assertEqual(self.obligation.outstanding_amount, Decimal("150"))
         self.assertEqual(AuditLog.objects.count(), 2)

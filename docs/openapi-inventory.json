@@ -8607,15 +8607,94 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Lista completa, sin paginación, ID descendente; incluye revertidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "transaction_id": {
+                        "type": "integer"
+                      },
+                      "amount": {
+                        "type": "string",
+                        "description": "Importe decimal exacto COP conciliado."
+                      },
+                      "request_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "reversed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "transaction_id",
+                      "amount",
+                      "request_id",
+                      "created_at",
+                      "reversed_at"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF/rol rechazado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía, obligación, movimiento o conciliación no encontrada en su tenant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "settlement-fields-documented",
+        "description": "GET para todos los miembros; POST solo propietario/contador. Conciliar reduce el pendiente usando un movimiento existente del mismo tenant/sentido, incluido en su corte. No modifica saldo bancario ni crea movimientos. No puede superar pendiente o disponible no asignado del movimiento; obligación cancelada rechazada. request_id se reutiliza por obligación: mismo movimiento/importe devuelve 200 incluso si ya fue revertido, sin conciliar de nuevo; contenido distinto devuelve 400. Revertir restaura pendiente una sola vez y deja evidencia/auditoría. No borra la conciliación."
       },
       "post": {
         "operationId": "settlements_post",
@@ -8653,16 +8732,207 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Conciliación existente o reversión idempotente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "transaction_id": {
+                      "type": "integer"
+                    },
+                    "amount": {
+                      "type": "string",
+                      "description": "Importe decimal exacto COP conciliado."
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "reversed_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "transaction_id",
+                    "amount",
+                    "request_id",
+                    "created_at",
+                    "reversed_at"
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Conciliación creada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "transaction_id": {
+                      "type": "integer"
+                    },
+                    "amount": {
+                      "type": "string",
+                      "description": "Importe decimal exacto COP conciliado."
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "reversed_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "transaction_id",
+                    "amount",
+                    "request_id",
+                    "created_at",
+                    "reversed_at"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF/rol rechazado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía, obligación, movimiento o conciliación no encontrada en su tenant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validación de campos o regla de conciliación incumplida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "settlement-fields-documented",
+        "description": "GET para todos los miembros; POST solo propietario/contador. Conciliar reduce el pendiente usando un movimiento existente del mismo tenant/sentido, incluido en su corte. No modifica saldo bancario ni crea movimientos. No puede superar pendiente o disponible no asignado del movimiento; obligación cancelada rechazada. request_id se reutiliza por obligación: mismo movimiento/importe devuelve 200 incluso si ya fue revertido, sin conciliar de nuevo; contenido distinto devuelve 400. Revertir restaura pendiente una sola vez y deja evidencia/auditoría. No borra la conciliación.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "transaction_id": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "amount": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number",
+                        "minimum": 0.01
+                      }
+                    ],
+                    "description": "Importe decimal; se recomienda cadena para conservar precisión.",
+                    "x-max-digits": 18,
+                    "x-decimal-places": 2,
+                    "x-decimal-minimum": "0.01"
+                  },
+                  "request_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "transaction_id",
+                  "amount",
+                  "request_id"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/api/companies/{company_id}/obligations/{obligation_id}/settlements/{settlement_id}/reverse/": {
@@ -8710,16 +8980,91 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Conciliación existente o reversión idempotente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "transaction_id": {
+                      "type": "integer"
+                    },
+                    "amount": {
+                      "type": "string",
+                      "description": "Importe decimal exacto COP conciliado."
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "reversed_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "transaction_id",
+                    "amount",
+                    "request_id",
+                    "created_at",
+                    "reversed_at"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF/rol rechazado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía, obligación, movimiento o conciliación no encontrada en su tenant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "settlement-fields-documented",
+        "description": "GET para todos los miembros; POST solo propietario/contador. Conciliar reduce el pendiente usando un movimiento existente del mismo tenant/sentido, incluido en su corte. No modifica saldo bancario ni crea movimientos. No puede superar pendiente o disponible no asignado del movimiento; obligación cancelada rechazada. request_id se reutiliza por obligación: mismo movimiento/importe devuelve 200 incluso si ya fue revertido, sin conciliar de nuevo; contenido distinto devuelve 400. Revertir restaura pendiente una sola vez y deja evidencia/auditoría. No borra la conciliación. Reversión no necesita cuerpo; cualquier campo enviado se ignora."
       }
     },
     "/api/companies/{company_id}/recurrence-occurrences/{occurrence_id}/unlink/": {
