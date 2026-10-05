@@ -182,6 +182,11 @@ function App() {
           <div className="chart" role="img" aria-label={`Saldo mínimo proyectado ${money(data.minimum_balance)}. ${data.first_deficit ? `Primer déficit ${data.first_deficit}` : 'Sin déficit en el horizonte'}`}>
             <React.Suspense fallback={<p role="status">Cargando gráfico…</p>}><DashboardChart points={data.points} dateLabel={dateLabel} money={money} /></React.Suspense>
           </div><p className="footnote">Saldo mínimo: {money(data.minimum_balance)}. Este escenario no equivale a P50 ni tiene intervalos de confianza.</p>
+          <details><summary>Ver saldos proyectados por día</summary><div className="table-wrap"><table>
+            <caption>Escenario de obligaciones a {horizon} días · COP · corte {dateLabel(data.as_of)}</caption>
+            <thead><tr><th scope="col">Fecha</th><th scope="col">Saldo proyectado COP</th></tr></thead>
+            <tbody>{data.points.map(point => <tr key={point.date}><th scope="row">{dateLabel(point.date)}</th><td>{new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(point.balance))}</td></tr>)}</tbody>
+          </table></div></details>
         </section>
         {data.first_deficit && <aside className="warning"><strong>Revisa tus compromisos antes del {dateLabel(data.first_deficit)}.</strong><p>Las obligaciones registradas llevan el saldo por debajo de cero. Revisa el calendario de cobros y pagos que se muestra abajo.</p></aside>}
         {data.overdue_count > 0 && <p role="status">Hay {data.overdue_count} obligaciones vencidas o con vencimiento en la fecha de corte. Requieren una nueva fecha estimada; no se incluyen como futuros cobros o pagos.</p>}

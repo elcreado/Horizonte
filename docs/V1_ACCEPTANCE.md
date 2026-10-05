@@ -72,6 +72,9 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
 - [ ] Verificar accesibilidad, móvil web, tiempos de renderizado/p95, carga concurrente,
   disponibilidad controlada y seguridad conforme a los criterios del README/SPECS.
   HTTP 200 y una importación rápida no prueban estos requisitos.
+  El dashboard ofrece una tabla desplegable de fecha/saldo para todos los puntos del
+  escenario, con dos decimales, caption y encabezados de fila/columna. Es una alternativa
+  textual al gráfico; compilación comprobada, recorrido real con Narrador aún pendiente.
   La matriz `tests.test_read_access_matrix` recorre las consultas y escrituras de empresa
   del inventario actual: exige rechazo de otra empresa y sesión ausente, incluso con cuerpo
   vacío. Se corrigió autorización previa a validación en saldo, cobertura y nombre de comercio.
