@@ -5,6 +5,7 @@ from django.test import TestCase
 from apps.accounts.models import AuditLog, Company
 from apps.banking.models import Transaction
 from apps.forecast.models import ForecastRun, Obligation
+from config.api_inventory import build_inventory
 from tests.test_imports import ImportTests
 
 
@@ -39,6 +40,10 @@ class ForecastRunTests(TestCase):
         params = {"horizon": 30, "method": "naive"}
         first = self.client.post(url, params, format="json")
         self.assertEqual(first.status_code, 201, first.data)
+        contract = build_inventory()["paths"]["/api/companies/{company_id}/forecast-runs/"]
+        schema = contract["post"]["responses"]["201"]["content"]["application/json"]["schema"]
+        self.assertEqual(set(first.json()), set(schema["properties"]))
+        self.assertIn("snapshots-pending", contract["post"]["x-contract-status"])
         repeat = self.client.post(url, params, format="json")
         self.assertEqual(repeat.status_code, 200, repeat.data)
         self.assertEqual(repeat.data["id"], first.data["id"])
@@ -57,6 +62,8 @@ class ForecastRunTests(TestCase):
         self.assertNotEqual(changed.data["result"]["points"][0]["balance"], original)
         history = self.client.get(url)
         self.assertEqual(history.status_code, 200)
+        page_schema = contract["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+        self.assertEqual(set(history.json()), set(page_schema["properties"]))
         self.assertEqual(history.data["count"], 2)
         self.assertEqual(
             ForecastRun.objects.get(pk=first.data["id"]).result["points"][0]["balance"], original

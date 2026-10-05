@@ -13,6 +13,7 @@ from .banking_contracts import apply_banking_contract
 from .calendar_contract import apply_calendar_contract
 from .connection_contracts import apply_connection_contract
 from .dashboard_contract import apply_dashboard_contract
+from .forecast_runs_contract import apply_forecast_runs_contract
 from .history_contract import apply_history_contract
 from .invoice_contracts import apply_invoice_contract
 from .merchant_contracts import apply_merchant_contract
@@ -95,6 +96,7 @@ def build_inventory() -> dict:
             apply_alert_history_contract(path, method, operation)
             apply_calendar_contract(path, method, operation)
             apply_dashboard_contract(path, method, operation)
+            apply_forecast_runs_contract(path, method, operation)
             operations[method] = operation
         paths[path] = operations
     return {

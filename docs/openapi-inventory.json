@@ -3187,18 +3187,156 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "last"
+                  ]
+                }
+              ]
+            },
+            "description": "Diez ejecuciones por página, fecha/ID descendentes; también admite last."
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Historial paginado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "maxItems": 10,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "method": {
+                            "type": "string"
+                          },
+                          "horizon": {
+                            "type": "integer",
+                            "enum": [
+                              30,
+                              60,
+                              90
+                            ]
+                          },
+                          "as_of": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "evidence": {
+                            "type": "object",
+                            "additionalProperties": true,
+                            "description": "Instantánea versionada congelada; esquema interno pendiente. Incluye source_digest y entradas del cálculo."
+                          },
+                          "result": {
+                            "type": "object",
+                            "additionalProperties": true,
+                            "description": "Resultado experimental congelado, incluidos puntos y cuantiles si existían. Esquema interno pendiente; no asumir calibración ni probabilidad de déficit."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "created_at",
+                          "method",
+                          "horizon",
+                          "as_of",
+                          "evidence",
+                          "result"
+                        ]
+                      }
+                    },
+                    "can_save": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "results",
+                    "can_save"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente, CSRF rechazado o rol sin escritura.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "detail"
+                  ],
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía o página no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "detail"
+                  ],
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "forecast-runs-envelope-documented-snapshots-pending",
+        "description": "GET para todos los miembros; POST solo propietario/contador. Misma evidencia y método reutilizan ejecución (200); evidencia nueva crea ejecución (201) y auditoría. Ediciones posteriores no recalculan instantáneas guardadas. El fingerprint no se expone. No elimina ejecuciones ni permite editar resultados. Contrato de instantáneas aún parcial."
       },
       "post": {
         "operationId": "forecast_runs_post",
@@ -3228,16 +3366,225 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Ejecución existente reutilizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "method": {
+                      "type": "string"
+                    },
+                    "horizon": {
+                      "type": "integer",
+                      "enum": [
+                        30,
+                        60,
+                        90
+                      ]
+                    },
+                    "as_of": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "evidence": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Instantánea versionada congelada; esquema interno pendiente. Incluye source_digest y entradas del cálculo."
+                    },
+                    "result": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Resultado experimental congelado, incluidos puntos y cuantiles si existían. Esquema interno pendiente; no asumir calibración ni probabilidad de déficit."
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "created_at",
+                    "method",
+                    "horizon",
+                    "as_of",
+                    "evidence",
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Nueva ejecución.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "method": {
+                      "type": "string"
+                    },
+                    "horizon": {
+                      "type": "integer",
+                      "enum": [
+                        30,
+                        60,
+                        90
+                      ]
+                    },
+                    "as_of": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "evidence": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Instantánea versionada congelada; esquema interno pendiente. Incluye source_digest y entradas del cálculo."
+                    },
+                    "result": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Resultado experimental congelado, incluidos puntos y cuantiles si existían. Esquema interno pendiente; no asumir calibración ni probabilidad de déficit."
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "created_at",
+                    "method",
+                    "horizon",
+                    "as_of",
+                    "evidence",
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente, CSRF rechazado o rol sin escritura.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "detail"
+                  ],
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía o página no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "detail"
+                  ],
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Horizonte o método inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "detail"
+                  ],
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Evidencia insuficiente o incompatible; puede incluir accounts con diagnóstico de cobertura.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "detail"
+                  ],
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "forecast-runs-envelope-documented-snapshots-pending",
+        "description": "GET para todos los miembros; POST solo propietario/contador. Misma evidencia y método reutilizan ejecución (200); evidencia nueva crea ejecución (201) y auditoría. Ediciones posteriores no recalculan instantáneas guardadas. El fingerprint no se expone. No elimina ejecuciones ni permite editar resultados. Contrato de instantáneas aún parcial.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "horizon": {
+                    "type": "integer",
+                    "enum": [
+                      30,
+                      60,
+                      90
+                    ],
+                    "default": 30
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "naive",
+                      "seasonal_naive",
+                      "ses",
+                      "hybrid_weekly"
+                    ],
+                    "default": "seasonal_naive"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/companies/{company_id}/history/": {
