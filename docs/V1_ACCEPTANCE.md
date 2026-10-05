@@ -16,6 +16,10 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
 - [ ] Completar entrega real de recuperación de contraseña (RF-01): integración HTTPS preparada,
   pero falta cuenta/clave/remitente Resend y comprobar recepción y reset de un solo uso.
   Sin dominio verificado, Resend de prueba limita destinatarios al correo de su propia cuenta.
+  Integración local adicional: fallo HTTP 503 simulado conserva la tarea para reintentar;
+  aceptación HTTPS posterior completa la tarea y borra argumentos privados. El enlace
+  generado permite cambiar la contraseña una sola vez. Proveedor simulado: esta prueba
+  no demuestra entrega ni recepción real en un buzón.
 - [ ] Revisar aceptación de empresas/roles (RF-02), conectores sintéticos (RF-03/RF-16),
   importaciones (RF-04/RF-05), normalización/clasificación/correcciones (RF-06/RF-07/RF-08)
   con corpus representativo. Las pruebas de fixtures no demuestran exactitud general.
