@@ -120,17 +120,17 @@ class AccountBalanceInput(serializers.Serializer):
 
 @api_view(["PATCH"])
 def update_balance(request, company_id, account_id):
-    serializer = AccountBalanceInput(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    values = serializer.validated_data
-    if values["balance_date"] > timezone.localdate():
-        return Response({"detail": "El corte no puede estar en el futuro."}, status=400)
     with transaction.atomic():
         member = get_object_or_404(
             CompanyMember.objects.select_for_update(), company_id=company_id, user=request.user
         )
         if member.role not in ("owner", "accountant"):
             return Response({"detail": "Tu rol solo permite consultar."}, status=403)
+        serializer = AccountBalanceInput(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        values = serializer.validated_data
+        if values["balance_date"] > timezone.localdate():
+            return Response({"detail": "El corte no puede estar en el futuro."}, status=400)
         account = get_object_or_404(
             BankAccount.objects.select_for_update(), pk=account_id, company_id=company_id
         )

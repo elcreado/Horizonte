@@ -19,15 +19,15 @@ class CoverageInput(serializers.Serializer):
 
 @api_view(["POST"])
 def confirm_coverage(request, company_id, account_id):
-    serializer = CoverageInput(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    values = serializer.validated_data
     with transaction.atomic():
         member = get_object_or_404(
             CompanyMember.objects.select_for_update(), company_id=company_id, user=request.user
         )
         if member.role not in ("owner", "accountant"):
             return Response({"detail": "Tu rol solo permite consultar."}, status=403)
+        serializer = CoverageInput(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        values = serializer.validated_data
         account = get_object_or_404(
             BankAccount.objects.select_for_update(), pk=account_id, company_id=company_id
         )

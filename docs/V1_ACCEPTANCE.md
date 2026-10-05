@@ -33,6 +33,11 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
 - [ ] Verificar accesibilidad, móvil web, tiempos de renderizado/p95, carga concurrente,
   disponibilidad controlada y seguridad conforme a los criterios del README/SPECS.
   HTTP 200 y una importación rápida no prueban estos requisitos.
+  La matriz `tests.test_read_access_matrix` recorre las consultas y escrituras de empresa
+  del inventario actual: exige rechazo de otra empresa y sesión ausente, incluso con cuerpo
+  vacío. Se corrigió autorización previa a validación en saldo, cobertura y nombre de comercio.
+  Suite local posterior: 199 pruebas, 194 aprobadas y 5 omitidas. No sustituye pruebas con
+  objetos existentes ajenos, todos los roles, XSS, carga ni una auditoría ASVS completa.
 - [x] Ensayar respaldo manual y restauración aislada sin Docker: 32 tablas, restricciones,
   migraciones y recorrido Client Django comprobados. Archivos privados fuera de Git;
   no acredita UI, cifrado ni copia externa. No activar respaldo diario.

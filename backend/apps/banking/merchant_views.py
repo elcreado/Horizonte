@@ -97,14 +97,14 @@ class MerchantNameInput(serializers.Serializer):
 
 @api_view(["PATCH"])
 def rename_merchant(request, company_id, merchant_id):
-    serializer = MerchantNameInput(data=request.data)
-    serializer.is_valid(raise_exception=True)
     with transaction.atomic():
         member = get_object_or_404(
             CompanyMember.objects.select_for_update(), company_id=company_id, user=request.user
         )
         if member.role not in ("owner", "accountant"):
             return Response({"detail": "Tu rol solo permite consultar."}, status=403)
+        serializer = MerchantNameInput(data=request.data)
+        serializer.is_valid(raise_exception=True)
         merchant = get_object_or_404(
             Merchant.objects.select_for_update(), company_id=company_id, pk=merchant_id
         )
