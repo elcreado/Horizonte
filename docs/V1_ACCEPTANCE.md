@@ -30,13 +30,14 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   deben cumplir el alcance original con evidencia, sin confundir umbral determinístico y probabilidad.
 - [ ] Finalizar contratos OpenAPI de las operaciones restantes, cuerpos de error y ejemplos.
   El inventario sigue parcial; no se acepta como especificación completa para generar clientes.
-  `forecast-runs` documenta ahora envolvente, paginación, parámetros, roles y códigos de
-  idempotencia; sus instantáneas `evidence`/`result` versionadas siguen con esquema interno
-  pendiente. Los campos exteriores se contrastan con respuestas reales en `test_forecast_runs`.
+  `forecast-runs` documenta envolvente, paginación, parámetros, roles, códigos de idempotencia
+  e instantáneas versionadas `evidence`/`result`. Sus campos se contrastan con respuestas reales
+  en `test_forecast_runs`, incluidas entradas de cuantiles de 270 días y 90 flujos futuros.
   El resultado interno ya documenta flujos diarios, alerta y las variantes de cuantiles
   `unavailable`/`experimental`, comprobadas con respuestas reales (incluido híbrido 90 días).
   Campos añadidos posteriormente son opcionales para leer ejecuciones antiguas. La evidencia
-  interna sigue pendiente; este contrato no prueba calibración ni exactitud predictiva.
+  interna describe flujos conocidos, digest, serie residual y recurrencias estimadas/vinculadas;
+  este contrato no prueba calibración ni exactitud predictiva.
 - [ ] Verificar accesibilidad, móvil web, tiempos de renderizado/p95, carga concurrente,
   disponibilidad controlada y seguridad conforme a los criterios del README/SPECS.
   HTTP 200 y una importación rápida no prueban estos requisitos.

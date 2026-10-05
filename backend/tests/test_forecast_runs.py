@@ -45,6 +45,18 @@ class ForecastRunTests(TestCase):
         self.assertEqual(quantiles["status"], "experimental")
         variant = schema["properties"]["quantiles"]["oneOf"][1]
         self.assertEqual(set(quantiles), set(variant["properties"]))
+        evidence = response.json()["evidence"]
+        row_schema = operation["responses"]["201"]["content"]["application/json"]["schema"]
+        evidence_schema = row_schema["properties"]["evidence"]
+        self.assertEqual(set(evidence), set(evidence_schema["properties"]))
+        inputs_schema = evidence_schema["properties"]["quantile_inputs"]["oneOf"][1]
+        self.assertEqual(set(evidence["quantile_inputs"]), set(inputs_schema["properties"]))
+        self.assertEqual(
+            set(evidence["quantile_inputs"]["model"]),
+            set(inputs_schema["properties"]["model"]["properties"]),
+        )
+        self.assertEqual(len(evidence["quantile_inputs"]["training_series"]), 270)
+        self.assertEqual(len(evidence["quantile_inputs"]["future_flows"]), 90)
         self.assertEqual(len(result["points"]), 90)
         point_fields = schema["properties"]["points"]["items"]["properties"]
         for point in result["points"]:
@@ -90,7 +102,10 @@ class ForecastRunTests(TestCase):
         self.assertEqual(
             set(quantiles), set(result_schema["properties"]["quantiles"]["oneOf"][0]["properties"])
         )
-        self.assertIn("snapshots-pending", contract["post"]["x-contract-status"])
+        self.assertEqual(contract["post"]["x-contract-status"], "forecast-runs-fields-documented")
+        self.assertEqual(
+            set(first.json()["evidence"]), set(schema["properties"]["evidence"]["properties"])
+        )
         repeat = self.client.post(url, params, format="json")
         self.assertEqual(repeat.status_code, 200, repeat.data)
         self.assertEqual(repeat.data["id"], first.data["id"])

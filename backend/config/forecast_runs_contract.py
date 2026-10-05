@@ -1,6 +1,7 @@
-"""Envolvente de ejecuciones: las instantáneas versionadas siguen siendo JSON parcial."""
+"""Contrato de ejecuciones e instantáneas versionadas de pronóstico."""
 
 from .auth_contracts import object_response
+from .forecast_evidence_contract import forecast_evidence_schema
 from .forecast_result_contract import forecast_result_schema
 
 
@@ -14,20 +15,16 @@ def apply_forecast_runs_contract(path, method, operation):
             "method": {"type": "string"},
             "horizon": {"type": "integer", "enum": [30, 60, 90]},
             "as_of": {"type": "string", "format": "date"},
-            "evidence": {
-                "type": "object",
-                "additionalProperties": True,
-                "description": "Instantánea versionada congelada; esquema interno pendiente. Incluye source_digest y entradas del cálculo.",
-            },
+            "evidence": forecast_evidence_schema(),
             "result": forecast_result_schema(),
         }
     )
-    operation["x-contract-status"] = "forecast-runs-envelope-documented-snapshots-pending"
+    operation["x-contract-status"] = "forecast-runs-fields-documented"
     operation["description"] = (
         "GET para todos los miembros; POST solo propietario/contador. Misma evidencia y método "
         "reutilizan ejecución (200); evidencia nueva crea ejecución (201) y auditoría. "
         "Ediciones posteriores no recalculan instantáneas guardadas. El fingerprint no se expone. "
-        "No elimina ejecuciones ni permite editar resultados. Contrato de instantáneas aún parcial."
+        "No elimina ejecuciones ni permite editar resultados. Campos históricos añadidos después pueden faltar."
     )
     operation["responses"].pop("2XX", None)
     operation.pop("x-request-schema-pending", None)

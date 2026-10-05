@@ -3261,8 +3261,263 @@
                           },
                           "evidence": {
                             "type": "object",
-                            "additionalProperties": true,
-                            "description": "Instantánea versionada congelada; esquema interno pendiente. Incluye source_digest y entradas del cálculo."
+                            "properties": {
+                              "version": {
+                                "type": "string",
+                                "description": "baseline_v1 o hybrid_weekly_v2 actuales; puede conservar una versión histórica."
+                              },
+                              "method": {
+                                "type": "string"
+                              },
+                              "horizon": {
+                                "type": "integer",
+                                "enum": [
+                                  30,
+                                  60,
+                                  90
+                                ]
+                              },
+                              "as_of": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "training_start": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "balance": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "threshold": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "source_digest": {
+                                "type": "string",
+                                "pattern": "^[a-f0-9]{64}$"
+                              },
+                              "accounts": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "movements": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "settlement_allocations": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "excluded_recurring_movements": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "known_future_obligations": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "training_series": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "description": "Decimal exacto COP."
+                                }
+                              },
+                              "known_flows": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string",
+                                  "description": "Decimal exacto COP."
+                                },
+                                "description": "Claves fecha ISO; flujo firmado agregado de obligaciones futuras."
+                              },
+                              "recurrence_estimates": {
+                                "type": "array",
+                                "items": {
+                                  "oneOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "key": {
+                                          "type": "string"
+                                        },
+                                        "date": {
+                                          "type": "string",
+                                          "format": "date"
+                                        },
+                                        "state": {
+                                          "type": "string",
+                                          "enum": [
+                                            "estimated"
+                                          ]
+                                        },
+                                        "amount": {
+                                          "type": "string",
+                                          "description": "Decimal exacto COP."
+                                        },
+                                        "account_id": {
+                                          "type": "integer"
+                                        },
+                                        "description": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "key",
+                                        "date",
+                                        "state",
+                                        "amount",
+                                        "account_id",
+                                        "description"
+                                      ]
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "key": {
+                                          "type": "string"
+                                        },
+                                        "date": {
+                                          "type": "string",
+                                          "format": "date"
+                                        },
+                                        "state": {
+                                          "type": "string",
+                                          "enum": [
+                                            "managed"
+                                          ]
+                                        },
+                                        "obligation_id": {
+                                          "type": "integer"
+                                        },
+                                        "actual_due_date": {
+                                          "type": "string",
+                                          "format": "date"
+                                        },
+                                        "cancelled": {
+                                          "type": "boolean"
+                                        },
+                                        "outstanding_amount": {
+                                          "type": "string",
+                                          "description": "Decimal exacto COP."
+                                        }
+                                      },
+                                      "required": [
+                                        "key",
+                                        "date",
+                                        "state",
+                                        "obligation_id",
+                                        "actual_due_date",
+                                        "cancelled",
+                                        "outstanding_amount"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              },
+                              "quantile_inputs": {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "maxProperties": 0
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "training_start": {
+                                        "type": "string",
+                                        "format": "date"
+                                      },
+                                      "training_series": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string",
+                                          "description": "Decimal exacto COP."
+                                        }
+                                      },
+                                      "future_flows": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string",
+                                          "description": "Decimal exacto COP."
+                                        }
+                                      },
+                                      "model": {
+                                        "type": "object",
+                                        "properties": {
+                                          "version": {
+                                            "type": "string",
+                                            "enum": [
+                                              "weekly_empirical_errors_v1"
+                                            ]
+                                          },
+                                          "historical_origins": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          },
+                                          "history_days": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          },
+                                          "origin_step_days": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          },
+                                          "horizon": {
+                                            "type": "integer",
+                                            "enum": [
+                                              30,
+                                              60,
+                                              90
+                                            ]
+                                          },
+                                          "last_calibration_end_index": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          },
+                                          "notice": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "version",
+                                          "historical_origins",
+                                          "history_days",
+                                          "origin_step_days",
+                                          "horizon",
+                                          "last_calibration_end_index",
+                                          "notice"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "training_start",
+                                      "training_series",
+                                      "future_flows",
+                                      "model"
+                                    ]
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "version",
+                              "method",
+                              "horizon",
+                              "as_of",
+                              "training_start",
+                              "balance",
+                              "threshold",
+                              "source_digest",
+                              "accounts",
+                              "movements",
+                              "settlement_allocations",
+                              "known_future_obligations",
+                              "training_series",
+                              "known_flows"
+                            ],
+                            "description": "Instantánea inmutable; counts no contienen IDs. training_series guarda flujo variable residual desde training_start hasta as_of. quantile_inputs usa su propio entrenamiento de 270 días cuando está disponible; {} significa ausente, no serie cero. Una ocurrencia managed conserva el vínculo incluso cancelado/saldado y no se estima de nuevo. source_digest identifica las fuentes, no es una firma ni garantiza exactitud. Campos añadidos después pueden faltar en ejecuciones históricas."
                           },
                           "result": {
                             "type": "object",
@@ -3576,8 +3831,8 @@
             }
           }
         },
-        "x-contract-status": "forecast-runs-envelope-documented-snapshots-pending",
-        "description": "GET para todos los miembros; POST solo propietario/contador. Misma evidencia y método reutilizan ejecución (200); evidencia nueva crea ejecución (201) y auditoría. Ediciones posteriores no recalculan instantáneas guardadas. El fingerprint no se expone. No elimina ejecuciones ni permite editar resultados. Contrato de instantáneas aún parcial."
+        "x-contract-status": "forecast-runs-fields-documented",
+        "description": "GET para todos los miembros; POST solo propietario/contador. Misma evidencia y método reutilizan ejecución (200); evidencia nueva crea ejecución (201) y auditoría. Ediciones posteriores no recalculan instantáneas guardadas. El fingerprint no se expone. No elimina ejecuciones ni permite editar resultados. Campos históricos añadidos después pueden faltar."
       },
       "post": {
         "operationId": "forecast_runs_post",
@@ -3641,8 +3896,263 @@
                     },
                     "evidence": {
                       "type": "object",
-                      "additionalProperties": true,
-                      "description": "Instantánea versionada congelada; esquema interno pendiente. Incluye source_digest y entradas del cálculo."
+                      "properties": {
+                        "version": {
+                          "type": "string",
+                          "description": "baseline_v1 o hybrid_weekly_v2 actuales; puede conservar una versión histórica."
+                        },
+                        "method": {
+                          "type": "string"
+                        },
+                        "horizon": {
+                          "type": "integer",
+                          "enum": [
+                            30,
+                            60,
+                            90
+                          ]
+                        },
+                        "as_of": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "training_start": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "balance": {
+                          "type": "string",
+                          "description": "Decimal exacto COP."
+                        },
+                        "threshold": {
+                          "type": "string",
+                          "description": "Decimal exacto COP."
+                        },
+                        "source_digest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "accounts": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "movements": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "settlement_allocations": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "excluded_recurring_movements": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "known_future_obligations": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "training_series": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "description": "Decimal exacto COP."
+                          }
+                        },
+                        "known_flows": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string",
+                            "description": "Decimal exacto COP."
+                          },
+                          "description": "Claves fecha ISO; flujo firmado agregado de obligaciones futuras."
+                        },
+                        "recurrence_estimates": {
+                          "type": "array",
+                          "items": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "date": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "enum": [
+                                      "estimated"
+                                    ]
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "description": "Decimal exacto COP."
+                                  },
+                                  "account_id": {
+                                    "type": "integer"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "key",
+                                  "date",
+                                  "state",
+                                  "amount",
+                                  "account_id",
+                                  "description"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "date": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "enum": [
+                                      "managed"
+                                    ]
+                                  },
+                                  "obligation_id": {
+                                    "type": "integer"
+                                  },
+                                  "actual_due_date": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "cancelled": {
+                                    "type": "boolean"
+                                  },
+                                  "outstanding_amount": {
+                                    "type": "string",
+                                    "description": "Decimal exacto COP."
+                                  }
+                                },
+                                "required": [
+                                  "key",
+                                  "date",
+                                  "state",
+                                  "obligation_id",
+                                  "actual_due_date",
+                                  "cancelled",
+                                  "outstanding_amount"
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        "quantile_inputs": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "maxProperties": 0
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "training_start": {
+                                  "type": "string",
+                                  "format": "date"
+                                },
+                                "training_series": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "description": "Decimal exacto COP."
+                                  }
+                                },
+                                "future_flows": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "description": "Decimal exacto COP."
+                                  }
+                                },
+                                "model": {
+                                  "type": "object",
+                                  "properties": {
+                                    "version": {
+                                      "type": "string",
+                                      "enum": [
+                                        "weekly_empirical_errors_v1"
+                                      ]
+                                    },
+                                    "historical_origins": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "history_days": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "origin_step_days": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "horizon": {
+                                      "type": "integer",
+                                      "enum": [
+                                        30,
+                                        60,
+                                        90
+                                      ]
+                                    },
+                                    "last_calibration_end_index": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "notice": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "version",
+                                    "historical_origins",
+                                    "history_days",
+                                    "origin_step_days",
+                                    "horizon",
+                                    "last_calibration_end_index",
+                                    "notice"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "training_start",
+                                "training_series",
+                                "future_flows",
+                                "model"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "method",
+                        "horizon",
+                        "as_of",
+                        "training_start",
+                        "balance",
+                        "threshold",
+                        "source_digest",
+                        "accounts",
+                        "movements",
+                        "settlement_allocations",
+                        "known_future_obligations",
+                        "training_series",
+                        "known_flows"
+                      ],
+                      "description": "Instantánea inmutable; counts no contienen IDs. training_series guarda flujo variable residual desde training_start hasta as_of. quantile_inputs usa su propio entrenamiento de 270 días cuando está disponible; {} significa ausente, no serie cero. Una ocurrencia managed conserva el vínculo incluso cancelado/saldado y no se estima de nuevo. source_digest identifica las fuentes, no es una firma ni garantiza exactitud. Campos añadidos después pueden faltar en ejecuciones históricas."
                     },
                     "result": {
                       "type": "object",
@@ -3935,8 +4445,263 @@
                     },
                     "evidence": {
                       "type": "object",
-                      "additionalProperties": true,
-                      "description": "Instantánea versionada congelada; esquema interno pendiente. Incluye source_digest y entradas del cálculo."
+                      "properties": {
+                        "version": {
+                          "type": "string",
+                          "description": "baseline_v1 o hybrid_weekly_v2 actuales; puede conservar una versión histórica."
+                        },
+                        "method": {
+                          "type": "string"
+                        },
+                        "horizon": {
+                          "type": "integer",
+                          "enum": [
+                            30,
+                            60,
+                            90
+                          ]
+                        },
+                        "as_of": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "training_start": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "balance": {
+                          "type": "string",
+                          "description": "Decimal exacto COP."
+                        },
+                        "threshold": {
+                          "type": "string",
+                          "description": "Decimal exacto COP."
+                        },
+                        "source_digest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "accounts": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "movements": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "settlement_allocations": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "excluded_recurring_movements": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "known_future_obligations": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "training_series": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "description": "Decimal exacto COP."
+                          }
+                        },
+                        "known_flows": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string",
+                            "description": "Decimal exacto COP."
+                          },
+                          "description": "Claves fecha ISO; flujo firmado agregado de obligaciones futuras."
+                        },
+                        "recurrence_estimates": {
+                          "type": "array",
+                          "items": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "date": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "enum": [
+                                      "estimated"
+                                    ]
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "description": "Decimal exacto COP."
+                                  },
+                                  "account_id": {
+                                    "type": "integer"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "key",
+                                  "date",
+                                  "state",
+                                  "amount",
+                                  "account_id",
+                                  "description"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "date": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "enum": [
+                                      "managed"
+                                    ]
+                                  },
+                                  "obligation_id": {
+                                    "type": "integer"
+                                  },
+                                  "actual_due_date": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "cancelled": {
+                                    "type": "boolean"
+                                  },
+                                  "outstanding_amount": {
+                                    "type": "string",
+                                    "description": "Decimal exacto COP."
+                                  }
+                                },
+                                "required": [
+                                  "key",
+                                  "date",
+                                  "state",
+                                  "obligation_id",
+                                  "actual_due_date",
+                                  "cancelled",
+                                  "outstanding_amount"
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        "quantile_inputs": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "maxProperties": 0
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "training_start": {
+                                  "type": "string",
+                                  "format": "date"
+                                },
+                                "training_series": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "description": "Decimal exacto COP."
+                                  }
+                                },
+                                "future_flows": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "description": "Decimal exacto COP."
+                                  }
+                                },
+                                "model": {
+                                  "type": "object",
+                                  "properties": {
+                                    "version": {
+                                      "type": "string",
+                                      "enum": [
+                                        "weekly_empirical_errors_v1"
+                                      ]
+                                    },
+                                    "historical_origins": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "history_days": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "origin_step_days": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "horizon": {
+                                      "type": "integer",
+                                      "enum": [
+                                        30,
+                                        60,
+                                        90
+                                      ]
+                                    },
+                                    "last_calibration_end_index": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "notice": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "version",
+                                    "historical_origins",
+                                    "history_days",
+                                    "origin_step_days",
+                                    "horizon",
+                                    "last_calibration_end_index",
+                                    "notice"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "training_start",
+                                "training_series",
+                                "future_flows",
+                                "model"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "method",
+                        "horizon",
+                        "as_of",
+                        "training_start",
+                        "balance",
+                        "threshold",
+                        "source_digest",
+                        "accounts",
+                        "movements",
+                        "settlement_allocations",
+                        "known_future_obligations",
+                        "training_series",
+                        "known_flows"
+                      ],
+                      "description": "Instantánea inmutable; counts no contienen IDs. training_series guarda flujo variable residual desde training_start hasta as_of. quantile_inputs usa su propio entrenamiento de 270 días cuando está disponible; {} significa ausente, no serie cero. Una ocurrencia managed conserva el vínculo incluso cancelado/saldado y no se estima de nuevo. source_digest identifica las fuentes, no es una firma ni garantiza exactitud. Campos añadidos después pueden faltar en ejecuciones históricas."
                     },
                     "result": {
                       "type": "object",
@@ -4275,8 +5040,8 @@
             }
           }
         },
-        "x-contract-status": "forecast-runs-envelope-documented-snapshots-pending",
-        "description": "GET para todos los miembros; POST solo propietario/contador. Misma evidencia y método reutilizan ejecución (200); evidencia nueva crea ejecución (201) y auditoría. Ediciones posteriores no recalculan instantáneas guardadas. El fingerprint no se expone. No elimina ejecuciones ni permite editar resultados. Contrato de instantáneas aún parcial.",
+        "x-contract-status": "forecast-runs-fields-documented",
+        "description": "GET para todos los miembros; POST solo propietario/contador. Misma evidencia y método reutilizan ejecución (200); evidencia nueva crea ejecución (201) y auditoría. Ediciones posteriores no recalculan instantáneas guardadas. El fingerprint no se expone. No elimina ejecuciones ni permite editar resultados. Campos históricos añadidos después pueden faltar.",
         "requestBody": {
           "required": false,
           "content": {
