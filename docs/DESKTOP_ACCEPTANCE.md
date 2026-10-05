@@ -63,6 +63,13 @@ Las fechas son fijas: no sustituirlas por la fecha actual del equipo.
 
 ## Condiciones de cierre
 
+- Con teclado: pulsar Tab al entrar muestra «Saltar al contenido principal»; activarlo
+  lleva el foco al contenido sin cambiar la ruta ni cerrar la sesión. Al cambiar de pantalla,
+  el foco pasa al contenido principal. Probar Tab/Mayús+Tab, Enter y Escape en formularios
+  y diálogos, con un indicador de foco visible y sin atrapamientos.
+- Con Narrador de Windows: comprobar que identifica la región principal y anuncia errores,
+  estados de importación y cambios de pantalla. La compilación no acredita estas pruebas.
+
 - Cada paso anterior necesita resultado y evidencia del cliente instalado; los ensayos HTTP
   y del configurador no sustituyen esta comprobación.
 - Recuperación de contraseña se ensaya aparte cuando haya proveedor HTTPS configurado y

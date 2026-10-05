@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useLayoutEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import { ScreenBoundary } from './ScreenBoundary';
@@ -86,6 +86,10 @@ function App() {
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useLayoutEffect(() => {
+    if (!checking) focusMainContent();
+  }, [route, checking, user]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -196,4 +200,11 @@ function App() {
     </main></>;
 }
 
-createRoot(document.getElementById('root')!).render(<React.StrictMode><ScreenBoundary><React.Suspense fallback={<main><p role="status">Cargando pantalla…</p></main>}><App /></React.Suspense></ScreenBoundary></React.StrictMode>);
+function focusMainContent() {
+  const main = document.querySelector('main');
+  if (!main) return;
+  main.tabIndex = -1;
+  main.focus({ preventScroll: true });
+}
+
+createRoot(document.getElementById('root')!).render(<React.StrictMode><button className="skip-content" onClick={() => { focusMainContent(); document.querySelector('main')?.scrollIntoView({ block: 'start' }); }}>Saltar al contenido principal</button><ScreenBoundary><React.Suspense fallback={<main><p role="status">Cargando pantalla…</p></main>}><App /></React.Suspense></ScreenBoundary></React.StrictMode>);

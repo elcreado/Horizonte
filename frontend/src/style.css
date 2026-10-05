@@ -83,4 +83,8 @@ a { color: #215f4e; }
 .obligation-calendar time { font-weight: 700; }
 .obligation-calendar p { margin: 8px 0; }
 .obligation-calendar caption { text-align: left; padding: 12px 0; }
+.skip-content { position: fixed; top: 8px; left: 8px; z-index: 1000; transform: translateY(-180%); }
+.skip-content:focus { transform: translateY(0); }
+:where(a, button, input, select, textarea, summary):focus-visible { outline: 3px solid #215f4e; outline-offset: 3px; }
+main:focus { outline: none; }
 @media (max-width: 650px) { .obligation-form { grid-template-columns: 1fr; } }
