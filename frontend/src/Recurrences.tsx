@@ -1,3 +1,4 @@
+import { getCsrf } from './csrf';
 import { useEffect, useState } from 'react';
 
 type Occurrence = { link_id: number | null; date: string; obligation_id: number | null; cancelled: boolean; matching_obligations: { id: number; reference: string; description: string; outstanding_amount: string }[] };
@@ -22,7 +23,7 @@ export function Recurrences({ company, horizon, onChanged }: { company: string; 
   async function review(item: Candidate, status: string, obligationId?: number, occurrenceDate?: string) {
     setSaving(true); setError('');
     try {
-      const csrf = await (await fetch('/api/auth/csrf/')).json();
+      const csrf = await getCsrf();
       const response = await fetch(`/api/companies/${company}/recurrences/?horizon=${horizon}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf.csrfToken },
         body: JSON.stringify({ fingerprint: item.fingerprint, status, obligation_id: obligationId, occurrence_date: occurrenceDate }),
@@ -38,7 +39,7 @@ export function Recurrences({ company, horizon, onChanged }: { company: string; 
     if (!occurrence.link_id) return;
     setSaving(true); setError('');
     try {
-      const csrf = await (await fetch('/api/auth/csrf/')).json();
+      const csrf = await getCsrf();
       const response = await fetch(`/api/companies/${company}/recurrence-occurrences/${occurrence.link_id}/unlink/`, {
         method: 'POST', headers: { 'X-CSRFToken': csrf.csrfToken },
       });

@@ -1,3 +1,4 @@
+import { getCsrf } from './csrf';
 import { FormEvent, useEffect, useState } from 'react';
 export function Profile() {
   const [data, setData] = useState<{ username: string; email: string } | null>(null);
@@ -13,7 +14,7 @@ export function Profile() {
     if (!values.password) { delete values.password; delete values.password_confirm; }
     setBusy(true); setError(''); setNotice('');
     try {
-      const csrf = await (await fetch('/api/auth/csrf/')).json();
+      const csrf = await getCsrf();
       const response = await fetch('/api/auth/profile/', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf.csrfToken }, body: JSON.stringify(values) });
       const result = await response.json();
       if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : Object.values(result).flat().join(' '));

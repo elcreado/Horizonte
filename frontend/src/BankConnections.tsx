@@ -1,3 +1,4 @@
+import { getCsrf } from './csrf';
 import { useEffect, useRef, useState } from 'react';
 
 type Connection = { id: number; provider: string; status: string; account_id: number; consent: { scopes: string[]; granted_at: string; revoked_at: string | null } };
@@ -31,7 +32,7 @@ export function BankConnections({ company, onChanged }: { company: string; onCha
   async function action(path: string, body?: object) {
     setBusy(true); setError('');
     try {
-      const csrf = await (await fetch('/api/auth/csrf/')).json();
+      const csrf = await getCsrf();
       const response = await fetch(`/api/companies/${company}/bank-connections/${path}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf.csrfToken }, body: JSON.stringify(body || {}),
       });

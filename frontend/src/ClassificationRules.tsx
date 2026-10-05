@@ -1,3 +1,4 @@
+import { getCsrf } from './csrf';
 import { useEffect, useState } from 'react';
 type Rule = { id: number; normalized_description: string; direction: string; category: string };
 type Page = { results: Rule[]; count: number; next: string | null; previous: string | null; can_edit: boolean };
@@ -18,7 +19,7 @@ export function ClassificationRules({ company }: { company: string }) {
   async function remove(rule: Rule) {
     setSaving(true); setError('');
     try {
-      const csrf = await (await fetch('/api/auth/csrf/')).json();
+      const csrf = await getCsrf();
       const response = await fetch(`/api/companies/${company}/classification-rules/${rule.id}/`, { method: 'DELETE', headers: { 'X-CSRFToken': csrf.csrfToken } });
       if (!response.ok) throw new Error('No se pudo eliminar la regla. Actualiza la lista.');
       setPage(1); setRevision(n => n + 1);

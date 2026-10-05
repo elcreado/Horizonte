@@ -1,3 +1,4 @@
+import { getCsrf } from './csrf';
 import { FormEvent, useEffect, useState } from 'react';
 export type AlertData = { threshold: string; currently_below: boolean; first_below: string | null; projected_days_below: number; shortfall_at_minimum: string };
 export function LiquidityAlert({ company, alert, onChanged }: { company: string; alert: AlertData; onChanged: () => void }) {
@@ -10,7 +11,7 @@ export function LiquidityAlert({ company, alert, onChanged }: { company: string;
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const body = Object.fromEntries(new FormData(event.currentTarget)); setBusy(true); setError('');
     try {
-      const csrf = await (await fetch('/api/auth/csrf/')).json();
+      const csrf = await getCsrf();
       const response = await fetch(`/api/companies/${company}/liquidity-threshold/`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf.csrfToken }, body: JSON.stringify(body) });
       const result = await response.json(); if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : Object.values(result).flat().join(' ')); onChanged();
     } catch (e) { setError((e as Error).message); } finally { setBusy(false); }

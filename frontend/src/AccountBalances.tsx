@@ -1,3 +1,4 @@
+import { getCsrf } from './csrf';
 import { FormEvent, useEffect, useState } from 'react';
 type Account = { id: number; name: string; connection_id: number | null; balance: string; balance_date: string; history_complete_from: string | null; history_complete_through: string | null };
 export function AccountBalances({ company, revision, onChanged }: { company: string; revision: number; onChanged: () => void }) {
@@ -11,7 +12,7 @@ export function AccountBalances({ company, revision, onChanged }: { company: str
   async function save(event: FormEvent<HTMLFormElement>, account: Account) {
     event.preventDefault(); const body = Object.fromEntries(new FormData(event.currentTarget)); setBusy(true); setError(''); setNotice('');
     try {
-      const csrf = await (await fetch('/api/auth/csrf/')).json();
+      const csrf = await getCsrf();
       const response = await fetch(`/api/companies/${company}/accounts/${account.id}/balance/`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf.csrfToken }, body: JSON.stringify(body) });
       const result = await response.json();
       if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : Object.values(result).flat().join(' '));
@@ -21,7 +22,7 @@ export function AccountBalances({ company, revision, onChanged }: { company: str
   async function setCoverage(account: Account, start: string, confirmed: boolean) {
     setBusy(true); setError(''); setNotice('');
     try {
-      const csrf = await (await fetch('/api/auth/csrf/')).json();
+      const csrf = await getCsrf();
       const response = await fetch(`/api/companies/${company}/accounts/${account.id}/coverage/`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf.csrfToken },
         body: JSON.stringify({ start, confirmed }),

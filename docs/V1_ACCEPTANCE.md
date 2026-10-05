@@ -67,6 +67,10 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   obligación documentan filtros, disponible, roles y paginación; prueba real comprueba reducción/
   restitución del disponible y lectura con rol lector. Instantáneas before/after por acción y
   otras operaciones aún requieren completar sus contratos.
+  Ocho formularios (saldos/cobertura, conexiones, reglas, empresa, umbral, movimientos,
+  perfil y recurrencias) comparten validación de HTTP/JSON/token CSRF antes de mutar.
+  Helper comprobado con HTTP fallido, JSON null/malformado, token vacío y token válido;
+  compilación aprobada. Falta reproducir fallos en la interfaz instalada.
   Empresas, salud y sugerencias de categoría documentan respuestas; pruebas contrastan campos,
   abstención y fallo de BD sin diagnóstico privado. Recurrencias GET/POST y desvinculación
   documentan estados, ocurrencias, revisión, materialización e idempotencia. Ninguna operación

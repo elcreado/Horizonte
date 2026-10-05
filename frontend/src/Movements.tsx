@@ -1,3 +1,4 @@
+import { getCsrf } from './csrf';
 import { FormEvent, useEffect, useState } from 'react';
 import { CategorySuggestion } from './CategorySuggestion';
 
@@ -29,7 +30,7 @@ export function Movements({ company, refresh, onChanged }: { company: string; re
     event.preventDefault(); if (!editing) return;
     const form = new FormData(event.currentTarget); setSaving(true); setError(''); setNotice('');
     try {
-      const csrf = await (await fetch('/api/auth/csrf/')).json();
+      const csrf = await getCsrf();
       const response = await fetch(`/api/companies/${company}/movements/${editing.id}/category/`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf.csrfToken },
         body: JSON.stringify({ category: form.get('category'), remember: form.get('remember') === 'on' }),
