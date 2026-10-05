@@ -22,6 +22,11 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
 - [ ] Completar validación temporal del híbrido y recurrencias (RF-09/RF-10): implementación
   experimental y evaluación sintética existentes; falta corpus independiente y reconstrucción
   de evidencia pasada antes de evaluar datos reales corregidos después del corte.
+  Se eliminan consultas por cada ocurrencia del GET de recurrencias: vínculos y pendientes
+  se leen por lote, conservando filtros por empresa. Ensayo sintético de diez patrones:
+  antes 84 consultas a 30 días y 264 a 90; después igual cantidad en ambos y máximo diez,
+  con más de cien ocurrencias expandidas. Suite posterior: 209 pruebas, 204 aprobadas,
+  5 omitidas. No certifica p95 remoto, concurrencia ni rendimiento visual.
 - [ ] Validar pronósticos probabilísticos y confianza (RF-11/RF-15). Cuantiles experimentales
   y candidato de intervalos reservados existen; cobertura agregada sintética no demuestra
   calibración por perfil. Los límites corregidos no son P10/P90 calibrados ni probabilidad de déficit.

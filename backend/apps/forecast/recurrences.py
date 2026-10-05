@@ -161,35 +161,51 @@ def recurrences(request, company_id):
     reviews = dict(
         RecurrenceReview.objects.filter(company_id=company_id).values_list("fingerprint", "status")
     )
-    for candidate in candidates:
+    expanded = [
+        (candidate, expand_dates(candidate, rows, as_of, horizon)) for candidate in candidates
+    ]
+    keys = {
+        occurrence_key({**candidate, "next_date": day})
+        for candidate, dates in expanded
+        for day in dates
+    }
+    linked = {
+        row.key: row
+        for row in RecurrenceOccurrence.objects.filter(
+            company_id=company_id, key__in=keys
+        ).select_related("obligation")
+    }
+    matching = defaultdict(list)
+    occurrence_dates = {day for _, dates in expanded for day in dates}
+    for item in Obligation.objects.filter(
+        company_id=company_id,
+        due_date__in=occurrence_dates,
+        cancelled=False,
+        outstanding_amount__gt=0,
+        recurrenceoccurrence__isnull=True,
+    ).values("id", "reference", "description", "outstanding_amount", "due_date", "direction"):
+        matching[(item["due_date"].isoformat(), item["direction"])].append(
+            {
+                "id": item["id"],
+                "reference": item["reference"],
+                "description": item["description"],
+                "outstanding_amount": str(item["outstanding_amount"]),
+            }
+        )
+    for candidate, dates in expanded:
         candidate["status"] = reviews.get(candidate["fingerprint"], "pending")
         candidate["occurrences"] = []
-        for occurrence_date in expand_dates(candidate, rows, as_of, horizon):
-            occurrence = (
-                RecurrenceOccurrence.objects.filter(
-                    company_id=company_id,
-                    key=occurrence_key({**candidate, "next_date": occurrence_date}),
-                )
-                .select_related("obligation")
-                .first()
-            )
+        for occurrence_date in dates:
+            occurrence = linked.get(occurrence_key({**candidate, "next_date": occurrence_date}))
             candidate["occurrences"].append(
                 {
                     "date": occurrence_date,
                     "link_id": occurrence.pk if occurrence else None,
                     "obligation_id": occurrence.obligation_id if occurrence else None,
                     "cancelled": occurrence.obligation.cancelled if occurrence else False,
-                    "matching_obligations": [
-                        {**item, "outstanding_amount": str(item["outstanding_amount"])}
-                        for item in Obligation.objects.filter(
-                            company_id=company_id,
-                            due_date=occurrence_date,
-                            direction=candidate["direction"],
-                            cancelled=False,
-                            outstanding_amount__gt=0,
-                            recurrenceoccurrence__isnull=True,
-                        ).values("id", "reference", "description", "outstanding_amount")
-                    ],
+                    "matching_obligations": matching.get(
+                        (occurrence_date, candidate["direction"]), []
+                    ),
                 }
             )
     return Response(

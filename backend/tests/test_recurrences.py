@@ -2,7 +2,9 @@ from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 
+from django.db import connection
 from django.test import SimpleTestCase, TestCase
+from django.test.utils import CaptureQueriesContext
 
 from apps.accounts.models import Company
 from apps.banking.models import Transaction
@@ -57,6 +59,33 @@ class RecurrenceTests(SimpleTestCase):
 
 class RecurrenceApiTests(TestCase):
     setUp = ImportTests.setUp
+
+    def test_database_queries_do_not_grow_per_expanded_occurrence(self):
+        Transaction.objects.bulk_create(
+            [
+                Transaction(
+                    account=self.account,
+                    external_id=f"pattern-{pattern}-{day}",
+                    date=date(2026, 9, day),
+                    amount="-100",
+                    description=f"Pattern {pattern}",
+                    normalized_description=f"PATTERN {pattern}",
+                )
+                for pattern in range(10)
+                for day in (1, 8, 15, 22)
+            ]
+        )
+        base = f"/api/companies/{self.company.pk}/recurrences/"
+        with CaptureQueriesContext(connection) as short_queries:
+            short = self.client.get(base + "?horizon=30")
+        with CaptureQueriesContext(connection) as long_queries:
+            long = self.client.get(base + "?horizon=90")
+        self.assertEqual(short.status_code, 200)
+        self.assertEqual(long.status_code, 200)
+        self.assertEqual(len(long.json()["results"]), 10)
+        self.assertGreater(sum(len(row["occurrences"]) for row in long.json()["results"]), 100)
+        self.assertEqual(len(long_queries), len(short_queries))
+        self.assertLessEqual(len(long_queries), 10)
 
     def test_access_and_evidence(self):
         for i, day in enumerate([1, 8, 15, 22]):
