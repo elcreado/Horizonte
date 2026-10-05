@@ -2819,15 +2819,41 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Umbral vigente y permiso de edición.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "threshold": {
+                      "type": "string",
+                      "description": "Importe decimal exacto."
+                    },
+                    "can_edit": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "threshold",
+                    "can_edit"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o escritura sin rol propietario."
+          },
+          "404": {
+            "description": "Empresa o membresía no encontrada."
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "threshold-fields-documented",
+        "description": "Consulta el umbral no negativo de la empresa y si el usuario puede editarlo. Solo el propietario puede modificarlo; se auditan cambios efectivos. El umbral produce alertas determinísticas, no probabilidades calibradas."
       },
       "patch": {
         "operationId": "threshold_patch",
@@ -2857,16 +2883,74 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "400": {
+            "description": "Umbral negativo, no finito o fuera de precisión decimal 18/2."
+          },
+          "200": {
+            "description": "Umbral vigente y permiso de edición.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "threshold": {
+                      "type": "string",
+                      "description": "Importe decimal exacto."
+                    },
+                    "can_edit": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "threshold",
+                    "can_edit"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o escritura sin rol propietario."
+          },
+          "404": {
+            "description": "Empresa o membresía no encontrada."
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "threshold-fields-documented",
+        "description": "Consulta el umbral no negativo de la empresa y si el usuario puede editarlo. Solo el propietario puede modificarlo; se auditan cambios efectivos. El umbral produce alertas determinísticas, no probabilidades calibradas.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "threshold": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number",
+                        "minimum": 0.0
+                      }
+                    ],
+                    "description": "Importe decimal; se recomienda cadena para conservar precisión.",
+                    "x-max-digits": 18,
+                    "x-decimal-places": 2,
+                    "x-decimal-minimum": "0"
+                  }
+                },
+                "required": [
+                  "threshold"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/api/companies/{company_id}/merchant-aliases/": {

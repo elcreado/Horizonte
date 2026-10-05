@@ -1,5 +1,20 @@
 # Distribución de escritorio en línea
 
+## Servidor de pruebas disponible
+
+Instalador actualizado: `desktop/release/hosted/Horizonte Setup 0.1.0.exe`, Windows x64,
+NSIS, generado el 5 de octubre de 2026 y comprobado como `NotSigned`. Prueba del ejecutable
+empaquetado: título/formulario presentes, Node oculto, HTTP externo rechazado, geolocalización,
+cámara y micrófono denegados. Resultado local:
+`.local-logs/desktop-hosted-smoke/result.json/result.json`.
+La prueba se limita al configurador local; no acredita sesión remota ni instalación real.
+
+Dirección: `https://horizonte-demo.onrender.com`. El formulario del cliente la ofrece ya
+rellenada y permite cambiarla. Pulsa Conectar para abrir Inicio; puedes registrarte con datos
+sintéticos. Render Free puede tardar aproximadamente un minuto después de una suspensión.
+Se verificó el recorrido HTTP remoto de registro, CSV, dashboard y sesión, pero falta el ensayo
+visual desde el cliente instalado y la instalación/desinstalación en Windows limpio.
+
 El cliente Electron abre la interfaz React alojada junto a Django bajo el mismo origen HTTPS.
 Las cookies de sesión HttpOnly y CSRF conservan su comportamiento web. No hay claves de BD ni
 credenciales de proveedores en el instalador. El equipo usuario necesita conexión al servidor;

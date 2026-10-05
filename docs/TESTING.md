@@ -433,3 +433,26 @@ En Empresa y equipo, propietario y contador consultan fecha, usuario, acción y 
 ## Referencia estadística experimental
 
 Para habilitarla, importa movimientos de cada cuenta y confirma en Saldos de cuentas manuales que los 90 días previos al corte están completos, incluidos días sin actividad. En el dashboard elige horizonte y método. Si falta cobertura o hay menos de cuatro días con flujo variable, la sección explica por qué no muestra resultados. El gráfico y la tabla muestran por separado obligaciones y flujo variable estimado. Este cálculo no produce intervalos ni probabilidades. Cambiar el corte o importar movimientos nuevos dentro del periodo retira la confirmación; tendrás que revisar los datos y confirmarla de nuevo. No requiere servicios externos.
+## Incidencia vigente de CI PostgreSQL — 5 de octubre de 2026
+
+**Resuelta en CI:** la ejecución `37324872869`, commit `6fe6ff5`, terminó `success`.
+Los cuatro jobs, incluido `backend-postgres`, pasaron. Las notas siguientes conservan el
+diagnóstico y los límites previos; ya no falta el resultado PostgreSQL de esta corrección.
+
+El log completo aportado por el usuario identificó `OperationalError: the connection is closed`.
+Las pruebas de worker y recuperación llamaban a `run_background` desde `TestCase`; su transacción
+envolvente provoca que la limpieza de conexiones cierre PostgreSQL. Se cambiaron ambas clases a
+`TransactionTestCase` para ejecutar el comando fuera de esa transacción. No se deshabilitó la
+limpieza de conexiones del worker. Suite local: 188 pruebas, 183 aprobadas y 5 omitidas; falta
+el resultado del nuevo job PostgreSQL para confirmar la corrección en ese motor.
+
+La ejecución pública `37320630224` de `codex/v1-hosted` pasó frontend, backend SQLite y
+desktop, pero falló en el paso de tests de `backend-postgres`. Las anotaciones públicas solo
+indican código de salida 1; no identifican el test fallido. No atribuir el fallo a una prueba
+concreta sin su traceback ni marcar PostgreSQL verificado por las pruebas HTTP de Render.
+
+No hay daemon Docker local accesible actualmente. La revisión automática rechazó leer una
+credencial Git local y publicar automáticamente el texto completo de fallo como anotación,
+por falta de autorización y de garantía sobre datos sensibles. Se necesita el fragmento del
+paso fallido o un entorno PostgreSQL de pruebas aislado. No ejecutar la suite destructiva de
+Django sobre la base de datos de la aplicación alojada.

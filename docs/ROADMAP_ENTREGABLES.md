@@ -1,8 +1,18 @@
 # Hoja de ruta de entregables de Horizonte
 
-**Corte de análisis:** 4 de octubre de 2026. **Fuente de verdad:** código actual, `README.md`, `SPECS.md`, `docs/IMPLEMENTATION_STATUS.md`, `docs/FORECAST_BASELINES.md` y pruebas ejecutadas. Este documento distingue una aplicación que ya funciona en desarrollo de una versión funcional distribuible y del alcance completo de investigación descrito en las especificaciones.
+**Corte de análisis:** 5 de octubre de 2026. **Fuente de verdad:** código actual, `README.md`, `SPECS.md`, `docs/IMPLEMENTATION_STATUS.md`, `docs/FORECAST_BASELINES.md` y pruebas ejecutadas. Este documento distingue una aplicación que ya funciona en desarrollo de una versión funcional distribuible y del alcance completo de investigación descrito en las especificaciones.
 
 ## Estado actual comprobado
+
+**Actualización del 5 de octubre:** el listado siguiente conserva el corte previo. Desde entonces
+se construyó el instalador Electron/NSIS, se publicó `codex/v1-hosted` y se creó el servicio
+Render Free en el workspace Horizonte. El despliegue inicial falló por falta de configuración
+PostgreSQL. En `.env.hosted` solo falta ahora `POSTGRES_PASSWORD`; no hay aceptación remota.
+La última suite completa ejecutó 187 pruebas: 182 aprobadas y 5 omitidas por PostgreSQL;
+posteriormente se añadió una prueba CSRF aprobada en el módulo de comercios (14 pruebas).
+La compilación separa aplicación (98,80 kB), dependencias (197,04 kB) y gráficos (365,76 kB),
+sin el aviso anterior de paquete mayor de 500 kB. Esto no prueba rendimiento real del navegador.
+El cliente de escritorio depende del servidor; el usuario final no necesita Docker.
 
 - [x] Inicio público sin sesión; registro, acceso/cierre de sesión, recuperación local de contraseña y gestión básica de cuenta, empresas y roles.
 - [x] Django/DRF, React/Vite, PostgreSQL/Redis y worker Celery en el arranque local. Las rutas de la interfaz consumen `/api` mediante el proxy de Vite en desarrollo.
@@ -60,7 +70,7 @@ Los pasos están en orden de dependencia. Cada uno termina con una evidencia de 
 
 - **Opción recomendada para un primer instalador:** empaquetar la interfaz en una ventana Tauri o Electron y mantener Django, PostgreSQL, Redis y Celery en un servidor de prueba seguro. Así el usuario final instala una app de escritorio que sigue funcional en línea, sin Docker local. Hay que introducir una URL de API configurable, decidir un origen estable para cookies/CSRF, HTTPS, inicio/cierre de sesión y actualización del instalador. El modo sin conexión no estaría disponible.
 - **Opción sin servidor y sin Docker:** empaquetar Django/Python como proceso auxiliar, sustituir o integrar las dependencias PostgreSQL/Redis/Celery de manera soportada, iniciar y detener procesos con seguridad, migrar la BD, guardar datos en una ruta de usuario, hacer backups y gestionar puertos/local-only. Requiere pruebas de importaciones, concurrencia y actualización del esquema. Es un proyecto aparte y no está listo hoy.
-- **Elección técnica sugerida:** probar primero Tauri con la interfaz compilada; Tauri documenta el empaquetado de binarios auxiliares, incluso servidores Python, si después se necesita modo local. Electron también puede empaquetarse y ofrece un contenedor Chromium, pero exige mantener su runtime y seguir sus controles de seguridad. Esta preferencia es una inferencia para este repositorio, no una prueba de instalador.
+- **Elección implementada para el primer instalador:** Electron con NSIS para Windows x64 y servidor remoto HTTPS. Existe `desktop/release/permissions/Horizonte Setup 0.1.0.exe` (sin firma). La prueba automatizada verifica restricciones del cliente y permisos en la configuración local; faltan instalación/desinstalación en Windows limpio y el recorrido autenticado remoto. Tauri queda como alternativa futura; no es el cliente actual.
 - **Prueba de viabilidad antes de prometer entrega:** crear un prototipo Windows que abre Inicio sin sesión, inicia sesión contra API de prueba, sube un CSV, espera el job y muestra dashboard; cerrarlo y abrirlo otra vez sin pérdida de sesión indebida. Después probar instalación, actualización y desinstalación en una máquina limpia. Solo entonces decidir soporte Windows; macOS/Linux requieren builds y QA propios.
 
 Referencias del empaquetado: [Tauri sidecars](https://v2.tauri.app/develop/sidecar/), [requisitos Windows de Tauri](https://v2.tauri.app/start/prerequisites/), [distribución de Electron](https://www.electronjs.org/docs/latest/tutorial/distribution-overview/) y [seguridad de Electron](https://www.electronjs.org/docs/latest/tutorial/security/).
@@ -78,7 +88,7 @@ La exclusión de “aplicación móvil nativa” en `README.md`/`SPECS.md` sigue
 ## Acciones externas para probar o distribuir
 
 - **Prueba local actual:** abrir Docker Desktop y ejecutar `scripts/start-dev.ps1`; no hacen falta cuenta bancaria ni credenciales externas para Mock Bank. Para primeras instalaciones sí hacen falta Python/Node y descarga de dependencias. Si falla la cola, verificar Redis y worker.
-- **Prueba de correo real:** proporcionar/configurar un SMTP de pruebas y una dirección destinataria; sin ello solo se verifica la recuperación local con backend de correo de desarrollo.
+- **Prueba de correo real en Render Free:** configurar Resend mediante API HTTPS y un remitente permitido; los puertos SMTP habituales están bloqueados. Sin estas credenciales solo se verifica la recuperación con correo simulado. Véase `HOSTING_FREE.md`.
 - **Prueba de banco real o sandbox:** crear cuenta de desarrollador y conceder acceso del proveedor elegido; el proyecto no puede inventar esas credenciales.
 - **Escritorio en línea:** disponer de servidor HTTPS accesible para el instalador y un equipo Windows limpio para ensayo. **Escritorio sin conexión:** requiere el trabajo adicional descrito arriba, no solo Docker Desktop.
 - **Port móvil V2:** Android Studio/SDK y dispositivo o emulador Android; para compilar/probar iOS, macOS con Xcode y dispositivo/simulador. Se necesitará un backend remoto HTTPS para que la app móvil sea funcional.

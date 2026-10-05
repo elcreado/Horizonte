@@ -288,6 +288,25 @@ IP del proxy, TLS remoto, ASVS, cifrado/retención, OAuth/PKCE de proveedores y 
 Manual de uso: USER_MANUAL.md. Operación: TECHNICAL_MANUAL.md. Riesgos: THREAT_MODEL.md.
 # Avance del 5 de octubre de 2026: alias de comercios
 
+## Carga del cliente y evidencia remota
+
+- CI `37324872869` del commit `6fe6ff5` terminó correctamente en sus cuatro jobs,
+  incluido PostgreSQL. Se resolvió el cierre de conexión provocado por ejecutar el comando
+  worker desde la transacción envolvente de `TestCase`; ambas clases usan `TransactionTestCase`.
+  El fallo de seis errores indicado en notas posteriores pertenece al corte anterior.
+
+- Pantallas de historial, facturas, obligaciones, movimientos, comercios, proyección experimental
+  y gráfico principal usan carga diferida. Inicio no precarga el paquete de gráficos según el
+  HTML compilado. Se ofrece un mensaje de carga y recuperación mediante recarga si una pantalla falla.
+- Compilación TypeScript/Vite aprobada: código inicial de aplicación 59,41 kB; vendor 197,04 kB;
+  gráficos 365,76 kB. No se ha medido el tiempo real de renderizado en navegador.
+- Render/Supabase activos; se probaron por HTTP registro/sesión/CSRF, CSV, Mock Bank y factura XML.
+  Una importación de 10.000 filas completó el recorrido en 12 segundos observados; ver
+  `HOSTING_FREE.md` e `IMPORT_BENCHMARK.md` para límites de la medición.
+- CI PostgreSQL sigue fallando con seis errores cuyo traceback aún no está disponible.
+  Los resultados HTTP no sustituyen la suite ni demuestran cierre de todos los RF/RNF.
+- Instalador actualizado en `desktop/release/hosted/`; QA visual y Windows limpio pendientes.
+
 - API `GET/POST /api/companies/{company_id}/merchant-aliases/`: consulta paginada y
   asignación de etiquetas normalizadas de `manual_upload` o `mock` a un comercio de la empresa.
 - Solo propietario o contador puede asignar; cada cambio efectivo queda en auditoría.

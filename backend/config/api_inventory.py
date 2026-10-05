@@ -12,6 +12,7 @@ from .invoice_contracts import apply_invoice_contract
 from .merchant_contracts import apply_merchant_contract
 from .movement_contracts import apply_movement_contract
 from .platform_contracts import apply_platform_contract
+from .threshold_contract import apply_threshold_contract
 
 
 def build_inventory() -> dict:
@@ -79,6 +80,7 @@ def build_inventory() -> dict:
             apply_movement_contract(path, method, operation)
             apply_platform_contract(path, method, operation)
             apply_invoice_contract(path, method, operation)
+            apply_threshold_contract(path, method, operation)
             operations[method] = operation
         paths[path] = operations
     return {

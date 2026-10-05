@@ -1,8 +1,8 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import './style.css';
-import { History } from './History';
+import { ScreenBoundary } from './ScreenBoundary';
+const History = React.lazy(() => import('./History').then(module => ({ default: module.History })));
 import { ClassificationRules } from './ClassificationRules';
 import { CreateCompany } from './CreateCompany';
 import { Profile } from './Profile';
@@ -11,18 +11,20 @@ import { AccountBalances } from './AccountBalances';
 import { BankConnections } from './BankConnections';
 import { LiquidityAlert, AlertData } from './LiquidityAlert';
 import { AlertHistory } from './AlertHistory';
-import { ForecastPreview } from './ForecastPreview';
+const ForecastPreview = React.lazy(() => import('./ForecastPreview').then(module => ({ default: module.ForecastPreview })));
 import { Home } from './Home';
 import { Register } from './Register';
 import { Team } from './Team';
 import { PasswordRecovery } from './PasswordRecovery';
-import { Invoices } from './Invoices';
-import { Obligations } from './Obligations';
+const Invoices = React.lazy(() => import('./Invoices').then(module => ({ default: module.Invoices })));
+const Obligations = React.lazy(() => import('./Obligations').then(module => ({ default: module.Obligations })));
 import { Recurrences } from './Recurrences';
-import { Movements } from './Movements';
-import { Merchants } from './Merchants';
+const Movements = React.lazy(() => import('./Movements').then(module => ({ default: module.Movements })));
+const Merchants = React.lazy(() => import('./Merchants').then(module => ({ default: module.Merchants })));
 import { ImportPanel } from './ImportPanel';
 import { PlatformUsers } from './PlatformUsers';
+
+const DashboardChart = React.lazy(() => import('./DashboardChart').then(module => ({ default: module.DashboardChart })));
 
 type Company = { id: number; name: string };
 type Dashboard = {
@@ -171,7 +173,7 @@ function App() {
         </section>
         <section className="panel"><div className="toolbar"><div><h2>La trayectoria de tu caja</h2><p>{data.method}</p></div><div className="periods" aria-label="Horizonte">{[30, 60, 90].map(n => <button className={horizon === n ? 'active' : 'secondary'} aria-pressed={horizon === n} key={n} onClick={() => setHorizon(n)}>{n} días</button>)}</div></div>
           <div className="chart" role="img" aria-label={`Saldo mínimo proyectado ${money(data.minimum_balance)}. ${data.first_deficit ? `Primer déficit ${data.first_deficit}` : 'Sin déficit en el horizonte'}`}>
-            <ResponsiveContainer width="100%" height="100%"><LineChart data={data.points.map(p => ({ ...p, balance: Number(p.balance) }))} margin={{ left: 15, right: 15, top: 15 }}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="date" tickFormatter={dateLabel} minTickGap={55} /><YAxis tickFormatter={v => `${Number(v) / 1000000} M`} /><Tooltip formatter={v => money(Number(v))} labelFormatter={v => dateLabel(String(v))} /><ReferenceLine y={0} stroke="#b34035" strokeDasharray="5 5" /><Line type="stepAfter" dataKey="balance" name="Saldo" stroke="#227760" strokeWidth={3} dot={false} isAnimationActive={false} /></LineChart></ResponsiveContainer>
+            <React.Suspense fallback={<p role="status">Cargando gráfico…</p>}><DashboardChart points={data.points} dateLabel={dateLabel} money={money} /></React.Suspense>
           </div><p className="footnote">Saldo mínimo: {money(data.minimum_balance)}. Este escenario no equivale a P50 ni tiene intervalos de confianza.</p>
         </section>
         {data.first_deficit && <aside className="warning"><strong>Revisa tus compromisos antes del {dateLabel(data.first_deficit)}.</strong><p>Las obligaciones registradas llevan el saldo por debajo de cero. Revisa el calendario de cobros y pagos que se muestra abajo.</p></aside>}
@@ -192,4 +194,4 @@ function App() {
     </main></>;
 }
 
-createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
+createRoot(document.getElementById('root')!).render(<React.StrictMode><ScreenBoundary><React.Suspense fallback={<main><p role="status">Cargando pantalla…</p></main>}><App /></React.Suspense></ScreenBoundary></React.StrictMode>);

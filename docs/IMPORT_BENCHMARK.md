@@ -38,3 +38,15 @@ Comando: `.venv/Scripts/python backend/manage.py benchmark_import --format xlsx`
 Rollback y saldo verificados. Persisten las limitaciones: llamada directa a la tarea, sin cola ni HTTP, sin commit final ni medida p95.
 
 `test_concurrent_imports.py` usa conexiones PostgreSQL independientes y una barrera de inicio: dos trabajos solapados más una reentrega del mismo trabajo producen exactamente 200 movimientos; dos trabajos con datos contradictorios dejan únicamente las dos filas del ganador y marcan fallido el otro. Los timeouts de bloqueo/sentencia acotan la prueba. Esto verifica integridad concurrente, no capacidad de múltiples workers en producción ni carga sostenida.
+## Medición remota del 5 de octubre de 2026
+
+- Recorrido real: cliente HTTP con sesión/CSRF → Render Free Virginia → cola en PostgreSQL
+  Supabase mediante Session pooler → worker de BD en el servicio web.
+- CSV sintético de 10.000 movimientos, 653.026 bytes en la petición multipart, sin comercios
+  explícitos y con importes alternos de +1/-1 COP. IDs externos únicos.
+- API respondió 202; trabajo terminó `completed` con 10.000 movimientos creados.
+- Tiempo observado desde el envío hasta detectar finalización: **12,00 segundos**. Incluye
+  latencia y sondeo cada tres segundos; no es el tiempo exacto interno de ejecución.
+- Una ejecución con servidor despierto, una empresa y un cliente. No acredita p95, carga
+  concurrente, arranque en frío, otros formatos ni cumplimiento global de rendimiento.
+- Evidencia local sin credenciales: `.local-logs/remote-import-10000.json`.
