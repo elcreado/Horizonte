@@ -30,6 +30,9 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   a 2 MiB antes de consultar CSRF/enviar; el backend conserva su validación independiente.
   Pérdida de conexión al enviar advierte consultar trabajos antes de repetir, porque la
   recepción puede haber ocurrido. Controles se deshabilitan durante el envío; QA visual pendiente.
+  Facturas XML aplica también límite local de extensión/tamaño/archivo vacío y helper CSRF.
+  Carga y confirmación advierten consultar estado cuando se pierde conexión o el JSON
+  de respuesta; no reintentan automáticamente la operación. Build aprobado, QA visual pendiente.
 - [ ] Completar validación temporal del híbrido y recurrencias (RF-09/RF-10): implementación
   experimental y evaluación sintética existentes; falta corpus independiente y reconstrucción
   de evidencia pasada antes de evaluar datos reales corregidos después del corte.

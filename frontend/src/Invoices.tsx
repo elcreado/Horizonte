@@ -1,4 +1,5 @@
 import { LinkInvoiceObligation } from './LinkInvoiceObligation';
+import { getCsrf } from './csrf';
 import { FormEvent, useEffect, useState } from 'react';
 
 type Invoice = { id: number; number: string; cufe: string; direction: string; issue_date: string; due_date: string | null; supplier: string; customer: string; subtotal: string; tax: string; total: string; payable: string; obligation_id: number | null; outstanding_amount: string | null; cancelled: boolean };
@@ -36,13 +37,19 @@ export function Invoices({ company, onChange }: { company: string; onChange: () 
   async function send(url: string, body: FormData | object): Promise<boolean> {
     setBusy(true); setError(''); setNotice('');
     try {
-      const csrfResponse = await fetch('/api/auth/csrf/');
-      if (!csrfResponse.ok) throw new Error('No se pudo verificar la sesión.');
-      const csrf = await csrfResponse.json();
+      if (body instanceof FormData) {
+        const file = body.get('file');
+        if (!(file instanceof File) || !/\.xml$/i.test(file.name) || file.size > 2 * 1024 * 1024) {
+          throw new Error('Selecciona un archivo XML UTF-8 de hasta 2 MB.');
+        }
+        if (!file.size) throw new Error('El archivo XML está vacío. Selecciona una factura.');
+      }
+      const csrf = await getCsrf();
       const headers: Record<string, string> = { 'X-CSRFToken': csrf.csrfToken };
       if (!(body instanceof FormData)) headers['Content-Type'] = 'application/json';
-      const response = await fetch(url, { method: 'POST', headers, body: body instanceof FormData ? body : JSON.stringify(body) });
-      const result = await response.json();
+      const response = await fetch(url, { method: 'POST', headers, body: body instanceof FormData ? body : JSON.stringify(body) })
+        .catch(() => { throw new Error('Se perdió la conexión. Consulta las importaciones, facturas y obligaciones antes de repetir: el servidor puede haber recibido la operación.'); });
+      const result = await response.json().catch(() => { throw new Error('No se pudo leer el resultado. Consulta las importaciones, facturas y obligaciones antes de repetir la operación.'); });
       if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : Object.values(result).flat().join(' '));
       setRevision(n => n + 1); return true;
     } catch (e) { setError((e as Error).message); return false; }
@@ -61,7 +68,7 @@ export function Invoices({ company, onChange }: { company: string; onChange: () 
   return <section className="panel"><h2>Facturas XML</h2><p>Importa una factura emitida o recibida en UBL 2.1. El NIT de la empresa debe aparecer como emisor o receptor.</p>
     <p className="footnote">La lectura no valida la firma ni certifica aceptación DIAN. Confirma el pendiente antes de incorporarlo a tu proyección.</p>
     <p><a href="/factura-ejemplo.xml" download>Descargar ejemplo sintético para Café Horizonte</a></p>
-    {data?.can_edit && <form className="toolbar" onSubmit={upload}><label>Factura XML UTF-8, hasta 2 MB<input name="file" type="file" accept=".xml,text/xml,application/xml" required /></label><button disabled={busy}>Importar factura</button></form>}
+    {data?.can_edit && <form className="toolbar" onSubmit={upload}><label>Factura XML UTF-8, hasta 2 MB<input name="file" type="file" accept=".xml,text/xml,application/xml" required disabled={busy} /></label><button disabled={busy}>Importar factura</button></form>}
     {error && <p className="error" role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
     {statusError && <p className="error" role="alert">{statusError} Se volverá a consultar automáticamente.</p>}
     <div aria-live="polite">{jobs.slice(0, 5).map(j => <p key={j.id}>Importación #{j.id}: {j.status === 'queued' ? 'En cola o procesando. Puede tardar si el servicio se está reactivando; vuelve a consultar más tarde.' : j.status === 'failed' ? j.error : j.duplicate ? 'Factura ya existente; no se duplicó.' : 'Leída. Confirma el valor pendiente.'}</p>)}</div>
