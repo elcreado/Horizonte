@@ -10,7 +10,9 @@ from .alert_history_contract import apply_alert_history_contract
 from .audit_contract import apply_audit_contract
 from .auth_contracts import apply_auth_contract
 from .banking_contracts import apply_banking_contract
+from .basic_queries_contract import apply_basic_queries_contract
 from .calendar_contract import apply_calendar_contract
+from .category_suggestion_contract import apply_category_suggestion_contract
 from .connection_contracts import apply_connection_contract
 from .dashboard_contract import apply_dashboard_contract
 from .experimental_forecast_contract import apply_experimental_forecast_contract
@@ -104,6 +106,8 @@ def build_inventory() -> dict:
             apply_obligation_contract(path, method, operation)
             apply_obligation_queries_contract(path, method, operation)
             apply_settlement_contract(path, method, operation)
+            apply_basic_queries_contract(path, method, operation)
+            apply_category_suggestion_contract(path, method, operation)
             apply_forecast_runs_contract(path, method, operation)
             operations[method] = operation
         paths[path] = operations

@@ -51,6 +51,10 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   obligación documentan filtros, disponible, roles y paginación; prueba real comprueba reducción/
   restitución del disponible y lectura con rol lector. Instantáneas before/after por acción y
   otras operaciones aún requieren completar sus contratos.
+  Empresas, salud y sugerencias de categoría documentan respuestas; pruebas contrastan campos,
+  abstención y fallo de BD sin diagnóstico privado. Quedan tres operaciones como inventario
+  de rutas: GET/POST recurrencias y desvinculación de ocurrencia. Esto no equivale a completar
+  errores/ejemplos ni revisar todos los esquemas históricos del resto de la API.
 - [ ] Verificar accesibilidad, móvil web, tiempos de renderizado/p95, carga concurrente,
   disponibilidad controlada y seguridad conforme a los criterios del README/SPECS.
   HTTP 200 y una importación rápida no prueban estos requisitos.

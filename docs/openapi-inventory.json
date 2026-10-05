@@ -605,15 +605,55 @@
         ],
         "parameters": [],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Empresas de la sesión.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente o rechazada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "basic-query-fields-documented",
+        "description": "Sesión requerida. Lista completa sin paginación de empresas donde el usuario tiene membresía; puede estar vacía. No garantiza orden ni acceso administrativo implícito."
       }
     },
     "/api/companies/create/": {
@@ -7527,15 +7567,121 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Sugerencia o abstención del modelo experimental.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "category": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Categoría sugerida o null si se abstiene."
+                    },
+                    "similarity": {
+                      "type": "number",
+                      "description": "Similitud coseno del primer candidato."
+                    },
+                    "margin": {
+                      "type": "number",
+                      "description": "Diferencia entre los dos primeros scores."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "suggested",
+                        "abstained"
+                      ]
+                    },
+                    "examples": {
+                      "type": "integer",
+                      "minimum": 6,
+                      "description": "Descripciones distintas usadas para entrenar."
+                    },
+                    "notice": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "category",
+                    "similarity",
+                    "margin",
+                    "status",
+                    "examples",
+                    "notice"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente o rechazada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía o movimiento no encontrado en su tenant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Sin dirección financiera o entrenamiento no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "unavailable"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "detail",
+                    "status"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "category-suggestion-fields-documented",
+        "description": "Todos los miembros. Entrena con hasta 1000 movimientos manualmente clasificados, más recientes, de la empresa y mismo sentido. Excluye el movimiento objetivo, su descripción normalizada y Otros. Requiere dos categorías con tres descripciones distintas cada una; etiquetas contradictorias impiden entrenamiento. Sugiere con similitud >=0.35 y margen >=0.15; en otro caso se abstiene. No modifica el movimiento ni crea reglas. Los scores no son probabilidades."
       }
     },
     "/api/companies/{company_id}/movements/{transaction_id}/category/": {
@@ -9781,15 +9927,54 @@
         "security": [],
         "parameters": [],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado de conectividad de BD.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resultado de conectividad de BD.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "unavailable"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "basic-query-fields-documented",
+        "description": "Público. Ejecuta SELECT 1 en la base configurada. No verifica worker, correo ni recorrido funcional. No expone diagnóstico privado de fallos."
       }
     },
     "/api/platform/users/": {

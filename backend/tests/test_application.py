@@ -10,6 +10,7 @@ from rest_framework.test import APIClient
 from apps.accounts.models import Company, CompanyMember
 from apps.banking.models import BankAccount, Transaction
 from apps.forecast.services import project_obligations
+from config.api_inventory import build_inventory
 
 
 class ApplicationTests(TestCase):
@@ -35,6 +36,11 @@ class ApplicationTests(TestCase):
             404,
         )
         self.assertEqual(len(self.client.get("/api/companies/").json()), 1)
+        row = self.client.get("/api/companies/").json()[0]
+        schema = build_inventory()["paths"]["/api/companies/"]["get"]["responses"]["200"][
+            "content"
+        ]["application/json"]["schema"]["items"]
+        self.assertEqual(set(row), set(schema["properties"]))
 
     def test_authentication_required(self):
         self.client.force_authenticate(None)

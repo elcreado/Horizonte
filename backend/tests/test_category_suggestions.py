@@ -2,6 +2,7 @@ from django.test import TestCase
 
 from apps.accounts.models import Company
 from apps.banking.models import BankAccount, Transaction
+from config.api_inventory import build_inventory
 from tests.test_imports import ImportTests
 
 
@@ -71,9 +72,21 @@ class CategorySuggestionTests(TestCase):
         url = f"/api/companies/{self.company.pk}/movements/{target.pk}/category-suggestion/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+        operation = build_inventory()["paths"][
+            "/api/companies/{company_id}/movements/{transaction_id}/category-suggestion/"
+        ]["get"]
+        schema = operation["responses"]["200"]["content"]["application/json"]["schema"]
+        self.assertEqual(set(response.json()), set(schema["properties"]))
         self.assertEqual(response.data["category"], "Software")
         target.refresh_from_db()
         self.assertEqual(target.category, "Otros")
+        target.description = "ZZZXQ WVVVXQ"
+        target.save(update_fields=["description"])
+        abstained = self.client.get(url)
+        self.assertEqual(abstained.status_code, 200)
+        self.assertEqual(abstained.json()["status"], "abstained")
+        self.assertIsNone(abstained.json()["category"])
+        self.assertEqual(set(abstained.json()), set(schema["properties"]))
         self.assertEqual(
             self.client.get(
                 url.replace(f"companies/{self.company.pk}", "companies/999999")

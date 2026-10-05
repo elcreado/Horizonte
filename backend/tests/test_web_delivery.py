@@ -1,10 +1,17 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 
 
 class WebDeliveryTests(TestCase):
+    def test_health_database_failure_does_not_expose_private_diagnostic(self):
+        with patch("config.web.connection.cursor", side_effect=RuntimeError("private diagnostic")):
+            response = self.client.get("/api/health/")
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json(), {"status": "unavailable"})
+
     def test_public_frontend_requires_no_session_and_is_not_cached(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
