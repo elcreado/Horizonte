@@ -3,13 +3,50 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from apps.accounts.models import AuditLog, Company
-from apps.banking.models import BankAccount, BankConnection, BankSyncJob, Transaction
+from apps.banking.models import BankAccount, BankConnection, BankConsent, BankSyncJob, Transaction
 from apps.banking.sync import sync_bank
 from tests.test_imports import ImportTests
 
 
 class BankConnectionTests(TestCase):
     setUp = ImportTests.setUp
+
+    def test_existing_foreign_connection_cannot_be_synced_or_revoked_by_any_role(self):
+        other = Company.objects.create(name="Private", nit="private-bank")
+        consent = BankConsent.objects.create(
+            company=other, user=self.user, scopes=["balances:read", "transactions:read"]
+        )
+        connection = BankConnection.objects.create(company=other, consent=consent, provider="mock")
+        BankAccount.objects.create(
+            company=other,
+            connection=connection,
+            name="Private",
+            balance="100",
+            balance_date=self.account.balance_date,
+        )
+        for role in ("owner", "accountant", "viewer"):
+            self.member.role = role
+            self.member.save(update_fields=["role"])
+            with self.subTest(role=role):
+                listed = self.client.get(f"/api/companies/{self.company.pk}/bank-connections/")
+                self.assertEqual(listed.status_code, 200)
+                self.assertEqual(listed.json()["connections"], [])
+                self.assertEqual(listed.json()["jobs"], [])
+                for action in ("sync", "revoke"):
+                    with self.subTest(action=action):
+                        response = self.client.post(
+                            f"/api/companies/{self.company.pk}/bank-connections/{connection.pk}/{action}/",
+                            {},
+                            format="json",
+                        )
+                        self.assertEqual(response.status_code, 403 if role == "viewer" else 404)
+        connection.refresh_from_db()
+        consent.refresh_from_db()
+        self.assertEqual(connection.status, "active")
+        self.assertIsNone(connection.revoked_at)
+        self.assertIsNone(consent.revoked_at)
+        self.assertFalse(BankSyncJob.objects.exists())
+        self.assertFalse(AuditLog.objects.exists())
 
     def connect(self):
         with patch("apps.banking.connections.sync_bank.apply_async"):

@@ -124,6 +124,10 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   confirmación y vinculación (404 para propietario/contador, 403 para lector), conservando
   factura sin vínculo, pendiente propio y ausencia de obligaciones/auditorías nuevas.
   Ensayo local de facturas y matriz: 17 pruebas aprobadas. Otros objetos siguen pendientes.
+  Conexión bancaria ajena existente: los tres roles no la ven en conexiones/trabajos propios;
+  sincronización/revocación rechazan ID ajeno bajo empresa propia (404 propietario/contador,
+  403 lector) sin revocar consentimiento, encolar trabajos ni crear auditorías.
+  Ensayo local bancario y matriz: 17 pruebas aprobadas; no equivale a auditoría ASVS completa.
 - [x] Ensayar respaldo manual y restauración aislada sin Docker: 32 tablas, restricciones,
   migraciones y recorrido Client Django comprobados. Archivos privados fuera de Git;
   no acredita UI, cifrado ni copia externa. No activar respaldo diario.
