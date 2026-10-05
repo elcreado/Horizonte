@@ -8,6 +8,10 @@ antes de crear el servicio; el repositorio existente por sí solo no acredita un
 La revisión local no detectó modelos sin migraciones. `.gitattributes` fija finales LF para los
 scripts bash; el script de compilación se normalizó para evitar errores CRLF en Linux.
 Estas comprobaciones no sustituyen una compilación y arranque reales en Render.
+La rama local `codex/v1-hosted` contiene el commit `3db1efb` con el código preparado.
+El intento de publicación fue rechazado por la revisión automática porque la autorización no
+identificaba explícitamente GitHub `elcreado/Horizonte` como destino de publicación del código
+y documentación. No se publicó esta rama; queda pendiente la autorización directa del usuario.
 
 - Render Free: una web Python sirve Django/React y un proceso separado consume la cola en BD.
   No se crea worker de pago ni Redis. Las tareas permanecen en PostgreSQL cuando el servicio se

@@ -306,5 +306,8 @@ Manual de uso: USER_MANUAL.md. Operación: TECHNICAL_MANUAL.md. Riesgos: THREAT_
 - Prueba adicional de aislamiento aprobada: rechaza un comercio real de otra empresa,
   restringe la consulta por membresía y mantiene resoluciones independientes para CSV/XLSX,
   Mock Bank y otra empresa. Suite focalizada: 13 pruebas aprobadas (incluye fixtures de importación).
+- Protección CSRF verificada con sesión Django real: la escritura sin token devuelve 403 y
+  no crea alias; con cookie y token válidos crea una asignación y una auditoría. Módulo: 14
+  pruebas aprobadas. No representa todavía la validación de cookies HTTPS en Render.
 - Pendiente: prueba visual
   y concurrencia real en PostgreSQL. El inventario de API sigue siendo parcial.

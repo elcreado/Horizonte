@@ -1,4 +1,5 @@
 from django.test import TestCase
+from rest_framework.test import APIClient
 
 from apps.accounts.models import AuditLog, Company, CompanyMember
 from apps.banking.merchants import resolve_merchants
@@ -10,6 +11,24 @@ from tests.test_imports import ImportTests
 class MerchantEditTests(TestCase):
     setUp = ImportTests.setUp
     job = ImportTests.job
+
+    def test_alias_write_requires_csrf_with_real_session(self):
+        target = Merchant.objects.create(
+            company=self.company, normalized_name="TARGET", display_name="Propio"
+        )
+        client = APIClient(enforce_csrf_checks=True)
+        client.force_login(self.user)
+        url = f"/api/companies/{self.company.pk}/merchant-aliases/"
+        payload = {"merchant_id": target.pk, "provider": "manual_upload", "name": "Café 24"}
+        self.assertEqual(client.get(url).status_code, 200)
+        self.assertEqual(client.post(url, payload, format="json").status_code, 403)
+        self.assertFalse(MerchantAlias.objects.exists())
+        token = client.get("/api/auth/csrf/").json()["csrfToken"]
+        self.assertEqual(
+            client.post(url, payload, format="json", HTTP_X_CSRFTOKEN=token).status_code, 201
+        )
+        self.assertEqual(MerchantAlias.objects.count(), 1)
+        self.assertEqual(AuditLog.objects.filter(action="merchant.alias_assigned").count(), 1)
 
     def test_aliases_are_scoped_to_tenant_and_source(self):
         other = Company.objects.create(name="Other", nit="other-alias")
