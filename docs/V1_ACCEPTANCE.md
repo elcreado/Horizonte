@@ -1,5 +1,9 @@
 # Aceptación de la primera versión funcional
 
+El usuario ajustó el objetivo a una primera versión de escritorio simplemente funcional.
+La entrega correspondiente se describe en `DESKTOP_V1_FUNCTIONAL.md`. Esta matriz conserva
+el alcance académico/ampliado; sus pendientes no se declaran resueltos por el cambio de objetivo.
+
 Estado: incompleta. Este listado conserva RF-01 a RF-16 y RNF de README/SPECS;
 no declara cierre por tener CI verde. Respaldo diario excluido por decisión del usuario.
 
