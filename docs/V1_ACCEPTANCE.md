@@ -120,6 +120,10 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   con movimiento ajeno y reversión con pago ajeno (incluido anidarlo bajo obligación propia).
   Todos responden 404 y mantienen pendientes, descripción y pago sin revertir.
   Esta evidencia no sustituye la revisión de otras familias ni todos los roles.
+  Facturas: ID ajeno existente bajo empresa propia rechaza consulta de vínculos (404),
+  confirmación y vinculación (404 para propietario/contador, 403 para lector), conservando
+  factura sin vínculo, pendiente propio y ausencia de obligaciones/auditorías nuevas.
+  Ensayo local de facturas y matriz: 17 pruebas aprobadas. Otros objetos siguen pendientes.
 - [x] Ensayar respaldo manual y restauración aislada sin Docker: 32 tablas, restricciones,
   migraciones y recorrido Client Django comprobados. Archivos privados fuera de Git;
   no acredita UI, cifrado ni copia externa. No activar respaldo diario.

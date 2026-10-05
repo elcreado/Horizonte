@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from apps.accounts.models import Company, CompanyMember
+from apps.accounts.models import AuditLog, Company, CompanyMember
 from apps.forecast.models import Obligation
 from apps.invoices.models import Invoice, InvoiceImport
 from apps.invoices.parser import parse_invoice
@@ -18,6 +18,50 @@ XML = (Path(__file__).resolve().parents[2] / "frontend/public/factura-ejemplo.xm
 
 
 class InvoiceTests(TestCase):
+    def test_foreign_invoice_id_cannot_be_read_confirmed_or_linked_under_own_company(self):
+        foreign = Invoice.objects.create(
+            company=self.other,
+            cufe="private-cufe",
+            number="private-number",
+            direction="in",
+            data={"issue_date": "2026-09-23", "payable": "119000.00"},
+        )
+        obligation = Obligation.objects.create(
+            company=self.company,
+            reference="own-for-link",
+            description="Own",
+            direction="in",
+            due_date="2026-10-15",
+            outstanding_amount="100",
+        )
+        for role in ("owner", "accountant", "viewer"):
+            self.member.role = role
+            self.member.save(update_fields=["role"])
+            with self.subTest(role=role):
+                url = f"{self.base}{foreign.pk}/obligation-link/"
+                self.assertEqual(self.client.get(url).status_code, 404)
+                expected = 403 if role == "viewer" else 404
+                self.assertEqual(
+                    self.client.post(
+                        url, {"obligation_id": obligation.pk}, format="json"
+                    ).status_code,
+                    expected,
+                )
+                self.assertEqual(
+                    self.client.post(
+                        f"{self.base}{foreign.pk}/confirm/",
+                        {"due_date": "2026-10-15", "outstanding_amount": "100"},
+                        format="json",
+                    ).status_code,
+                    expected,
+                )
+        foreign.refresh_from_db()
+        obligation.refresh_from_db()
+        self.assertIsNone(foreign.obligation_id)
+        self.assertEqual(str(obligation.outstanding_amount), "100.00")
+        self.assertEqual(Obligation.objects.count(), 1)
+        self.assertFalse(AuditLog.objects.exists())
+
     def setUp(self):
         self.company = Company.objects.create(name="Demo", nit="SYNTHETIC-001")
         self.other = Company.objects.create(name="Other", nit="OTHER")
