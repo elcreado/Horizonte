@@ -34,6 +34,9 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
 - [ ] Validar pronósticos probabilísticos y confianza (RF-11/RF-15). Cuantiles experimentales
   y candidato de intervalos reservados existen; cobertura agregada sintética no demuestra
   calibración por perfil. Los límites corregidos no son P10/P90 calibrados ni probabilidad de déficit.
+  Cobertura muestra las cuatro etapas BN-06 según amplitud observada por cuenta
+  (0–29, 30–89, 90–364 y 365 días en su ventana anual), distinguiendo días activos.
+  Las etiquetas no prueban completitud ni precisión y no cierran por sí solas RF-15.
 - [ ] Verificar alertas, dashboard y gráficos exigidos (RF-12/RF-13/RF-14): escenarios contractuales,
   históricos, categorías y calendario implementados; riesgo probabilístico/factores y confianza
   deben cumplir el alcance original con evidencia, sin confundir umbral determinístico y probabilidad.
