@@ -2,7 +2,7 @@
 
 > **Estado consolidado vigente:** [matriz de implementación](docs/IMPLEMENTATION_STATUS.md). Incluye obligaciones, conciliación e importación XML; el objetivo completo sigue en desarrollo. La [hoja de ruta de entregables](docs/ROADMAP_ENTREGABLES.md) detalla los pasos para la primera versión funcional, la viabilidad de escritorio y las metas de una segunda versión móvil.
 
-> **Estado v0.1:** base ejecutable con Inicio público, Django/React, sesión, aislamiento por empresa, datos sintéticos y escenario de obligaciones a 30/60/90 días. Este documento describe el alcance objetivo de la tesis, no funcionalidades ya terminadas.
+> **Prueba vigente sin Docker:** servidor Render Free con PostgreSQL en Supabase y cliente Windows Electron/NSIS. Inicio es público. Importaciones CSV/XLSX/XML, Mock Bank, obligaciones, conciliaciones y escenarios de caja están implementados; los modelos estadísticos siguen experimentales. [Manual de uso](docs/USER_MANUAL.md), [instalador y huella](docs/DESKTOP_RELEASE.md) y [aceptación pendiente](docs/V1_ACCEPTANCE.md). El objetivo completo todavía no está cerrado.
 >
 > **Arranque y acciones externas:** [docs/TESTING.md](docs/TESTING.md). **Convenciones:** [CODESTYLE.md](CODESTYLE.md). **Revisión:** [docs/REVISION.md](docs/REVISION.md). La demo no requiere claves bancarias ni servicios de pago.
 
@@ -119,7 +119,7 @@ El sistema **NO**:
 | RNF-05 | Escalabilidad | Los workers de procesamiento deben poder ampliarse horizontalmente. |
 | RNF-06 | Trazabilidad | Toda sincronización registra usuario, integración, fecha, resultado y errores. |
 | RNF-07 | Aislamiento | Una empresa nunca puede visualizar información de otra (multi-tenant seguro). |
-| RNF-08 | Recuperación | Backups automáticos de la base de datos. |
+| RNF-08 | Recuperación | Respaldo manual y restauración verificada. El usuario excluyó el respaldo diario automático para esta entrega. |
 | RNF-09 | Portabilidad | Despliegue reproducible con Docker / Docker Compose. |
 | RNF-10 | Accesibilidad | SPA responsiva para escritorio y móvil (web). |
 
@@ -274,8 +274,8 @@ proyecto/
 
 ---
 
-**CSV implementado:** carga idempotente, validación y procesamiento Celery con registro de resultado. **Siguiente fase:** clasificación, facturación XML, conciliación y baseline estadístico. La estructura anterior es objetivo; los módulos se incorporan por fases. La antigüedad del historial no garantiza precisión: también se evaluarán calidad, cobertura y resultados fuera de muestra.
+**Pipeline implementado:** carga CSV/XLSX idempotente, validación y procesamiento asíncrono con registro de resultado; XML con revisión, obligaciones y conciliación reversible. El servidor gratuito utiliza cola persistente en PostgreSQL; Celery sigue como alternativa de despliegue. La estructura anterior es objetivo. La antigüedad del historial no garantiza precisión: se requieren calidad, cobertura y resultados fuera de muestra.
 
-La importación CSV ya puede probarse desde el dashboard con PostgreSQL/Redis y el worker local. Ver docs/TESTING.md para formato y arranque.
+La aplicación alojada y el instalador permiten probar las importaciones sin Docker ni Redis local. Ver [manual de uso](docs/USER_MANUAL.md); para desarrollo local, [arranque y pruebas](docs/TESTING.md).
 
-**Clasificación implementada:** reglas automáticas en nuevas importaciones, lista paginada, corrección manual por rol y reglas recordadas por empresa. La siguiente fase es facturación XML y conciliación; ML y evaluación estadística siguen pendientes.
+**Clasificación implementada:** reglas automáticas en nuevas importaciones, lista paginada, corrección manual por rol, reglas recordadas por empresa y sugerencias TF-IDF experimentales. La validación con corpus representativo y la exactitud general siguen pendientes.

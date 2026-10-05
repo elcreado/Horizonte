@@ -2,7 +2,7 @@
 
 > **Estado consolidado vigente:** [matriz de implementación](docs/IMPLEMENTATION_STATUS.md). Incluye obligaciones, conciliación e importación XML; el objetivo completo sigue en desarrollo.
 
-> **Estado v0.1:** sesión Django + CSRF, membresías de lectura, saldos COP, movimientos sintéticos y escenario determinístico. SQLite para arranque local; PostgreSQL para integración. ETL, facturación y modelos probabilísticos pendientes. [Estado y pruebas](docs/TESTING.md) · [Decisiones de coherencia](docs/REVISION.md).
+> **Estado de ejecución vigente:** Django + CSRF y React alojados en Render Free, PostgreSQL en Supabase y cliente Windows Electron/NSIS para pruebas sin Docker. ETL CSV/XLSX/XML, Mock Bank, roles, obligaciones y conciliación reversible implementados. Pronósticos y cuantiles estadísticos experimentales, sin calibración demostrada. [Manual](docs/USER_MANUAL.md) · [Aceptación pendiente](docs/V1_ACCEPTANCE.md). Respaldo manual únicamente: no activar respaldo diario automático.
 
 
 **Plataforma de Inteligencia de Liquidez para Microempresas**
@@ -583,12 +583,12 @@ El MVP **no incluye**: transferencias, pagos, móvil nativo, contabilidad oficia
 
 ### Navegación pública implementada
 
-Inicio es accesible sin sesión y explica el alcance del producto; login y dashboard son vistas separadas. Acceder al dashboard sin sesión presenta el formulario de acceso. Cerrar sesión vuelve a Inicio. Las APIs financieras conservan autenticación y filtrado por empresa. PostgreSQL y Redis ya fueron verificados localmente; no hay todavía jobs de integración.
+Inicio es accesible sin sesión y explica el alcance del producto; login y dashboard son vistas separadas. Acceder al dashboard sin sesión presenta el formulario de acceso. Cerrar sesión vuelve a Inicio. Las APIs financieras conservan autenticación y filtrado por empresa. El despliegue gratuito procesa integraciones con cola persistente en PostgreSQL; Redis no es requisito del cliente de escritorio.
 
 ### Corte CSV entregado
 
-GET /api/companies/{id}/accounts/ y GET/POST /api/companies/{id}/imports/. POST multipart devuelve 202 y un trabajo; el worker procesa el archivo fuera de HTTP. Lectura restringida al tenant; escritura solo owner/accountant, revalidada al ejecutar. Carga atómica y bloqueo por cuenta, IDs estables, conflictos rechazados, sin actualizar saldo. Registro ImportJob con usuario/fecha/checksum/resultado; CSV temporal se borra al terminar. Límites y contrato en docs/TESTING.md. XLSX, normalización/clasificador y auditoría general continúan pendientes.
+GET /api/companies/{id}/accounts/ y GET/POST /api/companies/{id}/imports/. POST multipart devuelve 202 y un trabajo; el worker procesa CSV/XLSX fuera de HTTP. Lectura restringida al tenant; escritura solo owner/accountant, revalidada al ejecutar. Carga atómica y bloqueo por cuenta, IDs estables, conflictos rechazados, sin actualizar saldo. Registro ImportJob con usuario/fecha/checksum/resultado; contenido temporal se borra al terminar. Límites y contrato en docs/TESTING.md. Normalización, clasificación y auditoría están implementadas; aceptación con corpus representativo pendiente.
 
 ### Corte de clasificación entregado
 
-GET /api/companies/{id}/movements/?page=N y PATCH /api/companies/{id}/movements/{transaction_id}/category/. Payload: category y remember (booleano). Corrección owner/accountant, aislamiento por empresa, registro ClassificationChange y regla ClassificationRule por empresa/descripción normalizada/sentido. Prioridad: regla de empresa → regla por palabra completa → Otros. Solo nuevas filas importadas se clasifican automáticamente; no sobrescribir correcciones ni modificar saldos. No incluye TF-IDF, métricas de precisión, reclasificación histórica masiva ni eliminación de reglas desde interfaz.
+GET /api/companies/{id}/movements/?page=N y PATCH /api/companies/{id}/movements/{transaction_id}/category/. Payload: category y remember (booleano). Corrección owner/accountant, aislamiento por empresa, registro ClassificationChange y regla ClassificationRule por empresa/descripción normalizada/sentido. Prioridad: regla de empresa → regla por palabra completa → Otros. Solo nuevas filas importadas se clasifican automáticamente; no sobrescribir correcciones ni modificar saldos. La interfaz permite gestionar reglas y consultar sugerencias TF-IDF experimentales con abstención; no implica exactitud validada ni reclasificación histórica masiva. Contratos vigentes en docs/openapi-inventory.json, todavía parciales.
