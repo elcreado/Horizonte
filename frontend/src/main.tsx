@@ -10,6 +10,7 @@ import { Coverage, CoverageData } from './Coverage';
 import { AccountBalances } from './AccountBalances';
 import { BankConnections } from './BankConnections';
 import { LiquidityAlert, AlertData } from './LiquidityAlert';
+import { DeficitExplanation } from './DeficitExplanation';
 import { AlertHistory } from './AlertHistory';
 const ForecastPreview = React.lazy(() => import('./ForecastPreview').then(module => ({ default: module.ForecastPreview })));
 import { Home } from './Home';
@@ -188,7 +189,7 @@ function App() {
             <tbody>{data.points.map(point => <tr key={point.date}><th scope="row">{dateLabel(point.date)}</th><td>{new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(point.balance))}</td></tr>)}</tbody>
           </table></div></details>
         </section>
-        {data.first_deficit && <aside className="warning"><strong>Revisa tus compromisos antes del {dateLabel(data.first_deficit)}.</strong><p>Las obligaciones registradas llevan el saldo por debajo de cero. Revisa el calendario de cobros y pagos que se muestra abajo.</p></aside>}
+        {data.first_deficit && <DeficitExplanation firstDeficit={data.first_deficit} asOf={data.as_of} balance={data.balance} obligations={data.obligations} money={money} dateLabel={dateLabel} />}
         {data.overdue_count > 0 && <p role="status">Hay {data.overdue_count} obligaciones vencidas o con vencimiento en la fecha de corte. Requieren una nueva fecha estimada; no se incluyen como futuros cobros o pagos.</p>}
         <div className="columns"><section className="panel"><h2>Próximos compromisos</h2><p>Fechas y valores pendientes del período</p><div className="table-wrap"><table><thead><tr><th>Concepto</th><th>Fecha</th><th>Valor</th></tr></thead><tbody>{data.obligations.map(o => <tr key={o.id}><td>{o.description}<small>{o.direction === 'in' ? 'Por cobrar' : 'Por pagar'}</small></td><td>{dateLabel(o.due_date)}</td><td className={o.direction === 'in' ? 'positive' : ''}>{o.direction === 'in' ? '+' : '−'}{money(o.amount)}</td></tr>)}</tbody></table>{!data.obligations.length && <p>No hay obligaciones en este período.</p>}</div></section>
 </div>

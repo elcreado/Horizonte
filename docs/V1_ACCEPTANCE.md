@@ -50,6 +50,10 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
 - [ ] Verificar alertas, dashboard y gráficos exigidos (RF-12/RF-13/RF-14): escenarios contractuales,
   históricos, categorías y calendario implementados; riesgo probabilístico/factores y confianza
   deben cumplir el alcance original con evidencia, sin confundir umbral determinístico y probabilidad.
+  El primer déficit del escenario muestra saldo/corte y los primeros cinco pagos por
+  vencimiento hasta esa fecha, con descripción, fecha e importe; distingue ausencia de
+  pagos y posible saldo inicial negativo. No atribuye causalidad a un único compromiso
+  ni simula aplazamientos ni calcula probabilidad; RF-12 probabilístico sigue pendiente.
 - [ ] Finalizar contratos OpenAPI de las operaciones restantes, cuerpos de error y ejemplos.
   El inventario sigue parcial; no se acepta como especificación completa para generar clientes.
   `forecast-runs` documenta envolvente, paginación, parámetros, roles, códigos de idempotencia
