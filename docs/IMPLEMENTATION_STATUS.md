@@ -6,6 +6,12 @@ pendientes históricos no sustituyen este estado vigente.
 
 ## Corte verificado del 5 de octubre
 
+- Evaluación emparejada de intervalos completada: [INTERVAL_RESULTS.md](INTERVAL_RESULTS.md).
+  Corrección temporal aumenta cobertura agregada a 0,8269/0,8296/0,8101, pero amplía
+  intervalos y no resuelve todos los perfiles (volátil a 90 días: 0,6701). Candidato offline,
+  sin garantía de cobertura ni probabilidades de déficit. Corpus independiente pendiente.
+  Suite local vigente: 195 pruebas, 190 aprobadas y 5 omitidas; Ruff aprobado.
+
 - Render Free `horizonte-demo` está publicado en https://horizonte-demo.onrender.com,
   conectado a PostgreSQL de Supabase mediante Session pooler con TLS. Inicio y API de salud
   respondieron 200. Sesión, importación CSV, Mock Bank y confirmación XML comprobados por HTTP.
