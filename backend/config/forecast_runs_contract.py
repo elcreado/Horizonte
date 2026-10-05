@@ -1,6 +1,7 @@
 """Envolvente de ejecuciones: las instantáneas versionadas siguen siendo JSON parcial."""
 
 from .auth_contracts import object_response
+from .forecast_result_contract import forecast_result_schema
 
 
 def apply_forecast_runs_contract(path, method, operation):
@@ -18,11 +19,7 @@ def apply_forecast_runs_contract(path, method, operation):
                 "additionalProperties": True,
                 "description": "Instantánea versionada congelada; esquema interno pendiente. Incluye source_digest y entradas del cálculo.",
             },
-            "result": {
-                "type": "object",
-                "additionalProperties": True,
-                "description": "Resultado experimental congelado, incluidos puntos y cuantiles si existían. Esquema interno pendiente; no asumir calibración ni probabilidad de déficit.",
-            },
+            "result": forecast_result_schema(),
         }
     )
     operation["x-contract-status"] = "forecast-runs-envelope-documented-snapshots-pending"

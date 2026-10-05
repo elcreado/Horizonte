@@ -33,6 +33,10 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   `forecast-runs` documenta ahora envolvente, paginación, parámetros, roles y códigos de
   idempotencia; sus instantáneas `evidence`/`result` versionadas siguen con esquema interno
   pendiente. Los campos exteriores se contrastan con respuestas reales en `test_forecast_runs`.
+  El resultado interno ya documenta flujos diarios, alerta y las variantes de cuantiles
+  `unavailable`/`experimental`, comprobadas con respuestas reales (incluido híbrido 90 días).
+  Campos añadidos posteriormente son opcionales para leer ejecuciones antiguas. La evidencia
+  interna sigue pendiente; este contrato no prueba calibración ni exactitud predictiva.
 - [ ] Verificar accesibilidad, móvil web, tiempos de renderizado/p95, carga concurrente,
   disponibilidad controlada y seguridad conforme a los criterios del README/SPECS.
   HTTP 200 y una importación rápida no prueban estos requisitos.

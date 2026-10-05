@@ -12,6 +12,46 @@ from tests.test_imports import ImportTests
 class ForecastRunTests(TestCase):
     setUp = ImportTests.setUp
 
+    def test_quantile_result_matches_documented_experimental_variant(self):
+        start = self.account.balance_date - timedelta(days=269)
+        Transaction.objects.bulk_create(
+            [
+                Transaction(
+                    account=self.account,
+                    external_id=f"quantile-{offset}",
+                    date=start + timedelta(days=offset),
+                    amount="1.00",
+                    description="Variable",
+                )
+                for offset in range(270)
+            ]
+        )
+        self.account.history_complete_from = start
+        self.account.history_complete_through = self.account.balance_date
+        self.account.save()
+        response = self.client.post(
+            f"/api/companies/{self.company.pk}/forecast-runs/",
+            {"horizon": 90, "method": "hybrid_weekly"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+        result = response.json()["result"]
+        operation = build_inventory()["paths"]["/api/companies/{company_id}/forecast-runs/"]["post"]
+        schema = operation["responses"]["201"]["content"]["application/json"]["schema"][
+            "properties"
+        ]["result"]
+        self.assertEqual(set(result), set(schema["properties"]))
+        quantiles = result["quantiles"]
+        self.assertEqual(quantiles["status"], "experimental")
+        variant = schema["properties"]["quantiles"]["oneOf"][1]
+        self.assertEqual(set(quantiles), set(variant["properties"]))
+        self.assertEqual(len(result["points"]), 90)
+        point_fields = schema["properties"]["points"]["items"]["properties"]
+        for point in result["points"]:
+            self.assertEqual(set(point), set(point_fields))
+            for key in ("p10", "p50", "p90"):
+                self.assertIsInstance(point[key], str)
+
     def populate(self):
         cutoff = self.account.balance_date
         start = cutoff - timedelta(days=89)
@@ -43,6 +83,13 @@ class ForecastRunTests(TestCase):
         contract = build_inventory()["paths"]["/api/companies/{company_id}/forecast-runs/"]
         schema = contract["post"]["responses"]["201"]["content"]["application/json"]["schema"]
         self.assertEqual(set(first.json()), set(schema["properties"]))
+        result_schema = schema["properties"]["result"]
+        self.assertEqual(set(first.json()["result"]), set(result_schema["properties"]))
+        quantiles = first.json()["result"]["quantiles"]
+        self.assertEqual(quantiles["status"], "unavailable")
+        self.assertEqual(
+            set(quantiles), set(result_schema["properties"]["quantiles"]["oneOf"][0]["properties"])
+        )
         self.assertIn("snapshots-pending", contract["post"]["x-contract-status"])
         repeat = self.client.post(url, params, format="json")
         self.assertEqual(repeat.status_code, 200, repeat.data)

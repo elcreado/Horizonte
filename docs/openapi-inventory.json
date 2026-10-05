@@ -3266,8 +3266,249 @@
                           },
                           "result": {
                             "type": "object",
-                            "additionalProperties": true,
-                            "description": "Resultado experimental congelado, incluidos puntos y cuantiles si existían. Esquema interno pendiente; no asumir calibración ni probabilidad de déficit."
+                            "properties": {
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "experimental"
+                                ]
+                              },
+                              "method": {
+                                "type": "string",
+                                "enum": [
+                                  "naive",
+                                  "seasonal_naive",
+                                  "ses",
+                                  "hybrid_weekly"
+                                ]
+                              },
+                              "horizon": {
+                                "type": "integer",
+                                "enum": [
+                                  30,
+                                  60,
+                                  90
+                                ]
+                              },
+                              "as_of": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "training_start": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "training_days": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "observed_movements": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "excluded_recurring_movements": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "balance": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "known_future_obligations": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "estimated_recurrence_occurrences": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "points": {
+                                "type": "array",
+                                "minItems": 30,
+                                "maxItems": 90,
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "date": {
+                                      "type": "string",
+                                      "format": "date"
+                                    },
+                                    "known_flow": {
+                                      "type": "string",
+                                      "description": "Decimal exacto COP."
+                                    },
+                                    "estimated_flow": {
+                                      "type": "string",
+                                      "description": "Decimal exacto COP."
+                                    },
+                                    "balance": {
+                                      "type": "string",
+                                      "description": "Decimal exacto COP."
+                                    },
+                                    "recurring_flow": {
+                                      "type": "string",
+                                      "description": "Decimal exacto COP."
+                                    },
+                                    "p10": {
+                                      "type": "string",
+                                      "description": "Decimal exacto COP."
+                                    },
+                                    "p50": {
+                                      "type": "string",
+                                      "description": "Decimal exacto COP."
+                                    },
+                                    "p90": {
+                                      "type": "string",
+                                      "description": "Decimal exacto COP."
+                                    }
+                                  },
+                                  "required": [
+                                    "date",
+                                    "known_flow",
+                                    "estimated_flow",
+                                    "balance"
+                                  ],
+                                  "description": "Un día futuro. Cuantiles presentes solo cuando quantiles.status=experimental; recurring_flow puede faltar en versiones antiguas."
+                                }
+                              },
+                              "quantiles": {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "status": {
+                                        "type": "string",
+                                        "enum": [
+                                          "unavailable"
+                                        ]
+                                      },
+                                      "notice": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "status",
+                                      "notice"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "status": {
+                                        "type": "string",
+                                        "enum": [
+                                          "experimental"
+                                        ]
+                                      },
+                                      "version": {
+                                        "type": "string",
+                                        "enum": [
+                                          "weekly_empirical_errors_v1"
+                                        ]
+                                      },
+                                      "historical_origins": {
+                                        "type": "integer",
+                                        "minimum": 0
+                                      },
+                                      "history_days": {
+                                        "type": "integer",
+                                        "minimum": 0
+                                      },
+                                      "origin_step_days": {
+                                        "type": "integer",
+                                        "minimum": 0
+                                      },
+                                      "horizon": {
+                                        "type": "integer",
+                                        "enum": [
+                                          30,
+                                          60,
+                                          90
+                                        ]
+                                      },
+                                      "last_calibration_end_index": {
+                                        "type": "integer",
+                                        "minimum": 0
+                                      },
+                                      "notice": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "status",
+                                      "version",
+                                      "historical_origins",
+                                      "history_days",
+                                      "origin_step_days",
+                                      "horizon",
+                                      "last_calibration_end_index",
+                                      "notice"
+                                    ]
+                                  }
+                                ]
+                              },
+                              "first_deficit": {
+                                "type": "string",
+                                "format": "date",
+                                "nullable": true
+                              },
+                              "minimum_balance": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "liquidity_alert": {
+                                "type": "object",
+                                "properties": {
+                                  "threshold": {
+                                    "type": "string",
+                                    "description": "Decimal exacto COP."
+                                  },
+                                  "currently_below": {
+                                    "type": "boolean"
+                                  },
+                                  "first_below": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "nullable": true
+                                  },
+                                  "projected_days_below": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  "shortfall_at_minimum": {
+                                    "type": "string",
+                                    "description": "Decimal exacto COP."
+                                  }
+                                },
+                                "required": [
+                                  "threshold",
+                                  "currently_below",
+                                  "first_below",
+                                  "projected_days_below",
+                                  "shortfall_at_minimum"
+                                ]
+                              },
+                              "notice": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "status",
+                              "method",
+                              "horizon",
+                              "as_of",
+                              "training_start",
+                              "training_days",
+                              "observed_movements",
+                              "balance",
+                              "known_future_obligations",
+                              "points",
+                              "first_deficit",
+                              "minimum_balance",
+                              "liquidity_alert",
+                              "notice"
+                            ],
+                            "description": "Resultado congelado. Los campos opcionales pueden faltar en ejecuciones anteriores. known_flow son obligaciones; estimated_flow es flujo variable; recurring_flow suma recurrencias estimadas separadas. P10/P50/P90 experimentales no calibrados no expresan probabilidad de déficit ni cobertura conjunta. No completar campos históricos ausentes con cero."
                           }
                         },
                         "required": [
@@ -3405,8 +3646,249 @@
                     },
                     "result": {
                       "type": "object",
-                      "additionalProperties": true,
-                      "description": "Resultado experimental congelado, incluidos puntos y cuantiles si existían. Esquema interno pendiente; no asumir calibración ni probabilidad de déficit."
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "experimental"
+                          ]
+                        },
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "naive",
+                            "seasonal_naive",
+                            "ses",
+                            "hybrid_weekly"
+                          ]
+                        },
+                        "horizon": {
+                          "type": "integer",
+                          "enum": [
+                            30,
+                            60,
+                            90
+                          ]
+                        },
+                        "as_of": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "training_start": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "training_days": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "observed_movements": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "excluded_recurring_movements": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "balance": {
+                          "type": "string",
+                          "description": "Decimal exacto COP."
+                        },
+                        "known_future_obligations": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "estimated_recurrence_occurrences": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "points": {
+                          "type": "array",
+                          "minItems": 30,
+                          "maxItems": 90,
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "known_flow": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "estimated_flow": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "balance": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "recurring_flow": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "p10": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "p50": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "p90": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              }
+                            },
+                            "required": [
+                              "date",
+                              "known_flow",
+                              "estimated_flow",
+                              "balance"
+                            ],
+                            "description": "Un día futuro. Cuantiles presentes solo cuando quantiles.status=experimental; recurring_flow puede faltar en versiones antiguas."
+                          }
+                        },
+                        "quantiles": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "unavailable"
+                                  ]
+                                },
+                                "notice": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "status",
+                                "notice"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "experimental"
+                                  ]
+                                },
+                                "version": {
+                                  "type": "string",
+                                  "enum": [
+                                    "weekly_empirical_errors_v1"
+                                  ]
+                                },
+                                "historical_origins": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "history_days": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "origin_step_days": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "horizon": {
+                                  "type": "integer",
+                                  "enum": [
+                                    30,
+                                    60,
+                                    90
+                                  ]
+                                },
+                                "last_calibration_end_index": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "notice": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "status",
+                                "version",
+                                "historical_origins",
+                                "history_days",
+                                "origin_step_days",
+                                "horizon",
+                                "last_calibration_end_index",
+                                "notice"
+                              ]
+                            }
+                          ]
+                        },
+                        "first_deficit": {
+                          "type": "string",
+                          "format": "date",
+                          "nullable": true
+                        },
+                        "minimum_balance": {
+                          "type": "string",
+                          "description": "Decimal exacto COP."
+                        },
+                        "liquidity_alert": {
+                          "type": "object",
+                          "properties": {
+                            "threshold": {
+                              "type": "string",
+                              "description": "Decimal exacto COP."
+                            },
+                            "currently_below": {
+                              "type": "boolean"
+                            },
+                            "first_below": {
+                              "type": "string",
+                              "format": "date",
+                              "nullable": true
+                            },
+                            "projected_days_below": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "shortfall_at_minimum": {
+                              "type": "string",
+                              "description": "Decimal exacto COP."
+                            }
+                          },
+                          "required": [
+                            "threshold",
+                            "currently_below",
+                            "first_below",
+                            "projected_days_below",
+                            "shortfall_at_minimum"
+                          ]
+                        },
+                        "notice": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "method",
+                        "horizon",
+                        "as_of",
+                        "training_start",
+                        "training_days",
+                        "observed_movements",
+                        "balance",
+                        "known_future_obligations",
+                        "points",
+                        "first_deficit",
+                        "minimum_balance",
+                        "liquidity_alert",
+                        "notice"
+                      ],
+                      "description": "Resultado congelado. Los campos opcionales pueden faltar en ejecuciones anteriores. known_flow son obligaciones; estimated_flow es flujo variable; recurring_flow suma recurrencias estimadas separadas. P10/P50/P90 experimentales no calibrados no expresan probabilidad de déficit ni cobertura conjunta. No completar campos históricos ausentes con cero."
                     }
                   },
                   "required": [
@@ -3458,8 +3940,249 @@
                     },
                     "result": {
                       "type": "object",
-                      "additionalProperties": true,
-                      "description": "Resultado experimental congelado, incluidos puntos y cuantiles si existían. Esquema interno pendiente; no asumir calibración ni probabilidad de déficit."
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "experimental"
+                          ]
+                        },
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "naive",
+                            "seasonal_naive",
+                            "ses",
+                            "hybrid_weekly"
+                          ]
+                        },
+                        "horizon": {
+                          "type": "integer",
+                          "enum": [
+                            30,
+                            60,
+                            90
+                          ]
+                        },
+                        "as_of": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "training_start": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "training_days": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "observed_movements": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "excluded_recurring_movements": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "balance": {
+                          "type": "string",
+                          "description": "Decimal exacto COP."
+                        },
+                        "known_future_obligations": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "estimated_recurrence_occurrences": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "points": {
+                          "type": "array",
+                          "minItems": 30,
+                          "maxItems": 90,
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "known_flow": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "estimated_flow": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "balance": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "recurring_flow": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "p10": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "p50": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              },
+                              "p90": {
+                                "type": "string",
+                                "description": "Decimal exacto COP."
+                              }
+                            },
+                            "required": [
+                              "date",
+                              "known_flow",
+                              "estimated_flow",
+                              "balance"
+                            ],
+                            "description": "Un día futuro. Cuantiles presentes solo cuando quantiles.status=experimental; recurring_flow puede faltar en versiones antiguas."
+                          }
+                        },
+                        "quantiles": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "unavailable"
+                                  ]
+                                },
+                                "notice": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "status",
+                                "notice"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "experimental"
+                                  ]
+                                },
+                                "version": {
+                                  "type": "string",
+                                  "enum": [
+                                    "weekly_empirical_errors_v1"
+                                  ]
+                                },
+                                "historical_origins": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "history_days": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "origin_step_days": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "horizon": {
+                                  "type": "integer",
+                                  "enum": [
+                                    30,
+                                    60,
+                                    90
+                                  ]
+                                },
+                                "last_calibration_end_index": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "notice": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "status",
+                                "version",
+                                "historical_origins",
+                                "history_days",
+                                "origin_step_days",
+                                "horizon",
+                                "last_calibration_end_index",
+                                "notice"
+                              ]
+                            }
+                          ]
+                        },
+                        "first_deficit": {
+                          "type": "string",
+                          "format": "date",
+                          "nullable": true
+                        },
+                        "minimum_balance": {
+                          "type": "string",
+                          "description": "Decimal exacto COP."
+                        },
+                        "liquidity_alert": {
+                          "type": "object",
+                          "properties": {
+                            "threshold": {
+                              "type": "string",
+                              "description": "Decimal exacto COP."
+                            },
+                            "currently_below": {
+                              "type": "boolean"
+                            },
+                            "first_below": {
+                              "type": "string",
+                              "format": "date",
+                              "nullable": true
+                            },
+                            "projected_days_below": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "shortfall_at_minimum": {
+                              "type": "string",
+                              "description": "Decimal exacto COP."
+                            }
+                          },
+                          "required": [
+                            "threshold",
+                            "currently_below",
+                            "first_below",
+                            "projected_days_below",
+                            "shortfall_at_minimum"
+                          ]
+                        },
+                        "notice": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "method",
+                        "horizon",
+                        "as_of",
+                        "training_start",
+                        "training_days",
+                        "observed_movements",
+                        "balance",
+                        "known_future_obligations",
+                        "points",
+                        "first_deficit",
+                        "minimum_balance",
+                        "liquidity_alert",
+                        "notice"
+                      ],
+                      "description": "Resultado congelado. Los campos opcionales pueden faltar en ejecuciones anteriores. known_flow son obligaciones; estimated_flow es flujo variable; recurring_flow suma recurrencias estimadas separadas. P10/P50/P90 experimentales no calibrados no expresan probabilidad de déficit ni cobertura conjunta. No completar campos históricos ausentes con cero."
                     }
                   },
                   "required": [
