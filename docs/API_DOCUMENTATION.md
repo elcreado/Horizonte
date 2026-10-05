@@ -98,3 +98,12 @@ El inventario excluye HEAD/OPTIONS implícitos. La autorización por roles, thro
 financiero debe verificarse mediante contratos y pruebas, no se infiere del archivo de rutas.
 
 Formato basado en la [especificación oficial OpenAPI 3.0.3](https://spec.openapis.org/oas/v3.0.3.html).
+## Contrato de Mock Bank
+
+El inventario incluye campos de consulta de conexiones/jobs, autorización `provider=mock`
+y `consent=true`, sincronización 202 y revocación 200. Documenta roles owner/accountant,
+conflictos 409, indisponibilidad 503, alcance sintético y diferencia entre aceptación y
+ejecución. Crear una conexión devuelve `{connection, job}`, no un ID en la raíz.
+El contrato no acredita integración con un banco externo; los cuerpos detallados de error
+y contratos restantes del inventario siguen pendientes. Exportación y siete pruebas de
+inventario aprobadas después del cambio.

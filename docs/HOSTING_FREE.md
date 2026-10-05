@@ -2,6 +2,12 @@
 
 ## Estado remoto vigente
 
+**Actualización 7c51bdc aceptada:** CI `37325123856` terminó `success`; despliegue Render
+`dep-db1r8lid0e5s7391p47g` está `live`. Inicio devuelve 200 con `Cache-Control: no-store`;
+el HTML referencia el nuevo paquete inicial. JS/CSS iniciales, módulos diferidos y paquete
+de gráficos responden 200; `/api/health/` devuelve 200 y `status: ok`. La disponibilidad de
+estos archivos no demuestra por sí sola su ejecución visual en navegador o Electron.
+
 **Factura XML remota:** documento UBL sintético adaptado al NIT de la empresa QA,
 aceptado 202 y procesado `completed`. Antes de confirmar no tenía obligación. Confirmación
 201 creó una obligación pendiente de 119000,00 COP con vencimiento 15 de octubre;

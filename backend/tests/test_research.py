@@ -4,14 +4,48 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.test import SimpleTestCase
 
+from apps.forecast.arima_candidate import ArimaFitError
 from apps.forecast.research import evaluate_dataset, research_recurrences
 from apps.forecast.synthetic import generate_dataset
 
 
 class ResearchTests(SimpleTestCase):
+    def test_arima_policy_does_not_hide_invalid_data_or_missing_dependencies(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            generate_dataset(root, companies=1, seed=7)
+            for error in (ValueError("Datos inválidos"), ImportError("Dependencia ausente")):
+                with self.subTest(error=type(error).__name__):
+                    with patch("apps.forecast.research.predict_arima", side_effect=error):
+                        with self.assertRaises(type(error)):
+                            evaluate_dataset(
+                                root, step=180, include_arima=True, arima_ses_fallback=True
+                            )
+
+    def test_arima_failure_uses_same_windows_and_records_ses_policy(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            generate_dataset(root, companies=1, seed=7)
+            with patch(
+                "apps.forecast.research.predict_arima", side_effect=ArimaFitError("No convergió")
+            ):
+                report = evaluate_dataset(
+                    root, step=180, include_arima=True, arima_ses_fallback=True
+                )
+            for horizon in (30, 60, 90):
+                rows = {
+                    row["method"]: row for row in report["metrics"] if row["horizon"] == horizon
+                }
+                candidate = rows["arima_100_ses_fallback"]
+                self.assertEqual(candidate["windows"], rows["ses"]["windows"])
+                self.assertEqual(candidate["fallback_windows"], candidate["windows"])
+                self.assertEqual(candidate["balance_mae"], rows["ses"]["balance_mae"])
+            self.assertEqual(len(report["arima_fallbacks"]), 9)
+
     def test_future_commitments_do_not_leak_into_recurrence_estimation(self):
         commitments = [
             {

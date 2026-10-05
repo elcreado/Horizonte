@@ -3,10 +3,24 @@ from decimal import Decimal
 
 def render_report(report: dict) -> str:
     manifest = report["dataset"]
+    reproduction = report.get("reproduction", {})
+    output = reproduction.get("output", "data/generated")
+    has_arima = any(row["method"].startswith("arima") for row in report["metrics"])
+    command = (
+        "python backend/manage.py research_forecast"
+        f" --companies {manifest['companies']} --seed {manifest['seed']} --step {report['step']}"
+        f" --output {output}"
+    )
+    if reproduction.get("report"):
+        command += f" --report {reproduction['report']}"
+    if has_arima:
+        command += " --include-arima"
+    if any(row["method"] == "arima_100_ses_fallback" for row in report["metrics"]):
+        command += " --arima-ses-fallback"
     lines = [
         "# Evaluación sintética de caja — corte reproducible",
         "",
-        "Generado con `python backend/manage.py research_forecast`. No requiere Docker ni APIs.",
+        f"Reproducir con `{command}`. No requiere Docker ni APIs.",
         "",
         f"Dataset: {manifest['companies']} empresas, 24 meses (2023–2024), {manifest['daily_rows']} días-empresa completos.",
         f"Semilla {manifest['seed']}; {manifest['companies_with_negative_balance']} empresas tienen saldo negativo en algún momento.",
@@ -40,15 +54,35 @@ def render_report(report: dict) -> str:
             "- Perfiles y shocks diseñados para incluir crisis; no representan su frecuencia real.",
             "- Compromisos mensuales anunciados 30 días antes y shock 7 días antes; hybrid_weekly extrapola patrones desde el pasado y no predice shocks nuevos.",
             "- No se conectan estas métricas retrospectivas a una etiqueta de confianza en la interfaz.",
-            "- Faltan comparación ARIMA/Prophet, intervalos calibrados, corpus independiente y usabilidad.",
+            "- Faltan Prophet, intervalos calibrados, corpus independiente y usabilidad."
+            if has_arima
+            else "- Faltan comparación ARIMA/Prophet, intervalos calibrados, corpus independiente y usabilidad.",
             "",
             "## Integridad",
             "",
             *[f"- `{name}`: SHA-256 `{digest}`" for name, digest in manifest["sha256"].items()],
             "",
-            "Datos y métricas sin redondear: `data/generated/manifest.json`, `daily.csv`, `obligations.csv` y `evaluation.json`.",
+            f"Datos y métricas sin redondear en `{output}`: `manifest.json`, `daily.csv`, `obligations.csv` y `evaluation.json`.",
             "Reproducir con la misma semilla y parámetros; se rechazan archivos cuyo checksum cambió.",
             "Los CSV se regeneran y están ignorados por Git; este informe queda versionado.",
         ]
     )
+    if report.get("arima_fallbacks"):
+        lines.extend(
+            [
+                "",
+                "## Respaldo explícito de ARIMA",
+                "",
+                "ARIMA(1,0,0) usa SES en ajustes fallidos. Las métricas corresponden a esta política combinada, no a ARIMA puro.",
+                "",
+            ]
+        )
+        for row in report["metrics"]:
+            if row["method"].startswith("arima"):
+                lines.append(
+                    f"- {row['horizon']} días: {row['fallback_windows']} ventanas con SES de {row['windows']} evaluadas."
+                )
+        lines.append(
+            "Cada corte y motivo está registrado en arima_fallbacks del JSON; ninguna ventana se excluye para mejorar el promedio."
+        )
     return "\n".join(lines) + "\n"

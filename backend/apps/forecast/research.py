@@ -9,6 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
 
+from .arima_candidate import ArimaFitError, predict_arima
 from .baselines import predict_baseline
 from .recurrences import detect_recurrences, expand_dates, occurrence_key
 from .recurring_forecast import estimate_recurrences
@@ -89,13 +90,27 @@ def load_dataset(directory: Path):
     return manifest, series, commitments
 
 
-def evaluate_dataset(directory: Path, *, min_train: int = 180, step: int = 30) -> dict:
+def evaluate_dataset(
+    directory: Path,
+    *,
+    min_train: int = 180,
+    step: int = 30,
+    include_arima: bool = False,
+    arima_ses_fallback: bool = False,
+) -> dict:
     if min_train < 90 or step < 1:
         raise ValueError("Entrenamiento mínimo 90 días y paso positivo.")
     manifest, series, commitments = load_dataset(directory)
     metrics = []
+    fallbacks = []
+    if arima_ses_fallback and not include_arima:
+        raise ValueError("El respaldo SES requiere incluir ARIMA.")
     for horizon in (30, 60, 90):
-        for method in ("naive", "seasonal_naive", "ses", "hybrid_weekly"):
+        methods = ("naive", "seasonal_naive", "ses", "hybrid_weekly")
+        if include_arima:
+            methods += ("arima_100_ses_fallback" if arima_ses_fallback else "arima_100",)
+        for method in methods:
+            fallback_count = 0
             absolute = squared = relative = deficit_error = Decimal("0")
             ongoing_deficit = 0
             predictions = windows = true_positive = false_positive = false_negative = (
@@ -105,9 +120,28 @@ def evaluate_dataset(directory: Path, *, min_train: int = 180, step: int = 30) -
                 for origin in range(min_train, len(rows) - horizon + 1, step):
                     cutoff = rows[origin - 1]["date"]
                     history = [row["variable"] for row in rows[:origin]]
-                    forecast = predict_baseline(
-                        history, horizon, "seasonal_naive" if method == "hybrid_weekly" else method
-                    )
+                    if method.startswith("arima_100"):
+                        try:
+                            forecast = predict_arima(history, horizon)
+                        except ArimaFitError as error:
+                            if not arima_ses_fallback:
+                                raise
+                            fallback_count += 1
+                            fallbacks.append(
+                                {
+                                    "company": company,
+                                    "cutoff": cutoff.isoformat(),
+                                    "horizon": horizon,
+                                    "reason": str(error),
+                                }
+                            )
+                            forecast = predict_baseline(history, horizon, "ses")
+                    else:
+                        forecast = predict_baseline(
+                            history,
+                            horizon,
+                            "seasonal_naive" if method == "hybrid_weekly" else method,
+                        )
                     recurring = (
                         research_recurrences(commitments[company], cutoff, horizon)
                         if method == "hybrid_weekly"
@@ -173,6 +207,7 @@ def evaluate_dataset(directory: Path, *, min_train: int = 180, step: int = 30) -
                 {
                     "horizon": horizon,
                     "method": method,
+                    "fallback_windows": fallback_count,
                     "windows": windows,
                     "predictions": predictions,
                     "balance_mae": str(absolute / predictions),
@@ -197,6 +232,7 @@ def evaluate_dataset(directory: Path, *, min_train: int = 180, step: int = 30) -
         "step": step,
         "threshold": "0",
         "metrics": metrics,
+        "arima_fallbacks": fallbacks,
         "limitations": [
             "Ventanas solapadas; los errores no son muestras independientes.",
             "Métricas agregadas sobre caja sintética; no prueba eficacia con empresas reales.",

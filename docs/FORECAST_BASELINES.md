@@ -2,6 +2,18 @@
 
 Módulo: backend/apps/forecast/baselines.py.
 
+## Comparación ARIMA completada (5 de octubre de 2026)
+
+La evaluación de 100 empresas sintéticas y 24 meses está en [ARIMA_RESULTS.md](ARIMA_RESULTS.md).
+ARIMA(1,0,0), con SES únicamente ante fallo recuperable de ajuste, comparte las mismas ventanas
+temporales que los demás métodos. Necesitó respaldo en 48/1800, 44/1700 y 43/1600 ventanas
+para 30/60/90 días. No se descartaron ventanas fallidas. En los tres horizontes su MAE de saldo
+supera al híbrido y su recall de nuevo déficit es menor; no se incorpora a las rutas de producción.
+El orden fue fijado antes de evaluar, sin selección de parámetros usando las ventanas de prueba.
+Las dependencias opcionales están en `backend/requirements-research.txt`; no requiere servicios externos.
+Esta comparación resuelve el pendiente de ARIMA(1,0,0) de las notas históricas inferiores,
+pero no valida otros órdenes, SARIMA, Prophet, datos reales ni intervalos calibrados.
+
 ## Método híbrido con recurrencias confirmadas
 
 `method=hybrid_weekly` agrega estimaciones de fechas de patrones confirmados **vigentes** al patrón
@@ -44,3 +56,29 @@ La API `GET /api/companies/{id}/experimental-forecast/?horizon=30|60|90&method=n
 El residual descuenta importes de conciliaciones activas y los movimientos de recurrencias confirmadas que tienen una obligación futura vinculada dentro del horizonte. Las obligaciones pendientes se suman una sola vez como flujos conocidos. La referencia arranca del saldo declarado, sin volver a sumar el historial. Cambiar el corte o importar nuevas filas en un periodo confirmado retira la declaración de cobertura. Los estados de la UI siguen separados: el escenario principal conserva solo obligaciones; la referencia es experimental y no incluye P10/P50/P90, validación de precisión con empresas reales ni probabilidad de déficit.
 
 Las pruebas de integración cubren falta de cobertura, suma de obligación y estimación residual, exclusión de recurrencia, aislamiento de empresa, permisos y revocación de cobertura. Las ejecuciones estadísticas guardadas incluyen serie de entrenamiento, flujos conocidos y resultado; son revisables desde el dashboard. Faltan versiones temporales de conciliaciones para evaluación histórica, comparar modelos más avanzados y calibrar intervalos antes de presentar un pronóstico probabilístico.
+## Candidato ARIMA de investigación
+
+Política opcional `--arima-ses-fallback`: registra cada fallo de ajuste y usa SES en la
+misma ventana. El método se identifica como `arima_100_ses_fallback`; sus métricas no son
+de ARIMA puro. El informe JSON guarda compañía, corte, horizonte y motivo, y cada métrica
+incluye `fallback_windows`. Prueba automatizada fuerza fallos y verifica igualdad de ventanas
+y MAE con SES, sin depender de instalar statsmodels en CI.
+
+Ya se integró la opción `--include-arima` en `research_forecast`. Piloto completado con
+cinco empresas ×24 meses, cortes de 90 días y horizontes 30/60/90; resultados en `ARIMA_PILOT.md`.
+La ejecución de 100 empresas con cortes de 30 días se detuvo ante un ajuste sin convergencia.
+No existe todavía un resultado global aceptado. Falta registrar cobertura y ventanas fallidas
+sin ocultarlas ni comparar promedios sobre conjuntos de ventanas distintos.
+
+`arima_candidate.predict_arima` implementa ARIMA(1,0,0) con constante y estacionariedad
+impuesta, orden prefijado antes de evaluar, entrenamiento mínimo de 60 días y ventana máxima
+de 730 días. Escala solo con datos de entrenamiento y devuelve importes Decimal redondeados a
+céntimos. Ajustes sin convergencia o predicciones no finitas fallan explícitamente.
+
+Dependencias locales opcionales: `pip install -r backend/requirements-research.txt`.
+Render no instala estas dependencias ni ejecuta este candidato. Se comprobó un ajuste real de
+statsmodels 0.15.0 con 180 observaciones sintéticas y 30 predicciones finitas. Falta integrarlo
+en rolling-origin y comparar 30/60/90 días sobre el dataset versionado; esta comprobación no
+demuestra mejora de precisión ni calibración. No sustituye los métodos del producto.
+
+Referencia: [API oficial ARIMA de statsmodels](https://www.statsmodels.org/stable/generated/statsmodels.tsa.arima.model.ARIMA.html).

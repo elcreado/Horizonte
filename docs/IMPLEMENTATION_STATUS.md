@@ -1,8 +1,34 @@
-# Estado vigente del entregable — 4 de octubre de 2026
+# Estado vigente del entregable — 5 de octubre de 2026
 
 **La primera versión todavía no está completa.** Esta matriz conserva el alcance de README/SPECS.
 Los cortes anteriores están en [IMPLEMENTATION_HISTORY.md](IMPLEMENTATION_HISTORY.md); sus
 pendientes históricos no sustituyen este estado vigente.
+
+## Corte verificado del 5 de octubre
+
+- Render Free `horizonte-demo` está publicado en https://horizonte-demo.onrender.com,
+  conectado a PostgreSQL de Supabase mediante Session pooler con TLS. Inicio y API de salud
+  respondieron 200. Sesión, importación CSV, Mock Bank y confirmación XML comprobados por HTTP.
+  No se necesita Docker para consumir este servicio desde el instalador.
+- Instalador actual: `desktop/release/hosted/Horizonte Setup 0.1.0.exe`, con URL alojada
+  precargada y editable. Binario de configuración verificado; instalación limpia, sesión remota
+  dentro de Electron y desinstalación siguen pendientes. No está firmado.
+- CI publicada en https://github.com/elcreado/Horizonte/actions/runs/37325123856:
+  backend, backend-postgres, frontend y desktop aprobados. Corregido el uso de TestCase
+  en pruebas que invocan el worker y limpian conexiones PostgreSQL.
+- Comparación ARIMA de 100 empresas ×24 meses terminada: [ARIMA_RESULTS.md](ARIMA_RESULTS.md).
+  No supera al híbrido en MAE ni recall de déficit en los tres horizontes. Sigue fuera de
+  producción; respaldo SES explícito y sin exclusión de ventanas fallidas. Faltan calibración
+  de intervalos, corpus independiente, evaluación de clasificación y usabilidad.
+- Frontend carga pantallas y gráficas bajo demanda; build inicial reducido y módulos remotos
+  disponibles por HTTP. Renderizado visual y recuperación de servicio dormido sin verificar.
+- OpenAPI incorpora los contratos de umbrales y del conector Mock Bank. La documentación
+  completa de errores y de operaciones restantes sigue pendiente.
+- Pruebas externas pendientes: entrega real de recuperación por correo (proveedor/remitente),
+  respaldo y restauración PostgreSQL, Windows limpio, carga/p95 y revisión visual/accesibilidad.
+
+Las entradas de distribución inferiores conservan cortes históricos: sus afirmaciones de
+ausencia de credenciales, servicio remoto o instalador alojado quedan sustituidas por este corte.
 
 ## Distribución y comprobaciones actuales
 

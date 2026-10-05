@@ -1176,15 +1176,165 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado de la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "can_manage": {
+                      "type": "boolean"
+                    },
+                    "connections": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "provider": {
+                            "type": "string",
+                            "enum": [
+                              "mock"
+                            ]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "active",
+                              "revoked"
+                            ]
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "revoked_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          },
+                          "account_id": {
+                            "type": "integer"
+                          },
+                          "consent": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "scopes": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "granted_at": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "revoked_at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "scopes",
+                              "granted_at",
+                              "revoked_at"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "provider",
+                          "status",
+                          "created_at",
+                          "revoked_at",
+                          "account_id",
+                          "consent"
+                        ]
+                      }
+                    },
+                    "jobs": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "connection_id": {
+                            "type": "integer"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "queued",
+                              "completed",
+                              "failed"
+                            ]
+                          },
+                          "created_count": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "duplicate_count": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "error": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "finished_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "connection_id",
+                          "status",
+                          "created_count",
+                          "duplicate_count",
+                          "error",
+                          "created_at",
+                          "finished_at"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "can_manage",
+                    "connections",
+                    "jobs"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía o conexión de la empresa no encontrada."
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "mock-bank-fields-documented",
+        "description": "Conexiones de la empresa y veinte jobs más recientes. Requiere membresía."
       },
       "post": {
         "operationId": "bank_connections_post",
@@ -1214,16 +1364,191 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "400": {
+            "description": "Fuente no mock o consentimiento distinto de true."
+          },
+          "409": {
+            "description": "Conexión ya activa, conflicto de identidad o cortes de cuentas no unificados."
+          },
+          "503": {
+            "description": "No se pudo persistir el trabajo y su mensaje; operación revertida."
+          },
+          "201": {
+            "description": "Resultado de la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connection": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "provider": {
+                          "type": "string",
+                          "enum": [
+                            "mock"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "revoked"
+                          ]
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "revoked_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "account_id": {
+                          "type": "integer"
+                        },
+                        "consent": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "scopes": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "granted_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "revoked_at": {
+                              "type": "string",
+                              "format": "date-time",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "scopes",
+                            "granted_at",
+                            "revoked_at"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "provider",
+                        "status",
+                        "created_at",
+                        "revoked_at",
+                        "account_id",
+                        "consent"
+                      ]
+                    },
+                    "job": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "connection_id": {
+                          "type": "integer"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "queued",
+                            "completed",
+                            "failed"
+                          ]
+                        },
+                        "created_count": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "duplicate_count": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "error": {
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "finished_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "connection_id",
+                        "status",
+                        "created_count",
+                        "duplicate_count",
+                        "error",
+                        "created_at",
+                        "finished_at"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "connection",
+                    "job"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía o conexión de la empresa no encontrada."
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "mock-bank-fields-documented",
+        "description": "Owner/accountant autoriza saldo y movimientos sintéticos; crea o reactiva conexión y solicita sincronización. Consultar status del job: 201 no acredita tarea completada.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "mock"
+                    ]
+                  },
+                  "consent": {
+                    "type": "boolean",
+                    "enum": [
+                      true
+                    ]
+                  }
+                },
+                "required": [
+                  "provider",
+                  "consent"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/api/companies/{company_id}/bank-connections/{connection_id}/revoke/": {
@@ -1263,16 +1588,96 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado de la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "provider": {
+                      "type": "string",
+                      "enum": [
+                        "mock"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "revoked"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "revoked_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "account_id": {
+                      "type": "integer"
+                    },
+                    "consent": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "scopes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "granted_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "revoked_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "scopes",
+                        "granted_at",
+                        "revoked_at"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "provider",
+                    "status",
+                    "created_at",
+                    "revoked_at",
+                    "account_id",
+                    "consent"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía o conexión de la empresa no encontrada."
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "mock-bank-fields-documented",
+        "description": "Owner/accountant revoca consentimiento; cancela jobs pendientes. Repetir la revocación es idempotente; conserva movimientos previos."
       }
     },
     "/api/companies/{company_id}/bank-connections/{connection_id}/sync/": {
@@ -1312,16 +1717,80 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "409": {
+            "description": "Conexión revocada o job pendiente."
+          },
+          "503": {
+            "description": "Cola no disponible; puede devolver job fallido o error de persistencia."
+          },
+          "202": {
+            "description": "Resultado de la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "connection_id": {
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "completed",
+                        "failed"
+                      ]
+                    },
+                    "created_count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "duplicate_count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "finished_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "connection_id",
+                    "status",
+                    "created_count",
+                    "duplicate_count",
+                    "error",
+                    "created_at",
+                    "finished_at"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía o conexión de la empresa no encontrada."
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "mock-bank-fields-documented",
+        "description": "Owner/accountant solicita sincronización asíncrona. 202 significa queued, no ejecución completada."
       }
     },
     "/api/companies/{company_id}/classification-rules/": {

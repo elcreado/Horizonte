@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny
 
 from .auth_contracts import apply_auth_contract
 from .banking_contracts import apply_banking_contract
+from .connection_contracts import apply_connection_contract
 from .invoice_contracts import apply_invoice_contract
 from .merchant_contracts import apply_merchant_contract
 from .movement_contracts import apply_movement_contract
@@ -81,6 +82,7 @@ def build_inventory() -> dict:
             apply_platform_contract(path, method, operation)
             apply_invoice_contract(path, method, operation)
             apply_threshold_contract(path, method, operation)
+            apply_connection_contract(path, method, operation)
             operations[method] = operation
         paths[path] = operations
     return {
