@@ -6,10 +6,17 @@ pendientes históricos no sustituyen este estado vigente.
 
 ## Corte verificado del 5 de octubre
 
+- OpenAPI incorpora histórico GET y equipo GET/POST, miembro PATCH/DELETE y nombre PATCH:
+  entradas, respuestas exitosas, paginación, roles y regla del último propietario activo.
+  Los cuerpos completos de error del equipo permanecen pendientes.
+
 - Histórico incorpora gráfico horizontal de ingresos/egresos por categoría y conserva tabla
   accesible de importes. Importación completada y corrección de categoría notifican revisión
   financiera; histórico y movimientos se actualizan sin recarga manual. Peticiones canceladas
-  no actualizan estos componentes. TypeScript/build aprobados; QA visual y despliegue pendientes.
+  no actualizan estos componentes. TypeScript/build y CI aprobados
+  (https://github.com/elcreado/Horizonte/actions/runs/37331157829). Commit `9284168`
+  desplegado en Render: Inicio, salud y módulo History responden 200; bundle actual comprobado.
+  QA visual pendiente: herramienta vuelve a fallar al iniciar por sandbox Windows.
 
 - Respaldo real de Supabase autorizado y completado con PostgreSQL 18: archivo custom local
   de 238.147 bytes, checksum y lectura de índice comprobados, fuera de Git. Sin cifrado.

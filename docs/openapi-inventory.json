@@ -8,7 +8,7 @@
   "servers": [
     {
       "url": "/",
-      "description": "Mismo origen que la aplicación; sin servidor remoto publicado."
+      "description": "Mismo origen que la aplicación web o el servicio alojado."
     }
   ],
   "paths": {
@@ -2115,15 +2115,168 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Histórico mensual y por categorías, sin paginación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "start": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "as_of": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "first_transaction": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "notice": {
+                      "type": "string"
+                    },
+                    "months": {
+                      "type": "array",
+                      "minItems": 12,
+                      "maxItems": 12,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "month": {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}$"
+                          },
+                          "income": {
+                            "type": "string",
+                            "description": "Importe decimal exacto COP; egresos como magnitud positiva."
+                          },
+                          "expense": {
+                            "type": "string",
+                            "description": "Importe decimal exacto COP; egresos como magnitud positiva."
+                          },
+                          "net": {
+                            "type": "string",
+                            "description": "Importe decimal exacto COP; egresos como magnitud positiva."
+                          },
+                          "count": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        },
+                        "required": [
+                          "month",
+                          "income",
+                          "expense",
+                          "net",
+                          "count"
+                        ]
+                      }
+                    },
+                    "categories": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "category": {
+                            "type": "string"
+                          },
+                          "income": {
+                            "type": "string",
+                            "description": "Importe decimal exacto COP; egresos como magnitud positiva."
+                          },
+                          "expense": {
+                            "type": "string",
+                            "description": "Importe decimal exacto COP; egresos como magnitud positiva."
+                          }
+                        },
+                        "required": [
+                          "category",
+                          "income",
+                          "expense"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "start",
+                    "as_of",
+                    "first_transaction",
+                    "count",
+                    "notice",
+                    "months",
+                    "categories"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente o rechazada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa o membresía no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Sin cuentas, cortes distintos o moneda distinta de COP.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "history-fields-documented",
+        "description": "Todos los roles de empresa pueden consultar. Doce meses hasta el corte común de cuentas COP, inclusive; mes actual posiblemente parcial. Mes sin filas se muestra con ceros y count=0, sin afirmar ausencia de actividad. Solo movimientos de esta empresa; neto mensual no equivale a saldo bancario. Categorías en orden alfabético."
       }
     },
     "/api/companies/{company_id}/imports/": {
@@ -4173,16 +4326,63 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Nombre de empresa actualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida, usuario no activo, membresía duplicada o último propietario."
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o mutación sin rol propietario."
+          },
+          "404": {
+            "description": "Empresa/membresía ausentes, miembro ajeno o página inexistente."
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "team-fields-documented",
+        "description": "Consulta del equipo para todos los roles. Alta, cambio de rol, baja y nombre reservados a propietarios de esta empresa y auditados. Las mutaciones se serializan por empresa; no se puede retirar ni degradar al último propietario activo. Añadir requiere usuario activo existente y sin membresía previa; no envía invitación.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/api/companies/{company_id}/obligations/": {
@@ -4661,18 +4861,102 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Página de 20 miembros, orden por ID ascendente."
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Equipo paginado y capacidad de administración.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "owner",
+                              "accountant",
+                              "viewer"
+                            ]
+                          },
+                          "active": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "username",
+                          "role",
+                          "active"
+                        ]
+                      }
+                    },
+                    "can_manage": {
+                      "type": "boolean"
+                    },
+                    "my_membership_id": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "results",
+                    "can_manage",
+                    "my_membership_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida, usuario no activo, membresía duplicada o último propietario."
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o mutación sin rol propietario."
+          },
+          "404": {
+            "description": "Empresa/membresía ausentes, miembro ajeno o página inexistente."
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "team-fields-documented",
+        "description": "Consulta del equipo para todos los roles. Alta, cambio de rol, baja y nombre reservados a propietarios de esta empresa y auditados. Las mutaciones se serializan por empresa; no se puede retirar ni degradar al último propietario activo. Añadir requiere usuario activo existente y sin membresía previa; no envía invitación."
       },
       "post": {
         "operationId": "team_post",
@@ -4702,16 +4986,77 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "201": {
+            "description": "Membresía creada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "accountant",
+                        "viewer"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "role"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida, usuario no activo, membresía duplicada o último propietario."
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o mutación sin rol propietario."
+          },
+          "404": {
+            "description": "Empresa/membresía ausentes, miembro ajeno o página inexistente."
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "team-fields-documented",
+        "description": "Consulta del equipo para todos los roles. Alta, cambio de rol, baja y nombre reservados a propietarios de esta empresa y auditados. Las mutaciones se serializan por empresa; no se puede retirar ni degradar al último propietario activo. Añadir requiere usuario activo existente y sin membresía previa; no envía invitación.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "owner",
+                      "accountant",
+                      "viewer"
+                    ]
+                  },
+                  "username": {
+                    "type": "string",
+                    "maxLength": 150,
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "role",
+                  "username"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/api/companies/{company_id}/team/{member_id}/": {
@@ -4751,16 +5096,24 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "204": {
+            "description": "Membresía eliminada; usuario y datos financieros conservados."
+          },
+          "400": {
+            "description": "Entrada inválida, usuario no activo, membresía duplicada o último propietario."
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o mutación sin rol propietario."
+          },
+          "404": {
+            "description": "Empresa/membresía ausentes, miembro ajeno o página inexistente."
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "team-fields-documented",
+        "description": "Consulta del equipo para todos los roles. Alta, cambio de rol, baja y nombre reservados a propietarios de esta empresa y auditados. Las mutaciones se serializan por empresa; no se puede retirar ni degradar al último propietario activo. Añadir requiere usuario activo existente y sin membresía previa; no envía invitación."
       },
       "patch": {
         "operationId": "change_member_patch",
@@ -4798,16 +5151,47 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "204": {
+            "description": "Rol actualizado; sin cuerpo."
+          },
+          "400": {
+            "description": "Entrada inválida, usuario no activo, membresía duplicada o último propietario."
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o mutación sin rol propietario."
+          },
+          "404": {
+            "description": "Empresa/membresía ausentes, miembro ajeno o página inexistente."
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "team-fields-documented",
+        "description": "Consulta del equipo para todos los roles. Alta, cambio de rol, baja y nombre reservados a propietarios de esta empresa y auditados. Las mutaciones se serializan por empresa; no se puede retirar ni degradar al último propietario activo. Añadir requiere usuario activo existente y sin membresía previa; no envía invitación.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "owner",
+                      "accountant",
+                      "viewer"
+                    ]
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/api/health/": {

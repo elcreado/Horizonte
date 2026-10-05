@@ -9,10 +9,12 @@ from rest_framework.permissions import AllowAny
 from .auth_contracts import apply_auth_contract
 from .banking_contracts import apply_banking_contract
 from .connection_contracts import apply_connection_contract
+from .history_contract import apply_history_contract
 from .invoice_contracts import apply_invoice_contract
 from .merchant_contracts import apply_merchant_contract
 from .movement_contracts import apply_movement_contract
 from .platform_contracts import apply_platform_contract
+from .team_contracts import apply_team_contract
 from .threshold_contract import apply_threshold_contract
 
 
@@ -83,6 +85,8 @@ def build_inventory() -> dict:
             apply_invoice_contract(path, method, operation)
             apply_threshold_contract(path, method, operation)
             apply_connection_contract(path, method, operation)
+            apply_history_contract(path, method, operation)
+            apply_team_contract(path, method, operation)
             operations[method] = operation
         paths[path] = operations
     return {
@@ -95,7 +99,7 @@ def build_inventory() -> dict:
         "servers": [
             {
                 "url": "/",
-                "description": "Mismo origen que la aplicación; sin servidor remoto publicado.",
+                "description": "Mismo origen que la aplicación web o el servicio alojado.",
             }
         ],
         "paths": dict(sorted(paths.items())),

@@ -1,6 +1,17 @@
 # Documentación API: inventario parcial
 
 `openapi-inventory.json` registra las rutas reales de Django en formato OpenAPI 3.0.3.
+
+El histórico GET `/api/companies/{company_id}/history/` documenta sus doce meses,
+importes decimales como texto, categorías, primera fecha anulable y errores 403/404/409.
+La respuesta diferencia meses sin registros y mes de corte parcial; no interpreta el neto
+como saldo bancario. El contrato permite consulta a todos los roles de la empresa.
+
+Los contratos de equipo GET/POST, miembro PATCH/DELETE y nombre de empresa PATCH
+incluyen entradas derivadas de serializadores, campos de respuesta, páginas de 20 miembros,
+capacidades por rol y protección del último propietario activo. Mutaciones reservadas a
+propietarios; no se envían invitaciones ni se eliminan datos financieros al retirar membresía.
+Las respuestas exitosas están descritas; los cuerpos detallados de errores aún están pendientes.
 Actualmente contiene 48 rutas y 61 operaciones, identificadores únicos, parámetros de ruta,
 distinción entre acceso público y cookie de sesión, y cabecera CSRF para métodos mutantes.
 
