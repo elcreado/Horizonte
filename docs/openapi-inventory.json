@@ -82,6 +82,98 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Sesión ausente/rechazada o CSRF inválido. En endpoints públicos protegidos por csrf_protect, el rechazo puede ser HTML.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Página de rechazo CSRF de Django; no interpretar como JSON."
+              }
+            }
+          },
+          "400": {
+            "description": "Credenciales, token, formato JSON o validación de campos inválidos; detail o errores por campo/non_field_errors.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Tipo de contenido no admitido por el parser.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Límite persistente alcanzado; esperar Retry-After. Login/registro comparten límite y recuperación/reset otro.",
+            "headers": {
+              "Retry-After": {
+                "description": "Segundos antes de reintentar.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
         "x-contract-status": "auth-fields-documented",
@@ -137,6 +229,24 @@
           },
           "204": {
             "description": "Cierra la sesión; respuesta sin cuerpo."
+          },
+          "403": {
+            "description": "Sesión ausente/rechazada o CSRF inválido. En endpoints públicos protegidos por csrf_protect, el rechazo puede ser HTML.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
         "x-contract-status": "auth-fields-documented",
@@ -178,6 +288,24 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Sesión ausente/rechazada o CSRF inválido. En endpoints públicos protegidos por csrf_protect, el rechazo puede ser HTML.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
         "x-contract-status": "auth-fields-documented",
@@ -215,6 +343,24 @@
                   "required": [
                     "username",
                     "email"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente/rechazada o CSRF inválido. En endpoints públicos protegidos por csrf_protect, el rechazo puede ser HTML.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
                   ]
                 }
               }
@@ -264,6 +410,65 @@
                   "required": [
                     "username",
                     "email"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente/rechazada o CSRF inválido. En endpoints públicos protegidos por csrf_protect, el rechazo puede ser HTML.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Credenciales, token, formato JSON o validación de campos inválidos; detail o errores por campo/non_field_errors.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Tipo de contenido no admitido por el parser.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
                   ]
                 }
               }
@@ -350,6 +555,116 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Sesión ausente/rechazada o CSRF inválido. En endpoints públicos protegidos por csrf_protect, el rechazo puede ser HTML.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Página de rechazo CSRF de Django; no interpretar como JSON."
+              }
+            }
+          },
+          "400": {
+            "description": "Credenciales, token, formato JSON o validación de campos inválidos; detail o errores por campo/non_field_errors.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Tipo de contenido no admitido por el parser.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Límite persistente alcanzado; esperar Retry-After. Login/registro comparten límite y recuperación/reset otro.",
+            "headers": {
+              "Retry-After": {
+                "description": "Segundos antes de reintentar.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo encolar la recuperación; no demuestra existencia del usuario ni entrega de correo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
         "x-contract-status": "auth-fields-documented",
@@ -420,6 +735,98 @@
                   "required": [
                     "username",
                     "company_id"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente/rechazada o CSRF inválido. En endpoints públicos protegidos por csrf_protect, el rechazo puede ser HTML.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Página de rechazo CSRF de Django; no interpretar como JSON."
+              }
+            }
+          },
+          "400": {
+            "description": "Credenciales, token, formato JSON o validación de campos inválidos; detail o errores por campo/non_field_errors.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Tipo de contenido no admitido por el parser.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Límite persistente alcanzado; esperar Retry-After. Login/registro comparten límite y recuperación/reset otro.",
+            "headers": {
+              "Retry-After": {
+                "description": "Segundos antes de reintentar.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
                   ]
                 }
               }
@@ -532,6 +939,98 @@
           },
           "200": {
             "description": "Token vigente y confirmación coincidente; validadores de contraseña Django. Cambiar contraseña invalida token y sesiones anteriores; vence en una hora.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente/rechazada o CSRF inválido. En endpoints públicos protegidos por csrf_protect, el rechazo puede ser HTML.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Página de rechazo CSRF de Django; no interpretar como JSON."
+              }
+            }
+          },
+          "400": {
+            "description": "Credenciales, token, formato JSON o validación de campos inválidos; detail o errores por campo/non_field_errors.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Tipo de contenido no admitido por el parser.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Límite persistente alcanzado; esperar Retry-After. Login/registro comparten límite y recuperación/reset otro.",
+            "headers": {
+              "Retry-After": {
+                "description": "Segundos antes de reintentar.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -697,6 +1196,65 @@
                   "required": [
                     "id",
                     "name"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente/rechazada o CSRF inválido. En endpoints públicos protegidos por csrf_protect, el rechazo puede ser HTML.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Credenciales, token, formato JSON o validación de campos inválidos; detail o errores por campo/non_field_errors.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Tipo de contenido no admitido por el parser.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
                   ]
                 }
               }

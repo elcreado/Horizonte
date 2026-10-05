@@ -9,6 +9,7 @@ from rest_framework.permissions import AllowAny
 from .alert_history_contract import apply_alert_history_contract
 from .audit_contract import apply_audit_contract
 from .auth_contracts import apply_auth_contract
+from .auth_error_contract import apply_auth_error_contract
 from .banking_contracts import apply_banking_contract
 from .basic_queries_contract import apply_basic_queries_contract
 from .calendar_contract import apply_calendar_contract
@@ -90,6 +91,7 @@ def build_inventory() -> dict:
                 )
                 operation["x-request-schema-pending"] = True
             apply_auth_contract(path, method, operation)
+            apply_auth_error_contract(path, method, operation)
             apply_banking_contract(path, method, operation)
             apply_merchant_contract(path, method, operation)
             apply_movement_contract(path, method, operation)

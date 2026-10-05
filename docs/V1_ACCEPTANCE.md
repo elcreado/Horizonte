@@ -57,6 +57,9 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   queda como inventario de rutas; esto no equivale a completar errores/ejemplos ni revisar
   todos los esquemas históricos. Se corrigió el pendiente candidato para serializar Decimal
   como cadena, comprobado contra JSON real. Suite posterior: 205 pruebas, 200 aprobadas, 5 omitidas.
+  Errores de autenticación documentan 400/403/415/429 y 503 de recuperación; CSRF público
+  puede responder HTML, mientras sesión DRF responde JSON. Pruebas reales contrastan 400,
+  ambas formas de 403 y 415. Falta revisión equivalente de otras familias y ejemplos completos.
 - [ ] Verificar accesibilidad, móvil web, tiempos de renderizado/p95, carga concurrente,
   disponibilidad controlada y seguridad conforme a los criterios del README/SPECS.
   HTTP 200 y una importación rápida no prueban estos requisitos.
