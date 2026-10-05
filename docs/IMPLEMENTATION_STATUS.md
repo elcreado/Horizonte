@@ -9,7 +9,9 @@ pendientes históricos no sustituyen este estado vigente.
 - Historiales de alertas/pronósticos permiten reintentar consultas tras fallos y advierten
   consultar antes de repetir un guardado cuya respuesta se perdió. GET descarta respuestas
   canceladas; CSRF/POST de guardado cancelables al desmontar, sin actualizar vistas obsoletas.
-  TypeScript/build aprobados; recorrido visual de interrupción y despliegue pendientes.
+  TypeScript/build y CI aprobados (https://github.com/elcreado/Horizonte/actions/runs/37378577330).
+  Commit `ad14c65` publicado en Render, estado live: Inicio y salud 200, bundle actualizado
+  comprobado. Recorrido visual de interrupción pendiente.
 
 - OpenAPI incorpora histórico GET y equipo GET/POST, miembro PATCH/DELETE y nombre PATCH:
   entradas, respuestas exitosas, paginación, roles y regla del último propietario activo.
