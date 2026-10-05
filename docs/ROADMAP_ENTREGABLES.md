@@ -8,7 +8,7 @@
 CI del calendario `37379774142` terminó correctamente; commit `67d2350` desplegado,
 Inicio y salud HTTP 200 y bundle actualizado comprobado. Suite local: 197 pruebas,
 192 aprobadas y 5 omitidas; CI PostgreSQL aprobada. Instalador vigente:
-`desktop/release/hosted/Horizonte Setup 0.1.0.exe`, con URL remota precargada.
+`desktop/release/session-isolation/Horizonte Setup 0.1.0.exe`, con URL remota precargada.
 El usuario final necesita Windows e internet, sin Docker/Python/Node/PostgreSQL local.
 Instalación/desinstalación limpia y QA visual siguen pendientes. Respaldo manual y
 restauración estructural/Client Django verificados; respaldo diario rechazado por el usuario.

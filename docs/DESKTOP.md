@@ -2,12 +2,19 @@
 
 ## Servidor de pruebas disponible
 
-Instalador actualizado: `desktop/release/hosted/Horizonte Setup 0.1.0.exe`, Windows x64,
+Instalador actualizado: `desktop/release/session-isolation/Horizonte Setup 0.1.0.exe`, Windows x64,
 NSIS, generado el 5 de octubre de 2026 y comprobado como `NotSigned`. Prueba del ejecutable
 empaquetado: título/formulario presentes, Node oculto, HTTP externo rechazado, geolocalización,
 cámara y micrófono denegados. Resultado local:
 `.local-logs/desktop-hosted-smoke/result.json/result.json`.
 La prueba se limita al configurador local; no acredita sesión remota ni instalación real.
+
+Corrección posterior del mismo día: cambiar el servidor detiene la página anterior y borra
+almacenamiento y caché de la partición remota incluso sin ventana abierta. El smoke de Electron
+siembra una cookie sintética y verifica `sessionClearedWithoutWindow=true`; evidencia local en
+`.local-logs/desktop-session-isolation/result.json`. La misma regresión pasó en el ejecutable
+empaquetado: `.local-logs/desktop-session-isolation-packaged/result.json`. Instalador final de
+111.312.733 bytes, sin firma. No equivale a revocar sesiones en el servidor.
 
 Dirección: `https://horizonte-demo.onrender.com`. El formulario del cliente la ofrece ya
 rellenada y permite cambiarla. Pulsa Conectar para abrir Inicio; puedes registrarte con datos

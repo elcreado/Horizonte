@@ -5,7 +5,7 @@ entregable. Utilizar empresas, archivos y correos de prueba. No cargar informaci
 
 ## Instalar y conectar el escritorio
 
-- Ejecutar el instalador Windows `desktop/release/hosted/Horizonte Setup 0.1.0.exe`.
+- Ejecutar el instalador Windows `desktop/release/session-isolation/Horizonte Setup 0.1.0.exe`.
   El ejecutable se generó y su arranque se comprobó; instalación, actualización y desinstalación
   en un equipo limpio siguen pendientes. No está firmado.
 - Abrir Horizonte y escribir el origen HTTPS del servidor, sin rutas ni credenciales.

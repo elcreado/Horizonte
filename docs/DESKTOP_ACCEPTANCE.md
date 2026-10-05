@@ -6,7 +6,7 @@ Las fechas son fijas: no sustituirlas por la fecha actual del equipo.
 
 ## Preparación sin Docker
 
-- Instalar `desktop/release/hosted/Horizonte Setup 0.1.0.exe` en Windows x64.
+- Instalar `desktop/release/session-isolation/Horizonte Setup 0.1.0.exe` en Windows x64.
 - Abrir Horizonte y conectar a `https://horizonte-demo.onrender.com`.
 - Comprobar que Inicio aparece sin sesión. Si Render está despertando, esperar y usar
   Servidor → Reintentar. No hace falta instalar herramientas de desarrollo.

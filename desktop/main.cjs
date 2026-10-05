@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, dialog, session } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -9,6 +9,13 @@ let endpoint;
 const configPath = () => path.join(app.getPath('userData'), 'server.json');
 const setupUrl = pathToFileURL(path.join(__dirname, 'setup.html')).href;
 const smoke = process.argv.includes('--smoke-test');
+async function resetRemoteSession() {
+  // Detener la página anterior antes de borrar su sesión: no debe recrear cookies.
+  if (window && !window.isDestroyed()) window.destroy();
+  const remoteSession = session.fromPartition('persist:horizonte');
+  await remoteSession.clearStorageData();
+  await remoteSession.clearCache();
+}
 function denyPermissions(session) {
   session.setPermissionCheckHandler(() => false);
   session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
@@ -29,6 +36,11 @@ function openSetup() {
   setupWindow.once('ready-to-show', () => { if (!smoke) setupWindow.show(); });
   if (smoke) setupWindow.webContents.once('did-finish-load', async () => {
     try {
+      const remoteSession = session.fromPartition('persist:horizonte');
+      await remoteSession.cookies.set({ url: 'https://session-test.invalid', name: 'sessionid', value: 'synthetic', secure: true });
+      await resetRemoteSession();
+      const sessionClearedWithoutWindow = (await remoteSession.cookies.get({})).length === 0;
+      if (!sessionClearedWithoutWindow) throw new Error('Sesión persistente no eliminada');
       const result = await setupWindow.webContents.executeJavaScript(`(async () => {
         let blocked = false;
         try { await window.horizonteSetup.connect('http://example.com'); } catch { blocked = true; }
@@ -37,6 +49,7 @@ function openSetup() {
           nodeHidden: typeof window.require === 'undefined' && typeof window.process === 'undefined',
           invalidEndpointBlocked: blocked, permissions };
       })()`);
+      result.sessionClearedWithoutWindow = sessionClearedWithoutWindow;
       if (!result.input || !result.nodeHidden || !result.invalidEndpointBlocked) throw new Error('Falló smoke test');
       if (result.permissions.some(permission => permission.state !== 'denied')) throw new Error('Permisos no bloqueados');
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -92,7 +105,9 @@ else {
     ipcMain.handle('configure-server', async (event, value) => {
       if (event.senderFrame.url !== setupUrl) throw new Error('Solicitud no autorizada.');
       const next = validateEndpoint(value, !app.isPackaged);
-      if (next !== endpoint && window && !window.isDestroyed()) await window.webContents.session.clearStorageData();
+      if (next !== endpoint) {
+        await resetRemoteSession();
+      }
       fs.writeFileSync(configPath(), JSON.stringify({ endpoint: next }), { encoding: 'utf8', mode: 0o600 });
       endpoint = next;
       const opening = openApplication();
