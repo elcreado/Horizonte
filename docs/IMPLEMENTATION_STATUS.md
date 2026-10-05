@@ -6,6 +6,11 @@ pendientes históricos no sustituyen este estado vigente.
 
 ## Corte verificado del 5 de octubre
 
+- Historiales de alertas/pronósticos permiten reintentar consultas tras fallos y advierten
+  consultar antes de repetir un guardado cuya respuesta se perdió. GET descarta respuestas
+  canceladas; CSRF/POST de guardado cancelables al desmontar, sin actualizar vistas obsoletas.
+  TypeScript/build aprobados; recorrido visual de interrupción y despliegue pendientes.
+
 - OpenAPI incorpora histórico GET y equipo GET/POST, miembro PATCH/DELETE y nombre PATCH:
   entradas, respuestas exitosas, paginación, roles y regla del último propietario activo.
   Los cuerpos completos de error del equipo permanecen pendientes.
