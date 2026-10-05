@@ -8,7 +8,7 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
 - [x] Publicar servidor HTTPS con base persistente, sin herramientas locales para el usuario:
   Render Free + Supabase. Evidencia: despliegue live y recorridos HTTP documentados en HOSTING_FREE.md.
 - [x] Generar instalador Windows x64 con Inicio accesible sin sesión:
-  Electron/NSIS en `desktop/release/hosted/`. Configuración del binario comprobada;
+  Electron/NSIS en `desktop/release/session-isolation/`. Configuración del binario comprobada;
   no sustituye la prueba del usuario instalado.
 - [ ] Instalar, iniciar, cerrar, reabrir y desinstalar en Windows limpio. Probar registro,
   CSRF/sesión, empresa, CSV/XLSX, XML, Mock Bank, obligaciones, conciliación y dashboard.
@@ -40,6 +40,9 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   este contrato no prueba calibración ni exactitud predictiva.
   Se corrigió el truncamiento de horizontes JSON fraccionarios: 30.5/60.75/90.01 devuelven
   400 sin guardar una ejecución. Suite local posterior: 203 pruebas, 198 aprobadas y 5 omitidas.
+  La consulta `experimental-forecast` reutiliza el esquema del resultado y documenta
+  parámetros, permisos y errores 400/403/404/409; campos actuales requeridos comprobados
+  contra respuesta real. No guarda ejecuciones ni demuestra eficacia predictiva.
 - [ ] Verificar accesibilidad, móvil web, tiempos de renderizado/p95, carga concurrente,
   disponibilidad controlada y seguridad conforme a los criterios del README/SPECS.
   HTTP 200 y una importación rápida no prueban estos requisitos.

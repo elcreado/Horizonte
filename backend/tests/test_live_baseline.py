@@ -6,6 +6,7 @@ from apps.accounts.models import AuditLog, Company
 from apps.banking.models import Transaction
 from apps.banking.tasks import import_csv
 from apps.forecast.models import Obligation, RecurrenceOccurrence, RecurrenceReview
+from config.api_inventory import build_inventory
 from tests.test_imports import ImportTests
 
 
@@ -43,6 +44,17 @@ class LiveBaselineTests(TestCase):
         )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200, response.data)
+        operation = build_inventory()["paths"][
+            "/api/companies/{company_id}/experimental-forecast/"
+        ]["get"]
+        schema = operation["responses"]["200"]["content"]["application/json"]["schema"]
+        self.assertEqual(set(response.json()), set(schema["properties"]))
+        self.assertEqual(set(schema["required"]), set(response.json()))
+        self.assertIn("recurring_flow", schema["properties"]["points"]["items"]["required"])
+        self.assertEqual(
+            operation["responses"]["409"]["content"]["application/json"]["schema"]["required"],
+            ["detail"],
+        )
         self.assertEqual(response.data["status"], "experimental")
         self.assertEqual(response.data["points"][0]["known_flow"], "-100.00")
         self.assertEqual(response.data["points"][0]["estimated_flow"], "1.00")
