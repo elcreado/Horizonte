@@ -6,6 +6,8 @@ from django.conf import settings
 from django.urls import get_resolver
 from rest_framework.permissions import AllowAny
 
+from .alert_history_contract import apply_alert_history_contract
+from .audit_contract import apply_audit_contract
 from .auth_contracts import apply_auth_contract
 from .banking_contracts import apply_banking_contract
 from .connection_contracts import apply_connection_contract
@@ -87,6 +89,8 @@ def build_inventory() -> dict:
             apply_connection_contract(path, method, operation)
             apply_history_contract(path, method, operation)
             apply_team_contract(path, method, operation)
+            apply_audit_contract(path, method, operation)
+            apply_alert_history_contract(path, method, operation)
             operations[method] = operation
         paths[path] = operations
     return {

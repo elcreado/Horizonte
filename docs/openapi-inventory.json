@@ -1072,18 +1072,242 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Página de 10 evaluaciones; fecha/ID descendente."
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Consulta para todos los roles de la empresa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "evidence": {
+                            "type": "object",
+                            "properties": {
+                              "method": {
+                                "type": "string",
+                                "enum": [
+                                  "obligations_v1"
+                                ]
+                              },
+                              "as_of": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "horizon": {
+                                "type": "integer",
+                                "enum": [
+                                  30,
+                                  60,
+                                  90
+                                ]
+                              },
+                              "threshold": {
+                                "type": "string",
+                                "description": "Importe decimal exacto COP."
+                              },
+                              "balance": {
+                                "type": "string",
+                                "description": "Importe decimal exacto COP."
+                              },
+                              "accounts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "integer"
+                                    },
+                                    "balance": {
+                                      "type": "string",
+                                      "description": "Importe decimal exacto COP."
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "balance"
+                                  ]
+                                }
+                              },
+                              "obligations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "integer"
+                                    },
+                                    "description": {
+                                      "type": "string"
+                                    },
+                                    "date": {
+                                      "type": "string",
+                                      "format": "date"
+                                    },
+                                    "direction": {
+                                      "type": "string",
+                                      "enum": [
+                                        "in",
+                                        "out"
+                                      ]
+                                    },
+                                    "amount": {
+                                      "type": "string",
+                                      "description": "Importe decimal exacto COP."
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "description",
+                                    "date",
+                                    "direction",
+                                    "amount"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "method",
+                              "as_of",
+                              "horizon",
+                              "threshold",
+                              "balance",
+                              "accounts",
+                              "obligations"
+                            ]
+                          },
+                          "result": {
+                            "type": "object",
+                            "properties": {
+                              "threshold": {
+                                "type": "string",
+                                "description": "Importe decimal exacto COP."
+                              },
+                              "currently_below": {
+                                "type": "boolean"
+                              },
+                              "first_below": {
+                                "type": "string",
+                                "format": "date",
+                                "nullable": true
+                              },
+                              "projected_days_below": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "shortfall_at_minimum": {
+                                "type": "string",
+                                "description": "Importe decimal exacto COP."
+                              }
+                            },
+                            "required": [
+                              "threshold",
+                              "currently_below",
+                              "first_below",
+                              "projected_days_below",
+                              "shortfall_at_minimum"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "created_at",
+                          "evidence",
+                          "result"
+                        ]
+                      }
+                    },
+                    "can_save": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "results",
+                    "can_save"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o escritura sin rol permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía o página inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "alert-history-fields-documented",
+        "description": "Evalúa solo obligaciones pendientes no canceladas y saldo declarado, con umbral determinístico. Evidencia congelada; no predice cobros ni probabilidad de déficit. El mismo fingerprint reutiliza la evaluación y no duplica la auditoría. first_below es el corte si el saldo actual está bajo el umbral; en otro caso la primera fecha futura, o null. projected_days_below cuenta únicamente días futuros."
       },
       "post": {
         "operationId": "alert_history_post",
@@ -1113,16 +1337,409 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "400": {
+            "description": "Horizonte inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Sin cuentas COP con corte común.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Evaluación existente reutilizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "evidence": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "obligations_v1"
+                          ]
+                        },
+                        "as_of": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "horizon": {
+                          "type": "integer",
+                          "enum": [
+                            30,
+                            60,
+                            90
+                          ]
+                        },
+                        "threshold": {
+                          "type": "string",
+                          "description": "Importe decimal exacto COP."
+                        },
+                        "balance": {
+                          "type": "string",
+                          "description": "Importe decimal exacto COP."
+                        },
+                        "accounts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "balance": {
+                                "type": "string",
+                                "description": "Importe decimal exacto COP."
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "balance"
+                            ]
+                          }
+                        },
+                        "obligations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "date": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "direction": {
+                                "type": "string",
+                                "enum": [
+                                  "in",
+                                  "out"
+                                ]
+                              },
+                              "amount": {
+                                "type": "string",
+                                "description": "Importe decimal exacto COP."
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "description",
+                              "date",
+                              "direction",
+                              "amount"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "as_of",
+                        "horizon",
+                        "threshold",
+                        "balance",
+                        "accounts",
+                        "obligations"
+                      ]
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "threshold": {
+                          "type": "string",
+                          "description": "Importe decimal exacto COP."
+                        },
+                        "currently_below": {
+                          "type": "boolean"
+                        },
+                        "first_below": {
+                          "type": "string",
+                          "format": "date",
+                          "nullable": true
+                        },
+                        "projected_days_below": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "shortfall_at_minimum": {
+                          "type": "string",
+                          "description": "Importe decimal exacto COP."
+                        }
+                      },
+                      "required": [
+                        "threshold",
+                        "currently_below",
+                        "first_below",
+                        "projected_days_below",
+                        "shortfall_at_minimum"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "created_at",
+                    "evidence",
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Evaluación creada por propietario o contador y auditada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "evidence": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "obligations_v1"
+                          ]
+                        },
+                        "as_of": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "horizon": {
+                          "type": "integer",
+                          "enum": [
+                            30,
+                            60,
+                            90
+                          ]
+                        },
+                        "threshold": {
+                          "type": "string",
+                          "description": "Importe decimal exacto COP."
+                        },
+                        "balance": {
+                          "type": "string",
+                          "description": "Importe decimal exacto COP."
+                        },
+                        "accounts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "balance": {
+                                "type": "string",
+                                "description": "Importe decimal exacto COP."
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "balance"
+                            ]
+                          }
+                        },
+                        "obligations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "date": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "direction": {
+                                "type": "string",
+                                "enum": [
+                                  "in",
+                                  "out"
+                                ]
+                              },
+                              "amount": {
+                                "type": "string",
+                                "description": "Importe decimal exacto COP."
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "description",
+                              "date",
+                              "direction",
+                              "amount"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "as_of",
+                        "horizon",
+                        "threshold",
+                        "balance",
+                        "accounts",
+                        "obligations"
+                      ]
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "threshold": {
+                          "type": "string",
+                          "description": "Importe decimal exacto COP."
+                        },
+                        "currently_below": {
+                          "type": "boolean"
+                        },
+                        "first_below": {
+                          "type": "string",
+                          "format": "date",
+                          "nullable": true
+                        },
+                        "projected_days_below": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "shortfall_at_minimum": {
+                          "type": "string",
+                          "description": "Importe decimal exacto COP."
+                        }
+                      },
+                      "required": [
+                        "threshold",
+                        "currently_below",
+                        "first_below",
+                        "projected_days_below",
+                        "shortfall_at_minimum"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "created_at",
+                    "evidence",
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o escritura sin rol permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía o página inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "alert-history-fields-documented",
+        "description": "Evalúa solo obligaciones pendientes no canceladas y saldo declarado, con umbral determinístico. Evidencia congelada; no predice cobros ni probabilidad de déficit. El mismo fingerprint reutiliza la evaluación y no duplica la auditoría. first_below es el corte si el saldo actual está bajo el umbral; en otro caso la primera fecha futura, o null. projected_days_below cuenta únicamente días futuros.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "horizon": {
+                    "type": "integer",
+                    "enum": [
+                      30,
+                      60,
+                      90
+                    ],
+                    "default": 30
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/companies/{company_id}/audit/": {
@@ -1142,18 +1759,162 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Página de 20 registros."
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "description": "Coincidencia exacta tras retirar espacios exteriores; vacío no filtra."
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Eventos paginados del tenant autorizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "entity": {
+                            "type": "string"
+                          },
+                          "entity_id": {
+                            "type": "string"
+                          },
+                          "before": {
+                            "type": "object",
+                            "additionalProperties": true
+                          },
+                          "after": {
+                            "type": "object",
+                            "additionalProperties": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "created_at",
+                          "username",
+                          "action",
+                          "entity",
+                          "entity_id",
+                          "before",
+                          "after"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Filtro action mayor a 80 caracteres.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente o rol sin acceso a auditoría.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa, membresía o página no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "audit-fields-documented",
+        "description": "Solo propietario y contador de esta empresa. Orden descendente por fecha e ID. Snapshots before/after específicos de cada evento, sin esquema uniforme; esta ruta no modifica ni elimina registros."
       }
     },
     "/api/companies/{company_id}/bank-connections/": {

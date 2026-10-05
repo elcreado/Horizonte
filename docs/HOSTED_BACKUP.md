@@ -1,5 +1,9 @@
 # Respaldo alojado sin Docker
 
+Por decisión del usuario, no se activa respaldo diario alojado. Se conserva el respaldo
+manual y la verificación de restauración; no existe la tarea `Horizonte Hosted Backup`.
+El script histórico para Docker permanece disponible pero no fue activado en este trabajo.
+
 `scripts/hosted_backup.py` usa clientes nativos `pg_dump` y `pg_restore`. No necesita servidor
 PostgreSQL local ni Docker. Necesita instalar clientes compatibles con la versión del servidor,
 credenciales de lectura/esquema y acceso de red al Session pooler.

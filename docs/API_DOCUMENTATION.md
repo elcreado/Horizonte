@@ -2,6 +2,14 @@
 
 `openapi-inventory.json` registra las rutas reales de Django en formato OpenAPI 3.0.3.
 
+Historial de alertas GET/POST documentado con paginación de 10, evidencia congelada,
+resultado determinístico del umbral y distinción 200 reutilizada/201 creada. Solo propietario
+y contador guardan evaluaciones; todos los roles consultan. No representa probabilidad de déficit.
+
+Auditoría GET `/api/companies/{company_id}/audit/`: páginas de 20 registros, filtro exacto
+de acción, orden fecha/ID descendente y acceso exclusivo para propietario/contador.
+Los snapshots before/after dependen del evento y no tienen un esquema uniforme.
+
 El histórico GET `/api/companies/{company_id}/history/` documenta sus doce meses,
 importes decimales como texto, categorías, primera fecha anulable y errores 403/404/409.
 La respuesta diferencia meses sin registros y mes de corte parcial; no interpreta el neto
