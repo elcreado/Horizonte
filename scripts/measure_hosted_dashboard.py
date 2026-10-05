@@ -100,8 +100,11 @@ def main():
     finally:
         if logged_in:
             status, _ = request("/api/auth/logout/", {})
-            if status != 200:
+            if status not in (200, 204):
                 raise RuntimeError(f"Cierre de sesión rechazado: HTTP {status}.")
+            status, _ = request("/api/auth/me/")
+            if status != 403:
+                raise RuntimeError(f"La sesión no quedó invalidada: HTTP {status}.")
 
 
 if __name__ == "__main__":

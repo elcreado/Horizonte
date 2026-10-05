@@ -92,6 +92,11 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   secuenciales por horizonte; guarda únicamente tiempos/estados sin respuestas financieras.
   Usa mediana y percentil 95 por rango más próximo. No es prueba de render ni concurrencia;
   la cuenta y composición de datos deben contextualizar cualquier resultado.
+  Ensayo remoto del 5 de octubre, despliegue `aea6176`: cinco muestras por horizonte
+  después del calentamiento, todas HTTP 200, p95 por rango próximo 0,425/0,432/0,434 s
+  a 30/60/90 días; aquí p95 equivale al máximo por el tamaño reducido de la muestra.
+  Logout 204 y consulta posterior de sesión 403 comprobados. Es una cuenta sintética
+  de QA, no un conjunto representativo de carga; no cierra RNF-03 ni disponibilidad.
   El dashboard ofrece una tabla desplegable de fecha/saldo para todos los puntos del
   escenario, con dos decimales, caption y encabezados de fila/columna. Es una alternativa
   textual al gráfico; compilación comprobada, recorrido real con Narrador aún pendiente.
