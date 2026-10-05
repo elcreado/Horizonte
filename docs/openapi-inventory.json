@@ -5163,18 +5163,146 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}$"
+            },
+            "description": "Mes calendario válido YYYY-MM (años 0001–9999); por defecto mes local America/Bogota."
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Calendario mensual completo, sin paginación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "month": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "COP"
+                      ]
+                    },
+                    "days": {
+                      "type": "array",
+                      "minItems": 28,
+                      "maxItems": 31,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "receivable": {
+                            "type": "string",
+                            "description": "Suma decimal exacta COP de importes pendientes."
+                          },
+                          "payable": {
+                            "type": "string",
+                            "description": "Suma decimal exacta COP de importes pendientes."
+                          },
+                          "receivable_count": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "payable_count": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        },
+                        "required": [
+                          "date",
+                          "receivable",
+                          "payable",
+                          "receivable_count",
+                          "payable_count"
+                        ]
+                      }
+                    },
+                    "notice": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "month",
+                    "currency",
+                    "days",
+                    "notice"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Mes con formato o fecha inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente o rechazada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa o membresía no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "calendar-fields-documented",
+        "description": "Consulta para todos los roles de la empresa. Agrega todas las obligaciones del mes por vencimiento y sentido; excluye canceladas y pendientes iguales a cero. No depende de la paginación de obligaciones ni informa pagos realizados. Incluye todos los días del mes, con importes/conteos cero cuando no hay pendientes."
       }
     },
     "/api/companies/{company_id}/obligations/": {

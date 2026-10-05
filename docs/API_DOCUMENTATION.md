@@ -2,6 +2,10 @@
 
 `openapi-inventory.json` registra las rutas reales de Django en formato OpenAPI 3.0.3.
 
+Calendario GET `/api/companies/{company_id}/obligation-calendar/`: mes YYYY-MM,
+todos los días sin paginación, importes pendientes COP exactos, conteos y errores documentados.
+Se excluyen canceladas/saldadas; todos los roles del tenant pueden consultarlo.
+
 Historial de alertas GET/POST documentado con paginación de 10, evidencia congelada,
 resultado determinístico del umbral y distinción 200 reutilizada/201 creada. Solo propietario
 y contador guardan evaluaciones; todos los roles consultan. No representa probabilidad de déficit.
