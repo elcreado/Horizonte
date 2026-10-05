@@ -1,9 +1,12 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 
 type Account = { id: number; name: string; balance_date: string; connection_id: number | null };
 type Job = { id: number; status: string; created_count: number; duplicate_count: number; error: string };
 
-export function ImportPanel({ company, revision }: { company: string; revision: number }) {
+export function ImportPanel({ company, revision, onChanged }: { company: string; revision: number; onChanged: () => void }) {
+  const observedJobs = useRef<Map<number, string> | null>(null);
+  const notify = useRef(onChanged);
+  useEffect(() => { notify.current = onChanged; }, [onChanged]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [canImport, setCanImport] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -31,7 +34,12 @@ export function ImportPanel({ company, revision }: { company: string; revision: 
         const response = await fetch(`/api/companies/${company}/imports/`, { signal: controller.signal });
         if (!response.ok) throw new Error('No se pudo consultar el estado de las importaciones.');
         const result = await response.json();
-        if (!controller.signal.aborted) { setJobs(result); setStatusError(''); }
+        if (!controller.signal.aborted) {
+          const changed = observedJobs.current !== null && (result as Job[]).some(job => job.status === 'completed' && observedJobs.current?.get(job.id) !== 'completed');
+          observedJobs.current = new Map((result as Job[]).map(job => [job.id, job.status]));
+          setJobs(result); setStatusError('');
+          if (changed) notify.current();
+        }
       } catch (e) { if (!controller.signal.aborted) setStatusError((e as Error).message); }
       if (!controller.signal.aborted) timer = setTimeout(load, 3000);
     }
@@ -69,7 +77,7 @@ export function ImportPanel({ company, revision }: { company: string; revision: 
     {statusError && <p className="error" role="alert">{statusError} Se volverá a consultar automáticamente.</p>}
     {accountsError && <p className="error" role="alert">{accountsError} Se volverá a consultar automáticamente.</p>}
     <div aria-live="polite">{jobs.map(job => <p key={job.id}><strong>Importación #{job.id}: </strong>
-      {job.status === 'queued' ? 'En cola o procesando. Puede tardar si el servicio se está reactivando. Si no avanza, vuelve a consultar más tarde o contacta al administrador.' : job.status === 'completed' ? `${job.created_count} movimientos nuevos y ${job.duplicate_count} duplicados omitidos. Recarga el panorama para verlos.` : job.error}
+      {job.status === 'queued' ? 'En cola o procesando. Puede tardar si el servicio se está reactivando. Si no avanza, vuelve a consultar más tarde o contacta al administrador.' : job.status === 'completed' ? `${job.created_count} movimientos nuevos y ${job.duplicate_count} duplicados omitidos.` : job.error}
     </p>)}</div>
   </section>;
 }

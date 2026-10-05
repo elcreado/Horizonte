@@ -5,7 +5,7 @@ type Movement = { id: number; date: string; description: string; normalized_desc
 type Page = { count: number; next: string | null; previous: string | null; results: Movement[]; can_edit: boolean };
 const sources: Record<string, string> = { manual: 'Corregida manualmente', rule: 'Regla automática', company_rule: 'Regla de tu empresa', unclassified: 'Sin regla aplicada', existing: 'Categoría previa' };
 
-export function Movements({ company }: { company: string }) {
+export function Movements({ company, refresh, onChanged }: { company: string; refresh: number; onChanged: () => void }) {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<Page | null>(null);
   const [error, setError] = useState('');
@@ -19,10 +19,11 @@ export function Movements({ company }: { company: string }) {
     setData(null); setError(''); setEditing(null);
     fetch(`/api/companies/${company}/movements/?page=${page}`, { signal: controller.signal }).then(async response => {
       if (!response.ok) throw new Error('No se pudieron consultar los movimientos.');
-      setData(await response.json());
+      const result = await response.json();
+      if (!controller.signal.aborted) setData(result);
     }).catch(e => { if (!controller.signal.aborted) setError(e.message); });
     return () => controller.abort();
-  }, [company, page, reload]);
+  }, [company, page, reload, refresh]);
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (!editing) return;
@@ -35,7 +36,7 @@ export function Movements({ company }: { company: string }) {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.detail || 'No se pudo guardar la categoría.');
-      setEditing(null); setReload(value => value + 1); setNotice('Categoría guardada.');
+      setEditing(null); onChanged(); setNotice('Categoría guardada.');
     } catch (e) { setError((e as Error).message); }
     finally { setSaving(false); }
   }

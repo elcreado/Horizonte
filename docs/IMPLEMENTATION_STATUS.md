@@ -6,6 +6,11 @@ pendientes históricos no sustituyen este estado vigente.
 
 ## Corte verificado del 5 de octubre
 
+- Histórico incorpora gráfico horizontal de ingresos/egresos por categoría y conserva tabla
+  accesible de importes. Importación completada y corrección de categoría notifican revisión
+  financiera; histórico y movimientos se actualizan sin recarga manual. Peticiones canceladas
+  no actualizan estos componentes. TypeScript/build aprobados; QA visual y despliegue pendientes.
+
 - Respaldo real de Supabase autorizado y completado con PostgreSQL 18: archivo custom local
   de 238.147 bytes, checksum y lectura de índice comprobados, fuera de Git. Sin cifrado.
   Restauración estructural en clúster local temporal verificada: 32 tablas, cero restricciones

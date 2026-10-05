@@ -165,7 +165,7 @@ function App() {
       {company && !data && !error && <p role="status">Cargando panorama…</p>}
       {company && <AccountBalances key={company} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
       {company && <BankConnections key={company} company={company} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      {company && <ImportPanel key={company} company={company} revision={financialRevision} />}
+      {company && <ImportPanel key={company} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
       {data && <><LiquidityAlert key={company} company={company} alert={data.liquidity_alert} onChanged={() => setFinancialRevision(n => n + 1)} /><Coverage data={data.coverage} /><div className="notice"><strong>DEMO SINTÉTICA</strong> {data.notice} Corte: {dateLabel(data.as_of)}.</div>
         <section className="cards" aria-label="Resumen financiero">
           {[['Saldo disponible', data.balance], [`Por cobrar · ${horizon} días`, data.receivable], [`Por pagar · ${horizon} días`, data.payable]].map(([label, value]) => <article key={label}><p>{label}</p><strong>{money(value)}</strong><small>COP · pesos colombianos</small></article>)}
@@ -183,10 +183,10 @@ function App() {
       </>}
       {company && <AlertHistory key={company} company={company} horizon={horizon} />}
       {company && <ForecastPreview key={company} company={company} horizon={horizon} revision={financialRevision} />}
-      {company && <History key={company} company={company} />}
+      {company && <History key={company} company={company} refresh={financialRevision} />}
       {company && <Invoices key={company} company={company} onChange={() => setFinancialRevision(n => n + 1)} />}
       {company && <Obligations key={company} company={company} refresh={financialRevision} onChange={() => setFinancialRevision(n => n + 1)} />}
-      {company && <Movements key={company} company={company} />}
+      {company && <Movements key={company} company={company} refresh={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
       {company && <Merchants key={company} company={company} />}
       {company && <ClassificationRules key={company} company={company} />}
       {company && <Recurrences key={company} company={company} horizon={horizon} onChanged={() => setFinancialRevision(n => n + 1)} />}
