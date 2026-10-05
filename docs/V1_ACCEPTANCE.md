@@ -77,6 +77,11 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   objetos ajenos existentes bajo empresa propia y conservan los datos originales. Las 26
   escrituras también rechazan sesión real con cookie sin CSRF (403 con detalle CSRF), sin
   `force_authenticate`. Cuatro pruebas de la matriz aprobadas; faltan los demás objetos/roles.
+  La ampliación financiera comprueba objetos ajenos existentes bajo empresa propia:
+  lectura de candidatos, conciliaciones e historial, edición de obligación, conciliación
+  con movimiento ajeno y reversión con pago ajeno (incluido anidarlo bajo obligación propia).
+  Todos responden 404 y mantienen pendientes, descripción y pago sin revertir.
+  Esta evidencia no sustituye la revisión de otras familias ni todos los roles.
 - [x] Ensayar respaldo manual y restauración aislada sin Docker: 32 tablas, restricciones,
   migraciones y recorrido Client Django comprobados. Archivos privados fuera de Git;
   no acredita UI, cifrado ni copia externa. No activar respaldo diario.
