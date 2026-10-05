@@ -54,6 +54,39 @@ class ObligationTests(TestCase):
             format="json",
         )
 
+    def test_candidate_availability_and_history_match_contract_for_reader(self):
+        candidate_url = f"{self.base}{self.obligation.pk}/candidates/"
+        history_url = f"{self.base}{self.obligation.pk}/history/"
+        initial = self.client.get(candidate_url).json()
+        self.assertEqual(Decimal(initial["results"][0]["available"]), Decimal("100"))
+        paid = self.pay()
+        self.assertEqual(paid.status_code, 201)
+        allocated = self.client.get(candidate_url).json()
+        self.assertEqual(Decimal(allocated["results"][0]["available"]), Decimal("50"))
+        self.assertEqual(
+            self.client.post(f"{self.url}{paid.json()['id']}/reverse/").status_code, 200
+        )
+        self.member.role = "viewer"
+        self.member.save()
+        paths = build_inventory()["paths"]
+        for url, suffix in ((candidate_url, "candidates/"), (history_url, "history/")):
+            with self.subTest(endpoint=suffix):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                schema = paths[
+                    f"/api/companies/{{company_id}}/obligations/{{obligation_id}}/{suffix}"
+                ]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+                self.assertEqual(set(response.json()), set(schema["properties"]))
+                for row in response.json()["results"]:
+                    self.assertEqual(
+                        set(row), set(schema["properties"]["results"]["items"]["properties"])
+                    )
+        restored = self.client.get(candidate_url).json()
+        self.assertEqual(Decimal(restored["results"][0]["available"]), Decimal("100"))
+        history = self.client.get(history_url).json()
+        self.assertEqual(history["count"], 2)
+        self.assertEqual(history["results"][0]["action"], "obligation.reconciliation_reversed")
+
     def test_partial_idempotent_and_reversible(self):
         attempt = uuid.uuid4()
         first = self.pay(request_id=attempt)

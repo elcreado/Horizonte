@@ -8526,18 +8526,135 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "last"
+                  ]
+                }
+              ]
+            },
+            "description": "20 filas por página."
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado paginado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "amount": {
+                            "type": "string",
+                            "description": "Decimal COP con signo original."
+                          },
+                          "available": {
+                            "type": "string",
+                            "description": "Valor absoluto menos conciliaciones activas, decimal COP positivo."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "date",
+                          "description",
+                          "amount",
+                          "available"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente o rechazada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía, obligación o página no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "obligation-queries-fields-documented",
+        "description": "Todos los miembros. Movimientos de la empresa y mismo sentido, incluidos en el corte de su cuenta, con importe disponible positivo. Conciliaciones revertidas no consumen disponible. No limita disponible al pendiente ni exige coincidencia de contraparte/fecha de vencimiento; no recomienda ni concilia automáticamente. Una obligación cancelada o saldada puede tener candidatos; POST conciliación valida si la operación está permitida. Orden fecha/ID descendente."
       }
     },
     "/api/companies/{company_id}/obligations/{obligation_id}/history/": {
@@ -8565,18 +8682,139 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "last"
+                  ]
+                }
+              ]
+            },
+            "description": "20 filas por página."
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado paginado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "user__username": {
+                            "type": "string"
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "before": {
+                            "type": "object",
+                            "additionalProperties": true
+                          },
+                          "after": {
+                            "type": "object",
+                            "additionalProperties": true
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "user__username",
+                          "action",
+                          "before",
+                          "after",
+                          "created_at"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente o rechazada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía, obligación o página no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "obligation-queries-fields-documented",
+        "description": "Todos los miembros, incluido lector. Cambios auditados de esta obligación, ID descendente. before/after son instantáneas JSON según acción y versión, no una especificación de toda la auditoría de la empresa. No expone registros de otras entidades; user__username conserva el nombre de campo de la respuesta."
       }
     },
     "/api/companies/{company_id}/obligations/{obligation_id}/settlements/": {
