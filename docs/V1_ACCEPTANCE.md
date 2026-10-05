@@ -38,6 +38,8 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   Campos añadidos posteriormente son opcionales para leer ejecuciones antiguas. La evidencia
   interna describe flujos conocidos, digest, serie residual y recurrencias estimadas/vinculadas;
   este contrato no prueba calibración ni exactitud predictiva.
+  Se corrigió el truncamiento de horizontes JSON fraccionarios: 30.5/60.75/90.01 devuelven
+  400 sin guardar una ejecución. Suite local posterior: 203 pruebas, 198 aprobadas y 5 omitidas.
 - [ ] Verificar accesibilidad, móvil web, tiempos de renderizado/p95, carga concurrente,
   disponibilidad controlada y seguridad conforme a los criterios del README/SPECS.
   HTTP 200 y una importación rápida no prueban estos requisitos.

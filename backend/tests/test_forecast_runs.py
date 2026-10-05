@@ -12,6 +12,15 @@ from tests.test_imports import ImportTests
 class ForecastRunTests(TestCase):
     setUp = ImportTests.setUp
 
+    def test_fractional_json_horizons_are_rejected_without_saving_a_run(self):
+        self.populate()
+        url = f"/api/companies/{self.company.pk}/forecast-runs/"
+        for value in (30.5, 60.75, 90.01):
+            with self.subTest(horizon=value):
+                response = self.client.post(url, {"horizon": value}, format="json")
+                self.assertEqual(response.status_code, 400)
+        self.assertFalse(ForecastRun.objects.filter(company=self.company).exists())
+
     def test_quantile_result_matches_documented_experimental_variant(self):
         start = self.account.balance_date - timedelta(days=269)
         Transaction.objects.bulk_create(

@@ -29,10 +29,13 @@ class ForecastUnavailable(Exception):
 
 def validate_forecast_parameters(params) -> tuple[int, str]:
     try:
-        horizon = int(params.get("horizon", "30"))
-        if horizon not in (30, 60, 90):
+        raw_horizon = params.get("horizon", "30")
+        horizon = int(raw_horizon)
+        if horizon not in (30, 60, 90) or (
+            isinstance(raw_horizon, (float, Decimal)) and raw_horizon != horizon
+        ):
             raise ValueError
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         raise ForecastUnavailable("El horizonte debe ser 30, 60 o 90.") from None
     method = params.get("method", "seasonal_naive")
     if method not in ("naive", "seasonal_naive", "ses", "hybrid_weekly"):
