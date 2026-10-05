@@ -5,6 +5,8 @@ entregable. Utilizar empresas, archivos y correos de prueba. No cargar informaci
 
 ## Instalar y conectar el escritorio
 
+Huella y alcance de verificación del binario: [DESKTOP_RELEASE.md](DESKTOP_RELEASE.md).
+
 - Ejecutar el instalador Windows `desktop/release/session-isolation/Horizonte Setup 0.1.0.exe`.
   El ejecutable se generó y su arranque se comprobó; instalación, actualización y desinstalación
   en un equipo limpio siguen pendientes. No está firmado.
