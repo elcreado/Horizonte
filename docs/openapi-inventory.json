@@ -7903,18 +7903,165 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "last"
+                  ]
+                }
+              ]
+            },
+            "description": "20 filas; no canceladas primero, vencimiento/ID ascendentes."
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado de la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "can_edit": {
+                      "type": "boolean"
+                    },
+                    "results": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "reference": {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          "description": {
+                            "type": "string",
+                            "maxLength": 200
+                          },
+                          "counterparty": {
+                            "type": "string",
+                            "maxLength": 200
+                          },
+                          "direction": {
+                            "type": "string",
+                            "enum": [
+                              "in",
+                              "out"
+                            ]
+                          },
+                          "due_date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "outstanding_amount": {
+                            "type": "string",
+                            "description": "Decimal COP pendiente; puede ser cero después de conciliar."
+                          },
+                          "cancelled": {
+                            "type": "boolean"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "cancelled",
+                              "settled",
+                              "pending"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "reference",
+                          "description",
+                          "counterparty",
+                          "direction",
+                          "due_date",
+                          "outstanding_amount",
+                          "cancelled",
+                          "status"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "can_edit",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF/rol rechazado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa, membresía, obligación o página no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "obligation-fields-documented",
+        "description": "Lectura para todos los miembros; escritura solo propietario/contador. Referencia única por empresa. Crear no modifica saldo bancario. Cancelación prevalece sobre pendiente cero en status. Editar no permite cambiar referencia, dirección ni importe: el pendiente se reduce/restituye mediante conciliaciones/reversiones. Cambiar vencimiento no mueve dinero."
       },
       "post": {
         "operationId": "obligations_post",
@@ -7944,16 +8091,205 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "201": {
+            "description": "Resultado de la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "reference": {
+                      "type": "string",
+                      "maxLength": 120
+                    },
+                    "description": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "counterparty": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "direction": {
+                      "type": "string",
+                      "enum": [
+                        "in",
+                        "out"
+                      ]
+                    },
+                    "due_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "outstanding_amount": {
+                      "type": "string",
+                      "description": "Decimal COP pendiente; puede ser cero después de conciliar."
+                    },
+                    "cancelled": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "cancelled",
+                        "settled",
+                        "pending"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "reference",
+                    "description",
+                    "counterparty",
+                    "direction",
+                    "due_date",
+                    "outstanding_amount",
+                    "cancelled",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF/rol rechazado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa, membresía, obligación o página no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos inválidos, referencia duplicada o campos no editables. Errores por campo o lista de mensajes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "obligation-fields-documented",
+        "description": "Lectura para todos los miembros; escritura solo propietario/contador. Referencia única por empresa. Crear no modifica saldo bancario. Cancelación prevalece sobre pendiente cero en status. Editar no permite cambiar referencia, dirección ni importe: el pendiente se reduce/restituye mediante conciliaciones/reversiones. Cambiar vencimiento no mueve dinero.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                  },
+                  "counterparty": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 0
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "in",
+                      "out"
+                    ]
+                  },
+                  "due_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "outstanding_amount": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number",
+                        "minimum": 0.01
+                      }
+                    ],
+                    "description": "Importe decimal; se recomienda cadena para conservar precisión.",
+                    "x-max-digits": 18,
+                    "x-decimal-places": 2,
+                    "x-decimal-minimum": "0.01"
+                  }
+                },
+                "required": [
+                  "reference",
+                  "description",
+                  "direction",
+                  "due_date",
+                  "outstanding_amount"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/api/companies/{company_id}/obligations/{obligation_id}/": {
@@ -7993,16 +8329,176 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado de la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "reference": {
+                      "type": "string",
+                      "maxLength": 120
+                    },
+                    "description": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "counterparty": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "direction": {
+                      "type": "string",
+                      "enum": [
+                        "in",
+                        "out"
+                      ]
+                    },
+                    "due_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "outstanding_amount": {
+                      "type": "string",
+                      "description": "Decimal COP pendiente; puede ser cero después de conciliar."
+                    },
+                    "cancelled": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "cancelled",
+                        "settled",
+                        "pending"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "reference",
+                    "description",
+                    "counterparty",
+                    "direction",
+                    "due_date",
+                    "outstanding_amount",
+                    "cancelled",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF/rol rechazado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa, membresía, obligación o página no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos inválidos, referencia duplicada o campos no editables. Errores por campo o lista de mensajes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "obligation-fields-documented",
+        "description": "Lectura para todos los miembros; escritura solo propietario/contador. Referencia única por empresa. Crear no modifica saldo bancario. Cancelación prevalece sobre pendiente cero en status. Editar no permite cambiar referencia, dirección ni importe: el pendiente se reduce/restituye mediante conciliaciones/reversiones. Cambiar vencimiento no mueve dinero.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                  },
+                  "counterparty": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 0
+                  },
+                  "due_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "cancelled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
       }
     },
     "/api/companies/{company_id}/obligations/{obligation_id}/candidates/": {

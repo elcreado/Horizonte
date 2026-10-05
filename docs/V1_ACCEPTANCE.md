@@ -43,6 +43,10 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   La consulta `experimental-forecast` reutiliza el esquema del resultado y documenta
   parámetros, permisos y errores 400/403/404/409; campos actuales requeridos comprobados
   contra respuesta real. No guarda ejecuciones ni demuestra eficacia predictiva.
+  Listado/creación/edición de obligaciones tienen campos, paginación, estados, entradas derivadas
+  de serializers y errores documentados. La edición excluye referencia, dirección e importe
+  pendiente; creación/listado se contrastan con respuestas reales. Pagos/reversiones y otras
+  operaciones aún requieren completar sus contratos.
 - [ ] Verificar accesibilidad, móvil web, tiempos de renderizado/p95, carga concurrente,
   disponibilidad controlada y seguridad conforme a los criterios del README/SPECS.
   HTTP 200 y una importación rápida no prueban estos requisitos.

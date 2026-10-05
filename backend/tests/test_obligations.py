@@ -9,6 +9,7 @@ from rest_framework.test import APIClient
 from apps.accounts.models import AuditLog, Company, CompanyMember
 from apps.banking.models import BankAccount, Transaction
 from apps.forecast.models import Obligation, Settlement
+from config.api_inventory import build_inventory
 
 
 class ObligationTests(TestCase):
@@ -135,7 +136,19 @@ class ObligationTests(TestCase):
             "due_date": "2026-10-01",
             "outstanding_amount": "12.30",
         }
-        self.assertEqual(self.client.post(self.base, payload, format="json").status_code, 201)
+        created = self.client.post(self.base, payload, format="json")
+        self.assertEqual(created.status_code, 201)
+        paths = build_inventory()["paths"]
+        contract = paths["/api/companies/{company_id}/obligations/"]
+        schema = contract["post"]["responses"]["201"]["content"]["application/json"]["schema"]
+        self.assertEqual(set(created.json()), set(schema["properties"]))
+        page = self.client.get(self.base).json()
+        page_schema = contract["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+        self.assertEqual(set(page), set(page_schema["properties"]))
+        patch = paths["/api/companies/{company_id}/obligations/{obligation_id}/"]["patch"]
+        body = patch["requestBody"]["content"]["application/json"]["schema"]
+        self.assertFalse(body["additionalProperties"])
+        self.assertNotIn("outstanding_amount", body["properties"])
         self.assertEqual(self.client.post(self.base, payload, format="json").status_code, 400)
         payload["reference"] = "bad"
         payload["outstanding_amount"] = "-1"
