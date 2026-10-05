@@ -6,6 +6,13 @@ pendientes históricos no sustituyen este estado vigente.
 
 ## Corte verificado del 5 de octubre
 
+- Respaldo real de Supabase autorizado y completado con PostgreSQL 18: archivo custom local
+  de 238.147 bytes, checksum y lectura de índice comprobados, fuera de Git. Sin cifrado.
+  Restauración estructural en clúster local temporal verificada: 32 tablas, cero restricciones
+  no validadas, conteos registrados y clúster apagado. Migraciones vigentes y recorrido Client
+  Django de sesión/consultas financieras/dashboard 30/60/90 también aprobados sobre una nueva
+  restauración. Programación automática y UI pendientes; ver [HOSTED_BACKUP.md](HOSTED_BACKUP.md).
+
 - Evaluación emparejada de intervalos completada: [INTERVAL_RESULTS.md](INTERVAL_RESULTS.md).
   Corrección temporal aumenta cobertura agregada a 0,8269/0,8296/0,8101, pero amplía
   intervalos y no resuelve todos los perfiles (volátil a 90 días: 0,6701). Candidato offline,
