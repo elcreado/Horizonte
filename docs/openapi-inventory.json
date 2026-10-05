@@ -9488,16 +9488,66 @@
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado de consulta/revisión/vínculo según operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF/rol rechazado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía, obligación u ocurrencia no encontrada en su tenant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "recurrence-fields-documented",
+        "description": "Solo propietario/contador. Elimina vínculo, conservando obligación, pagos y efecto en proyección; audita una vez. No requiere cuerpo. Repetir devuelve 404, no una segunda reversión ni una cancelación."
       }
     },
     "/api/companies/{company_id}/recurrences/": {
@@ -9517,18 +9567,265 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "horizon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                30,
+                60,
+                90
+              ],
+              "default": 30
+            }
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado de consulta/revisión/vínculo según operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "as_of": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "horizon": {
+                      "type": "integer",
+                      "enum": [
+                        30,
+                        60,
+                        90
+                      ]
+                    },
+                    "can_edit": {
+                      "type": "boolean"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "account_id": {
+                            "type": "integer"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "direction": {
+                            "type": "string",
+                            "enum": [
+                              "in",
+                              "out"
+                            ]
+                          },
+                          "cadence": {
+                            "type": "string",
+                            "enum": [
+                              "monthly",
+                              "weekly"
+                            ]
+                          },
+                          "amount": {
+                            "type": "string",
+                            "description": "Decimal exacto COP."
+                          },
+                          "next_date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "observations": {
+                            "type": "integer",
+                            "minimum": 3
+                          },
+                          "transaction_ids": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer"
+                            }
+                          },
+                          "fingerprint": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "confirmed",
+                              "rejected"
+                            ]
+                          },
+                          "occurrences": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "date": {
+                                  "type": "string",
+                                  "format": "date"
+                                },
+                                "link_id": {
+                                  "type": "integer",
+                                  "nullable": true
+                                },
+                                "obligation_id": {
+                                  "type": "integer",
+                                  "nullable": true
+                                },
+                                "cancelled": {
+                                  "type": "boolean"
+                                },
+                                "matching_obligations": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "integer"
+                                      },
+                                      "reference": {
+                                        "type": "string"
+                                      },
+                                      "description": {
+                                        "type": "string"
+                                      },
+                                      "outstanding_amount": {
+                                        "type": "string",
+                                        "description": "Decimal exacto COP."
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "reference",
+                                      "description",
+                                      "outstanding_amount"
+                                    ]
+                                  }
+                                }
+                              },
+                              "required": [
+                                "date",
+                                "link_id",
+                                "obligation_id",
+                                "cancelled",
+                                "matching_obligations"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "account_id",
+                          "description",
+                          "direction",
+                          "cadence",
+                          "amount",
+                          "next_date",
+                          "observations",
+                          "transaction_ids",
+                          "fingerprint",
+                          "status",
+                          "occurrences"
+                        ]
+                      }
+                    },
+                    "notice": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "as_of",
+                    "horizon",
+                    "can_edit",
+                    "results",
+                    "notice"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF/rol rechazado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía, obligación u ocurrencia no encontrada en su tenant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Horizonte, estado, fecha o identificador inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Saldos incompatibles, patrón cambiado/no confirmado, vínculo incompatible o obligación ambigua.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "recurrence-fields-documented",
+        "description": "GET para todos los miembros, POST propietario/contador. Saldos COP con corte común. Detecta historial de 370 días hasta el corte, agrupado por cuenta/descripción/signo; tres fechas distintas como mínimo y montos dentro del 10% de la mediana. Lista completa sin paginación, orden próxima fecha/cuenta/descripción; puede incluir patrones cuya próxima fecha quede fuera del horizonte y sin ocurrencias. Revisar no cancela obligaciones. create/link requieren revisión confirmed vigente y fecha expandida dentro del horizonte query. Un vínculo ya existente devuelve 200; nuevo 201. Crear evita obligación ambigua del mismo sentido/fecha; vincular exige obligación pendiente no cancelada, misma fecha/sentido y sin vínculo. No cambia saldo bancario."
       },
       "post": {
         "operationId": "recurrences_post",
@@ -9555,19 +9852,197 @@
               "type": "string"
             },
             "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          },
+          {
+            "name": "horizon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                30,
+                60,
+                90
+              ],
+              "default": 30
+            }
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado de consulta/revisión/vínculo según operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "confirmed",
+                            "rejected",
+                            "pending"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "obligation_id": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "obligation_id"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Resultado de consulta/revisión/vínculo según operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "obligation_id": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "obligation_id"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF/rol rechazado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa/membresía, obligación u ocurrencia no encontrada en su tenant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Horizonte, estado, fecha o identificador inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Saldos incompatibles, patrón cambiado/no confirmado, vínculo incompatible o obligación ambigua.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
-        "x-request-schema-pending": true
+        "x-contract-status": "recurrence-fields-documented",
+        "description": "GET para todos los miembros, POST propietario/contador. Saldos COP con corte común. Detecta historial de 370 días hasta el corte, agrupado por cuenta/descripción/signo; tres fechas distintas como mínimo y montos dentro del 10% de la mediana. Lista completa sin paginación, orden próxima fecha/cuenta/descripción; puede incluir patrones cuya próxima fecha quede fuera del horizonte y sin ocurrencias. Revisar no cancela obligaciones. create/link requieren revisión confirmed vigente y fecha expandida dentro del horizonte query. Un vínculo ya existente devuelve 200; nuevo 201. Crear evita obligación ambigua del mismo sentido/fecha; vincular exige obligación pendiente no cancelada, misma fecha/sentido y sin vínculo. No cambia saldo bancario.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fingerprint": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "confirmed",
+                      "rejected",
+                      "pending",
+                      "create",
+                      "link"
+                    ]
+                  },
+                  "occurrence_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "create/link: por defecto next_date; debe pertenecer al patrón/horizonte."
+                  },
+                  "obligation_id": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9223372036854775807,
+                    "description": "Requerido para link de una nueva ocurrencia."
+                  }
+                },
+                "required": [
+                  "fingerprint",
+                  "status"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/api/companies/{company_id}/team/": {

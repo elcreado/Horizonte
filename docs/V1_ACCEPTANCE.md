@@ -52,9 +52,11 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   restitución del disponible y lectura con rol lector. Instantáneas before/after por acción y
   otras operaciones aún requieren completar sus contratos.
   Empresas, salud y sugerencias de categoría documentan respuestas; pruebas contrastan campos,
-  abstención y fallo de BD sin diagnóstico privado. Quedan tres operaciones como inventario
-  de rutas: GET/POST recurrencias y desvinculación de ocurrencia. Esto no equivale a completar
-  errores/ejemplos ni revisar todos los esquemas históricos del resto de la API.
+  abstención y fallo de BD sin diagnóstico privado. Recurrencias GET/POST y desvinculación
+  documentan estados, ocurrencias, revisión, materialización e idempotencia. Ninguna operación
+  queda como inventario de rutas; esto no equivale a completar errores/ejemplos ni revisar
+  todos los esquemas históricos. Se corrigió el pendiente candidato para serializar Decimal
+  como cadena, comprobado contra JSON real. Suite posterior: 205 pruebas, 200 aprobadas, 5 omitidas.
 - [ ] Verificar accesibilidad, móvil web, tiempos de renderizado/p95, carga concurrente,
   disponibilidad controlada y seguridad conforme a los criterios del README/SPECS.
   HTTP 200 y una importación rápida no prueban estos requisitos.

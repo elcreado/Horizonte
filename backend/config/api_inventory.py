@@ -24,6 +24,7 @@ from .movement_contracts import apply_movement_contract
 from .obligation_contract import apply_obligation_contract
 from .obligation_queries_contract import apply_obligation_queries_contract
 from .platform_contracts import apply_platform_contract
+from .recurrence_contract import apply_recurrence_contract
 from .settlement_contract import apply_settlement_contract
 from .team_contracts import apply_team_contract
 from .threshold_contract import apply_threshold_contract
@@ -108,6 +109,7 @@ def build_inventory() -> dict:
             apply_settlement_contract(path, method, operation)
             apply_basic_queries_contract(path, method, operation)
             apply_category_suggestion_contract(path, method, operation)
+            apply_recurrence_contract(path, method, operation)
             apply_forecast_runs_contract(path, method, operation)
             operations[method] = operation
         paths[path] = operations

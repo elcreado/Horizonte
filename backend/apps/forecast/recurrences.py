@@ -179,8 +179,9 @@ def recurrences(request, company_id):
                     "link_id": occurrence.pk if occurrence else None,
                     "obligation_id": occurrence.obligation_id if occurrence else None,
                     "cancelled": occurrence.obligation.cancelled if occurrence else False,
-                    "matching_obligations": list(
-                        Obligation.objects.filter(
+                    "matching_obligations": [
+                        {**item, "outstanding_amount": str(item["outstanding_amount"])}
+                        for item in Obligation.objects.filter(
                             company_id=company_id,
                             due_date=occurrence_date,
                             direction=candidate["direction"],
@@ -188,7 +189,7 @@ def recurrences(request, company_id):
                             outstanding_amount__gt=0,
                             recurrenceoccurrence__isnull=True,
                         ).values("id", "reference", "description", "outstanding_amount")
-                    ),
+                    ],
                 }
             )
     return Response(

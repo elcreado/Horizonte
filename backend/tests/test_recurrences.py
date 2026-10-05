@@ -6,7 +6,9 @@ from django.test import SimpleTestCase, TestCase
 
 from apps.accounts.models import Company
 from apps.banking.models import Transaction
+from apps.forecast.models import Obligation
 from apps.forecast.recurrences import detect_recurrences
+from config.api_inventory import build_inventory
 from tests.test_imports import ImportTests
 
 
@@ -68,6 +70,31 @@ class RecurrenceApiTests(TestCase):
             )
         response = self.client.get(f"/api/companies/{self.company.id}/recurrences/")
         self.assertEqual(response.status_code, 200)
+        schema = build_inventory()["paths"]["/api/companies/{company_id}/recurrences/"]["get"][
+            "responses"
+        ]["200"]["content"]["application/json"]["schema"]
+        body = response.json()
+        self.assertEqual(set(body), set(schema["properties"]))
+        candidate_schema = schema["properties"]["results"]["items"]
+        candidate = body["results"][0]
+        self.assertEqual(set(candidate), set(candidate_schema["properties"]))
+        occurrence = candidate["occurrences"][0]
+        self.assertEqual(
+            set(occurrence),
+            set(candidate_schema["properties"]["occurrences"]["items"]["properties"]),
+        )
+        Obligation.objects.create(
+            company=self.company,
+            reference="precision-test",
+            description="Pending",
+            direction="out",
+            due_date=occurrence["date"],
+            outstanding_amount="1234.56",
+        )
+        matching = self.client.get(f"/api/companies/{self.company.pk}/recurrences/").json()[
+            "results"
+        ][0]["occurrences"][0]["matching_obligations"]
+        self.assertEqual(matching[0]["outstanding_amount"], "1234.56")
         self.assertEqual(response.data["results"][0]["observations"], 4)
         other = Company.objects.create(name="Other", nit="recurrence-other")
         self.assertEqual(
