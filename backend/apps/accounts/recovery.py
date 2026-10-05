@@ -9,13 +9,15 @@ from rest_framework import serializers
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle
+
+from config.background import enqueue
 
 from .models import AuditLog, CompanyMember
 from .tasks import send_password_recovery
+from .throttles import PersistentUserThrottle
 
 
-class RecoveryThrottle(UserRateThrottle):
+class RecoveryThrottle(PersistentUserThrottle):
     scope = "password_recovery"
     rate = "5/hour"
 
@@ -40,7 +42,7 @@ def recover_password(request):
     serializer = RecoveryInput(data=request.data)
     serializer.is_valid(raise_exception=True)
     try:
-        send_password_recovery.apply_async(kwargs=serializer.validated_data, retry=False)
+        enqueue(send_password_recovery, kwargs=serializer.validated_data, retry=False)
     except Exception:
         return Response(
             {"detail": "El servicio de recuperación no está disponible. Intenta más tarde."},

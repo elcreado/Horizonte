@@ -1,0 +1,2 @@
+# Los scripts ejecutados en Render/Linux deben conservar finales LF.
+*.sh text eol=lf

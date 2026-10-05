@@ -1,32 +1,43 @@
 import { FormEvent, useEffect, useState } from 'react';
 
-type Account = { id: number; name: string; balance_date: string };
+type Account = { id: number; name: string; balance_date: string; connection_id: number | null };
 type Job = { id: number; status: string; created_count: number; duplicate_count: number; error: string };
 
-export function ImportPanel({ company }: { company: string }) {
+export function ImportPanel({ company, revision }: { company: string; revision: number }) {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [canImport, setCanImport] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [error, setError] = useState('');
+  const [statusError, setStatusError] = useState('');
+  const [accountsError, setAccountsError] = useState('');
   const [sending, setSending] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
+    let accountsLoaded = false;
     async function load() {
+      if (!accountsLoaded && !controller.signal.aborted) {
+        try {
+          const response = await fetch(`/api/companies/${company}/accounts/`, { signal: controller.signal });
+          if (!response.ok) throw new Error('No se pudieron consultar las cuentas.');
+          const result = await response.json();
+          if (!controller.signal.aborted) {
+            setAccounts(result.accounts.filter((account: Account) => !account.connection_id));
+            setCanImport(result.can_import); setAccountsError(''); accountsLoaded = true;
+          }
+        } catch (error) { if (!controller.signal.aborted) setAccountsError((error as Error).message); }
+      }
       try {
         const response = await fetch(`/api/companies/${company}/imports/`, { signal: controller.signal });
         if (!response.ok) throw new Error('No se pudo consultar el estado de las importaciones.');
-        setJobs(await response.json());
-      } catch (e) { if (!controller.signal.aborted) setError((e as Error).message); }
+        const result = await response.json();
+        if (!controller.signal.aborted) { setJobs(result); setStatusError(''); }
+      } catch (e) { if (!controller.signal.aborted) setStatusError((e as Error).message); }
       if (!controller.signal.aborted) timer = setTimeout(load, 3000);
     }
-    fetch(`/api/companies/${company}/accounts/`, { signal: controller.signal }).then(async response => {
-      if (!response.ok) throw new Error('No se pudieron consultar las cuentas.');
-      const result = await response.json(); setAccounts(result.accounts); setCanImport(result.can_import);
-    }).catch(e => { if (!controller.signal.aborted) setError(e.message); });
     void load();
     return () => { controller.abort(); clearTimeout(timer); };
-  }, [company]);
+  }, [company, revision]);
 
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSending(true); setError('');
@@ -55,8 +66,10 @@ export function ImportPanel({ company }: { company: string }) {
     </form>}
     {!canImport && <p>El propietario o contador puede importar movimientos.</p>}
     {error && <p role="alert" className="error">{error}</p>}
+    {statusError && <p className="error" role="alert">{statusError} Se volverá a consultar automáticamente.</p>}
+    {accountsError && <p className="error" role="alert">{accountsError} Se volverá a consultar automáticamente.</p>}
     <div aria-live="polite">{jobs.map(job => <p key={job.id}><strong>Importación #{job.id}: </strong>
-      {job.status === 'queued' ? 'En cola o procesando. Si no avanza, comprueba que el worker esté iniciado.' : job.status === 'completed' ? `${job.created_count} movimientos nuevos y ${job.duplicate_count} duplicados omitidos. Recarga el panorama para verlos.` : job.error}
+      {job.status === 'queued' ? 'En cola o procesando. Puede tardar si el servicio se está reactivando. Si no avanza, vuelve a consultar más tarde o contacta al administrador.' : job.status === 'completed' ? `${job.created_count} movimientos nuevos y ${job.duplicate_count} duplicados omitidos. Recarga el panorama para verlos.` : job.error}
     </p>)}</div>
   </section>;
 }

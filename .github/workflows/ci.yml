@@ -27,3 +27,50 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run build
+  backend-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: horizonte_ci
+          POSTGRES_USER: horizonte_ci
+          POSTGRES_PASSWORD: ci-only-synthetic-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DJANGO_DEBUG: '1'
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: '5432'
+      POSTGRES_DB: horizonte_ci
+      POSTGRES_USER: horizonte_ci
+      POSTGRES_PASSWORD: ci-only-synthetic-password
+      POSTGRES_SSLMODE: disable
+      POSTGRES_SCHEMA: public
+      # La suite verifica la cola persistente con override_settings; otros tests
+      # mantienen el contrato Celery y simulan su despacho, sin broker real.
+      BACKGROUND_MODE: celery
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r backend/requirements.txt
+      - run: python backend/manage.py test backend/tests
+  desktop:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      # Estas pruebas usan node:test; no requieren descargar Electron ni empaquetar.
+      - run: npm test

@@ -1,0 +1,37 @@
+# Preparado para coste cero: no crea worker, Redis ni BD de pago.
+services:
+  - type: web
+    name: horizonte-demo
+    runtime: python
+    plan: free
+    buildCommand: bash scripts/build-hosted.sh
+    startCommand: python scripts/start-hosted.py
+    healthCheckPath: /api/health/
+    autoDeployTrigger: off
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.12
+      - key: NODE_VERSION
+        value: 24.13.0
+      - key: DJANGO_DEBUG
+        value: '0'
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_TRUST_PROXY
+        value: '1'
+      - key: BACKGROUND_MODE
+        value: database
+      - key: POSTGRES_HOST
+        sync: false
+      - key: POSTGRES_PORT
+        value: '5432'
+      - key: POSTGRES_DB
+        value: postgres
+      - key: POSTGRES_USER
+        sync: false
+      - key: POSTGRES_PASSWORD
+        sync: false
+      - key: POSTGRES_SSLMODE
+        value: require
+      - key: POSTGRES_SCHEMA
+        value: horizonte

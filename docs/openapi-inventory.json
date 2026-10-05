@@ -1,0 +1,4398 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Horizonte API — inventario parcial",
+    "version": "0.1.0",
+    "description": "Generado de Django. Esquemas detallados pendientes; no usar para generar clientes completos."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Mismo origen que la aplicación; sin servidor remoto publicado."
+    }
+  ],
+  "paths": {
+    "/api/auth/csrf/": {
+      "get": {
+        "operationId": "csrf_get",
+        "summary": "csrf",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Obtiene cookie/token CSRF; no inicia sesión.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "csrfToken": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "csrfToken"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "auth-fields-documented",
+        "description": "Obtiene cookie/token CSRF; no inicia sesión."
+      }
+    },
+    "/api/auth/login/": {
+      "post": {
+        "operationId": "login_view_post",
+        "summary": "login_view",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Valida credenciales y establece cookie de sesión. Límite 10/minuto compartido con registro.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "username"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "auth-fields-documented",
+        "description": "Valida credenciales y establece cookie de sesión. Límite 10/minuto compartido con registro.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout/": {
+      "post": {
+        "operationId": "logout_view_post",
+        "summary": "logout_view",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "204": {
+            "description": "Cierra la sesión; respuesta sin cuerpo."
+          }
+        },
+        "x-contract-status": "auth-fields-documented",
+        "description": "Cierra la sesión; respuesta sin cuerpo."
+      }
+    },
+    "/api/auth/me/": {
+      "get": {
+        "operationId": "me_get",
+        "summary": "me",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Consulta el usuario de la sesión y su capacidad de administración de plataforma.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    },
+                    "platform_admin": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "username",
+                    "platform_admin"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "auth-fields-documented",
+        "description": "Consulta el usuario de la sesión y su capacidad de administración de plataforma."
+      }
+    },
+    "/api/auth/profile/": {
+      "get": {
+        "operationId": "profile_get",
+        "summary": "profile",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Consulta usuario y correo de la sesión.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "username",
+                    "email"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "auth-fields-documented",
+        "description": "Consulta usuario y correo de la sesión."
+      },
+      "patch": {
+        "operationId": "profile_patch",
+        "summary": "profile",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Requiere contraseña actual correcta y correo o nueva contraseña. Una nueva contraseña requiere confirmación coincidente y validadores Django. Conserva la sesión actual al cambiarla.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "username",
+                    "email"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "auth-fields-documented",
+        "description": "Requiere contraseña actual correcta y correo o nueva contraseña. Una nueva contraseña requiere confirmación coincidente y validadores Django. Conserva la sesión actual al cambiarla.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "current_password": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "writeOnly": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "minLength": 1,
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 10,
+                    "writeOnly": true
+                  },
+                  "password_confirm": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "current_password"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/recover-password/": {
+      "post": {
+        "operationId": "recover_password_post",
+        "summary": "recover_password",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "202": {
+            "description": "Encola recuperación; respuesta genérica independientemente de existencia del usuario. No garantiza entrega. Límite 5/hora compartido con reset.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "auth-fields-documented",
+        "description": "Encola recuperación; respuesta genérica independientemente de existencia del usuario. No garantiza entrega. Límite 5/hora compartido con reset.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "maxLength": 150,
+                    "minLength": 1
+                  },
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "minLength": 1,
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "username",
+                  "email"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register/": {
+      "post": {
+        "operationId": "register_post",
+        "summary": "register",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "201": {
+            "description": "Crea usuario, empresa, propietario y cuenta COP de forma atómica e inicia sesión. Rechaza sesiones ya iniciadas y usuario/NIT duplicados. NIT único sin distinguir mayúsculas; corte no futuro; contraseña confirmada y validada por Django. Límite 10/minuto compartido con login.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    },
+                    "company_id": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "username",
+                    "company_id"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "auth-fields-documented",
+        "description": "Crea usuario, empresa, propietario y cuenta COP de forma atómica e inicia sesión. Rechaza sesiones ya iniciadas y usuario/NIT duplicados. NIT único sin distinguir mayúsculas; corte no futuro; contraseña confirmada y validada por Django. Límite 10/minuto compartido con login.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "company_name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                  },
+                  "nit": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9-]+$"
+                  },
+                  "account_name": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "minLength": 1
+                  },
+                  "opening_balance": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "description": "Importe decimal; se recomienda cadena para conservar precisión.",
+                    "x-max-digits": 18,
+                    "x-decimal-places": 2
+                  },
+                  "balance_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "username": {
+                    "type": "string",
+                    "maxLength": 150,
+                    "minLength": 1,
+                    "pattern": "^[\\w.@+-]+$"
+                  },
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "minLength": 1,
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 10,
+                    "writeOnly": true
+                  },
+                  "password_confirm": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "company_name",
+                  "nit",
+                  "account_name",
+                  "opening_balance",
+                  "balance_date",
+                  "username",
+                  "email",
+                  "password",
+                  "password_confirm"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password/": {
+      "post": {
+        "operationId": "reset_password_post",
+        "summary": "reset_password",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Token vigente y confirmación coincidente; validadores de contraseña Django. Cambiar contraseña invalida token y sesiones anteriores; vence en una hora.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "auth-fields-documented",
+        "description": "Token vigente y confirmación coincidente; validadores de contraseña Django. Cambiar contraseña invalida token y sesiones anteriores; vence en una hora.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uid": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                  },
+                  "token": {
+                    "type": "string",
+                    "maxLength": 150,
+                    "minLength": 1,
+                    "writeOnly": true
+                  },
+                  "password": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 10,
+                    "writeOnly": true
+                  },
+                  "password_confirm": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "uid",
+                  "token",
+                  "password",
+                  "password_confirm"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/": {
+      "get": {
+        "operationId": "companies_get",
+        "summary": "companies",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      }
+    },
+    "/api/companies/create/": {
+      "post": {
+        "operationId": "add_company_post",
+        "summary": "add_company",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "201": {
+            "description": "Crea empresa, membresía de propietario y cuenta COP de forma atómica. NIT único sin distinguir mayúsculas; fecha de corte no futura.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-contract-status": "auth-fields-documented",
+        "description": "Crea empresa, membresía de propietario y cuenta COP de forma atómica. NIT único sin distinguir mayúsculas; fecha de corte no futura.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "company_name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                  },
+                  "nit": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9-]+$"
+                  },
+                  "account_name": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "minLength": 1
+                  },
+                  "opening_balance": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "description": "Importe decimal; se recomienda cadena para conservar precisión.",
+                    "x-max-digits": 18,
+                    "x-decimal-places": 2
+                  },
+                  "balance_date": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "required": [
+                  "company_name",
+                  "nit",
+                  "account_name",
+                  "opening_balance",
+                  "balance_date"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{company_id}/accounts/": {
+      "get": {
+        "operationId": "accounts_get",
+        "summary": "accounts",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Cuentas visibles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "can_import": {
+                      "type": "boolean"
+                    },
+                    "accounts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "connection_id": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "COP"
+                            ]
+                          },
+                          "balance": {
+                            "type": "string",
+                            "description": "Importe decimal exacto con dos decimales."
+                          },
+                          "balance_date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "history_complete_from": {
+                            "type": "string",
+                            "format": "date",
+                            "nullable": true
+                          },
+                          "history_complete_through": {
+                            "type": "string",
+                            "format": "date",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "connection_id",
+                          "currency",
+                          "balance",
+                          "balance_date",
+                          "history_complete_from",
+                          "history_complete_through"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "can_import",
+                    "accounts"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión rechazada."
+          },
+          "404": {
+            "description": "Membresía no encontrada."
+          }
+        },
+        "x-contract-status": "banking-fields-documented",
+        "description": "Cuentas de la empresa; requiere membresía. can_import indica rol owner/accountant, no autorización para cargar en una cuenta conectada. Sin paginación ni orden garantizado."
+      }
+    },
+    "/api/companies/{company_id}/accounts/{account_id}/balance/": {
+      "patch": {
+        "operationId": "update_balance_patch",
+        "summary": "update_balance",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Estado actualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "balance": {
+                      "type": "string"
+                    },
+                    "balance_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "history_complete_from": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "history_complete_through": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "balance",
+                    "balance_date",
+                    "history_complete_from",
+                    "history_complete_through"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos; errores de campos o detail según la validación."
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol de solo consulta."
+          },
+          "404": {
+            "description": "Membresía o cuenta de esta empresa no encontrada."
+          },
+          "409": {
+            "description": "Cuenta conectada o movimientos posteriores al corte solicitado."
+          }
+        },
+        "x-contract-status": "banking-fields-documented",
+        "description": "Actualiza saldo manual. Corte no futuro ni anterior a movimientos existentes. Cambiar el corte elimina la declaración de cobertura. Registra auditoría si cambia el estado. Requiere membresía owner/accountant de la empresa.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "balance": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "description": "Importe decimal; se recomienda cadena para conservar precisión.",
+                    "x-max-digits": 18,
+                    "x-decimal-places": 2
+                  },
+                  "balance_date": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "required": [
+                  "balance",
+                  "balance_date"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{company_id}/accounts/{account_id}/coverage/": {
+      "post": {
+        "operationId": "confirm_coverage_post",
+        "summary": "confirm_coverage",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Estado actualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "history_complete_from": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "history_complete_through": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "history_complete_from",
+                    "history_complete_through"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos; errores de campos o detail según la validación."
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol de solo consulta."
+          },
+          "404": {
+            "description": "Membresía o cuenta de esta empresa no encontrada."
+          },
+          "409": {
+            "description": "Cuenta conectada cuya cobertura procede de su fuente."
+          }
+        },
+        "x-contract-status": "banking-fields-documented",
+        "description": "Declara historial completo desde start hasta el corte de la cuenta, o lo retira con confirmed=false. Start debe estar entre el corte menos 3650 días y el corte, inclusive. No verifica por sí mismo la integridad de los movimientos. Requiere membresía owner/accountant de la empresa.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "confirmed": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "start",
+                  "confirmed"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{company_id}/alert-history/": {
+      "get": {
+        "operationId": "alert_history_get",
+        "summary": "alert_history",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      },
+      "post": {
+        "operationId": "alert_history_post",
+        "summary": "alert_history",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/audit/": {
+      "get": {
+        "operationId": "audit_history_get",
+        "summary": "audit_history",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      }
+    },
+    "/api/companies/{company_id}/bank-connections/": {
+      "get": {
+        "operationId": "bank_connections_get",
+        "summary": "bank_connections",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      },
+      "post": {
+        "operationId": "bank_connections_post",
+        "summary": "bank_connections",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/bank-connections/{connection_id}/revoke/": {
+      "post": {
+        "operationId": "bank_revoke_post",
+        "summary": "bank_revoke",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/bank-connections/{connection_id}/sync/": {
+      "post": {
+        "operationId": "bank_sync_post",
+        "summary": "bank_sync",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/classification-rules/": {
+      "get": {
+        "operationId": "rules_get",
+        "summary": "rules",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Reglas visibles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "can_edit": {
+                      "type": "boolean"
+                    },
+                    "results": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "normalized_description": {
+                            "type": "string"
+                          },
+                          "direction": {
+                            "type": "string",
+                            "enum": [
+                              "in",
+                              "out"
+                            ]
+                          },
+                          "category": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "normalized_description",
+                          "direction",
+                          "category",
+                          "updated_at"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "can_edit",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía, regla de la empresa o página no encontrada."
+          }
+        },
+        "x-contract-status": "classification-rule-fields-documented",
+        "description": "Reglas recordadas de la empresa, por descripción normalizada/ID, veinte por página. Requiere membresía; can_edit indica owner/accountant. No vuelve a clasificar movimientos al consultar."
+      }
+    },
+    "/api/companies/{company_id}/classification-rules/{rule_id}/": {
+      "delete": {
+        "operationId": "delete_rule_delete",
+        "summary": "delete_rule",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "204": {
+            "description": "Regla eliminada; sin cuerpo."
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía, regla de la empresa o página no encontrada."
+          }
+        },
+        "x-contract-status": "classification-rule-fields-documented",
+        "description": "Elimina la regla de esta empresa con owner/accountant y auditoría. No cambia categorías de movimientos existentes. No requiere cuerpo JSON; CSRF sigue requerido."
+      }
+    },
+    "/api/companies/{company_id}/dashboard/": {
+      "get": {
+        "operationId": "dashboard_get",
+        "summary": "dashboard",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      }
+    },
+    "/api/companies/{company_id}/experimental-forecast/": {
+      "get": {
+        "operationId": "baseline_forecast_get",
+        "summary": "baseline_forecast",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      }
+    },
+    "/api/companies/{company_id}/forecast-runs/": {
+      "get": {
+        "operationId": "forecast_runs_get",
+        "summary": "forecast_runs",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      },
+      "post": {
+        "operationId": "forecast_runs_post",
+        "summary": "forecast_runs",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/history/": {
+      "get": {
+        "operationId": "history_get",
+        "summary": "history",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      }
+    },
+    "/api/companies/{company_id}/imports/": {
+      "get": {
+        "operationId": "imports_get",
+        "summary": "imports",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Trabajos visibles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "account_id": {
+                        "type": "integer"
+                      },
+                      "file_format": {
+                        "type": "string",
+                        "enum": [
+                          "csv",
+                          "xlsx"
+                        ]
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "queued",
+                          "completed",
+                          "failed"
+                        ]
+                      },
+                      "created_count": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "duplicate_count": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "error": {
+                        "type": "string"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "finished_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "account_id",
+                      "file_format",
+                      "status",
+                      "created_count",
+                      "duplicate_count",
+                      "error",
+                      "created_at",
+                      "finished_at"
+                    ]
+                  },
+                  "maxItems": 20
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente para escritura."
+          },
+          "404": {
+            "description": "Membresía o cuenta de la empresa no encontrada."
+          }
+        },
+        "x-contract-status": "banking-fields-documented",
+        "description": "Últimos 20 trabajos de la empresa, ordenados por ID descendente. Requiere membresía; no admite paginación. No expone el archivo original."
+      },
+      "post": {
+        "operationId": "imports_post",
+        "summary": "imports",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "400": {
+            "description": "Cuenta no seleccionada, archivo inválido o CSV no UTF-8."
+          },
+          "409": {
+            "description": "Cuenta conectada: importar desde su fuente."
+          },
+          "503": {
+            "description": "Cola no disponible; no se garantiza aceptación del trabajo."
+          },
+          "202": {
+            "description": "Trabajo aceptado para procesamiento asíncrono.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "account_id": {
+                      "type": "integer"
+                    },
+                    "file_format": {
+                      "type": "string",
+                      "enum": [
+                        "csv",
+                        "xlsx"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "completed",
+                        "failed"
+                      ]
+                    },
+                    "created_count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "duplicate_count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "finished_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "account_id",
+                    "file_format",
+                    "status",
+                    "created_count",
+                    "duplicate_count",
+                    "error",
+                    "created_at",
+                    "finished_at"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente para escritura."
+          },
+          "404": {
+            "description": "Membresía o cuenta de la empresa no encontrada."
+          }
+        },
+        "x-contract-status": "banking-fields-documented",
+        "description": "Encola CSV UTF-8 (BOM permitido) o XLSX, hasta 2 MiB y 10.000 filas. Requiere owner/accountant y cuenta manual de la empresa. 202 confirma aceptación, no importación exitosa: consultar estado mediante GET. El worker valida y procesa de forma atómica.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "account_id": {
+                    "type": "integer"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Archivo .csv o .xlsx de hasta 2.097.152 bytes."
+                  }
+                },
+                "required": [
+                  "account_id",
+                  "file"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{company_id}/invoices/": {
+      "get": {
+        "operationId": "invoices_get",
+        "summary": "invoices",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Facturas visibles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "can_edit": {
+                      "type": "boolean"
+                    },
+                    "results": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "supplier_nit": {
+                            "type": "string"
+                          },
+                          "customer_nit": {
+                            "type": "string"
+                          },
+                          "supplier": {
+                            "type": "string"
+                          },
+                          "customer": {
+                            "type": "string"
+                          },
+                          "subtotal": {
+                            "type": "string"
+                          },
+                          "total": {
+                            "type": "string"
+                          },
+                          "payable": {
+                            "type": "string"
+                          },
+                          "tax": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "integer"
+                          },
+                          "number": {
+                            "type": "string",
+                            "maxLength": 100
+                          },
+                          "cufe": {
+                            "type": "string",
+                            "maxLength": 150
+                          },
+                          "direction": {
+                            "type": "string",
+                            "enum": [
+                              "in",
+                              "out"
+                            ]
+                          },
+                          "issue_date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "due_date": {
+                            "type": "string",
+                            "format": "date",
+                            "nullable": true
+                          },
+                          "obligation_id": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "outstanding_amount": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "cancelled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "supplier_nit",
+                          "customer_nit",
+                          "supplier",
+                          "customer",
+                          "subtotal",
+                          "total",
+                          "payable",
+                          "tax",
+                          "id",
+                          "number",
+                          "cufe",
+                          "direction",
+                          "issue_date",
+                          "due_date",
+                          "obligation_id",
+                          "outstanding_amount",
+                          "cancelled"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "can_edit",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión no autorizada."
+          },
+          "404": {
+            "description": "Membresía o página no encontrada."
+          }
+        },
+        "x-contract-status": "invoice-fields-documented",
+        "description": "Facturas de la empresa por ID descendente, veinte por página; requiere membresía. Importes COP en cadenas decimales. can_edit indica owner/accountant. Vencimiento XML y obligación pueden faltar; pendiente/cancelación proceden de la obligación vinculada."
+      }
+    },
+    "/api/companies/{company_id}/invoices/imports/": {
+      "get": {
+        "operationId": "invoice_imports_get",
+        "summary": "invoice_imports",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado de solicitud, no certificación del documento.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "maxItems": 20,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "error": {
+                        "type": "string"
+                      },
+                      "invoice_id": {
+                        "type": "integer",
+                        "nullable": true
+                      },
+                      "duplicate": {
+                        "type": "boolean"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "finished_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "status",
+                      "error",
+                      "invoice_id",
+                      "duplicate",
+                      "created_at",
+                      "finished_at"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía no encontrada."
+          }
+        },
+        "x-contract-status": "invoice-import-fields-documented",
+        "description": "Últimos veinte trabajos XML de la empresa por ID descendente; requiere membresía. Sin paginación; contenido original no expuesto."
+      },
+      "post": {
+        "operationId": "invoice_imports_post",
+        "summary": "invoice_imports",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "400": {
+            "description": "Archivo no seleccionado, extensión/tamaño inválidos o codificación no UTF-8."
+          },
+          "503": {
+            "description": "Cola no disponible; no confirma aceptación."
+          },
+          "202": {
+            "description": "Resultado de solicitud, no certificación del documento.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía no encontrada."
+          }
+        },
+        "x-contract-status": "invoice-import-fields-documented",
+        "description": "Carga XML UTF-8 (BOM permitido), extensión .xml, hasta 2 MiB. Requiere owner/accountant. 202 confirma encolado, no validación UBL ni creación de obligación: consultar trabajo, revisar factura y confirmar por separado. No certifica DIAN.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "XML de hasta 2.097.152 bytes."
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{company_id}/invoices/{invoice_id}/confirm/": {
+      "post": {
+        "operationId": "confirm_invoice_post",
+        "summary": "confirm_invoice",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Factura previamente confirmada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "supplier_nit": {
+                      "type": "string"
+                    },
+                    "customer_nit": {
+                      "type": "string"
+                    },
+                    "supplier": {
+                      "type": "string"
+                    },
+                    "customer": {
+                      "type": "string"
+                    },
+                    "subtotal": {
+                      "type": "string"
+                    },
+                    "total": {
+                      "type": "string"
+                    },
+                    "payable": {
+                      "type": "string"
+                    },
+                    "tax": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "number": {
+                      "type": "string",
+                      "maxLength": 100
+                    },
+                    "cufe": {
+                      "type": "string",
+                      "maxLength": 150
+                    },
+                    "direction": {
+                      "type": "string",
+                      "enum": [
+                        "in",
+                        "out"
+                      ]
+                    },
+                    "issue_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "due_date": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "obligation_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "outstanding_amount": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "cancelled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "supplier_nit",
+                    "customer_nit",
+                    "supplier",
+                    "customer",
+                    "subtotal",
+                    "total",
+                    "payable",
+                    "tax",
+                    "id",
+                    "number",
+                    "cufe",
+                    "direction",
+                    "issue_date",
+                    "due_date",
+                    "obligation_id",
+                    "outstanding_amount",
+                    "cancelled"
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Obligación creada y factura vinculada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "supplier_nit": {
+                      "type": "string"
+                    },
+                    "customer_nit": {
+                      "type": "string"
+                    },
+                    "supplier": {
+                      "type": "string"
+                    },
+                    "customer": {
+                      "type": "string"
+                    },
+                    "subtotal": {
+                      "type": "string"
+                    },
+                    "total": {
+                      "type": "string"
+                    },
+                    "payable": {
+                      "type": "string"
+                    },
+                    "tax": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "number": {
+                      "type": "string",
+                      "maxLength": 100
+                    },
+                    "cufe": {
+                      "type": "string",
+                      "maxLength": 150
+                    },
+                    "direction": {
+                      "type": "string",
+                      "enum": [
+                        "in",
+                        "out"
+                      ]
+                    },
+                    "issue_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "due_date": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "obligation_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "outstanding_amount": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "cancelled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "supplier_nit",
+                    "customer_nit",
+                    "supplier",
+                    "customer",
+                    "subtotal",
+                    "total",
+                    "payable",
+                    "tax",
+                    "id",
+                    "number",
+                    "cufe",
+                    "direction",
+                    "issue_date",
+                    "due_date",
+                    "obligation_id",
+                    "outstanding_amount",
+                    "cancelled"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos/fecha/pendiente inválidos o referencia de obligación ocupada."
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía o factura de la empresa no encontrada."
+          }
+        },
+        "x-contract-status": "invoice-fields-documented",
+        "description": "Confirma explícitamente una factura para crear obligación, con owner/accountant. Fecha esperada no anterior a emisión, pendiente entre cero e importe pagadero del XML. Si ya tiene obligación devuelve estado actual sin volver a validar el cuerpo ni crear otra. Audita la creación.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "due_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "outstanding_amount": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number",
+                        "minimum": 0.0
+                      }
+                    ],
+                    "description": "Importe decimal; se recomienda cadena para conservar precisión.",
+                    "x-max-digits": 18,
+                    "x-decimal-places": 2,
+                    "x-decimal-minimum": "0"
+                  }
+                },
+                "required": [
+                  "due_date",
+                  "outstanding_amount"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{company_id}/invoices/{invoice_id}/obligation-link/": {
+      "get": {
+        "operationId": "link_obligation_get",
+        "summary": "link_obligation",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Candidatas o factura vinculada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "reference": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "counterparty": {
+                            "type": "string"
+                          },
+                          "due_date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "outstanding_amount": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "reference",
+                          "description",
+                          "counterparty",
+                          "due_date",
+                          "outstanding_amount"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía, factura, obligación de la empresa o página no encontrada."
+          }
+        },
+        "x-contract-status": "invoice-link-fields-documented",
+        "description": "Candidatas de esta empresa con mismo sentido, vigentes, sin factura vinculada, fecha no anterior a emisión y pendiente no mayor al pagadero XML. Orden por vencimiento/ID; veinte por página. La coincidencia no implica equivalencia: revisar antes de vincular."
+      },
+      "post": {
+        "operationId": "link_obligation_post",
+        "summary": "link_obligation",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "400": {
+            "description": "Datos o compatibilidad inválidos, o vínculo ocupado."
+          },
+          "200": {
+            "description": "Candidatas o factura vinculada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "supplier_nit": {
+                      "type": "string"
+                    },
+                    "customer_nit": {
+                      "type": "string"
+                    },
+                    "supplier": {
+                      "type": "string"
+                    },
+                    "customer": {
+                      "type": "string"
+                    },
+                    "subtotal": {
+                      "type": "string"
+                    },
+                    "total": {
+                      "type": "string"
+                    },
+                    "payable": {
+                      "type": "string"
+                    },
+                    "tax": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "number": {
+                      "type": "string",
+                      "maxLength": 100
+                    },
+                    "cufe": {
+                      "type": "string",
+                      "maxLength": 150
+                    },
+                    "direction": {
+                      "type": "string",
+                      "enum": [
+                        "in",
+                        "out"
+                      ]
+                    },
+                    "issue_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "due_date": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "obligation_id": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "outstanding_amount": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "cancelled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "supplier_nit",
+                    "customer_nit",
+                    "supplier",
+                    "customer",
+                    "subtotal",
+                    "total",
+                    "payable",
+                    "tax",
+                    "id",
+                    "number",
+                    "cufe",
+                    "direction",
+                    "issue_date",
+                    "due_date",
+                    "obligation_id",
+                    "outstanding_amount",
+                    "cancelled"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía, factura, obligación de la empresa o página no encontrada."
+          }
+        },
+        "x-contract-status": "invoice-link-fields-documented",
+        "description": "Vincula explícitamente obligación existente compatible, con owner/accountant y auditoría; no crea otra obligación. Rechaza obligación cancelada, distinta dirección, fecha/pendiente incompatibles o vínculo ocupado. Repetir el mismo vínculo devuelve la factura actual; otro vínculo se rechaza.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "obligation_id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "obligation_id"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{company_id}/liquidity-threshold/": {
+      "get": {
+        "operationId": "threshold_get",
+        "summary": "threshold",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      },
+      "patch": {
+        "operationId": "threshold_patch",
+        "summary": "threshold",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/merchant-aliases/": {
+      "get": {
+        "operationId": "merchant_aliases_get",
+        "summary": "merchant_aliases",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Listado o asignación de una etiqueta existente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "can_edit": {
+                      "type": "boolean"
+                    },
+                    "results": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "merchant_id": {
+                            "type": "integer"
+                          },
+                          "provider": {
+                            "type": "string"
+                          },
+                          "normalized_name": {
+                            "type": "string",
+                            "maxLength": 250
+                          },
+                          "merchant_display_name": {
+                            "type": "string",
+                            "maxLength": 250
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "merchant_id",
+                          "provider",
+                          "normalized_name",
+                          "merchant_display_name"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "can_edit",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía, comercio de la empresa o página no encontrados."
+          }
+        },
+        "x-contract-status": "merchant-alias-fields-documented",
+        "description": "Consulta de alias de la empresa; requiere membresía. Veinte por página, ordenados por fuente, etiqueta normalizada e ID."
+      },
+      "post": {
+        "operationId": "merchant_aliases_post",
+        "summary": "merchant_aliases",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "201": {
+            "description": "Nueva etiqueta creada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "merchant_id": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "merchant_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fuente inválida, ID no positivo o etiqueta vacía/excesiva antes o después de normalizar."
+          },
+          "200": {
+            "description": "Listado o asignación de una etiqueta existente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "merchant_id": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "merchant_id"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía, comercio de la empresa o página no encontrados."
+          }
+        },
+        "x-contract-status": "merchant-alias-fields-documented",
+        "description": "Owner/accountant asigna una etiqueta normalizada a un comercio de la empresa. La clave es empresa, fuente y etiqueta. Reemplaza la asignación previa y afecta solo futuras importaciones; conserva movimientos y descripciones anteriores. Audita cambios efectivos; repetir la misma asignación no duplica auditoría.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "merchant_id": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "manual_upload",
+                      "mock"
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "merchant_id",
+                  "provider",
+                  "name"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{company_id}/merchants/": {
+      "get": {
+        "operationId": "merchants_get",
+        "summary": "merchants",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado exitoso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "can_edit": {
+                      "type": "boolean"
+                    },
+                    "results": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "display_name": {
+                            "type": "string",
+                            "maxLength": 250
+                          },
+                          "normalized_name": {
+                            "type": "string"
+                          },
+                          "movement_count": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "display_name",
+                          "normalized_name",
+                          "movement_count"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "can_edit",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol de escritura insuficiente."
+          },
+          "404": {
+            "description": "Membresía/comercio de la empresa o página no encontrados."
+          }
+        },
+        "x-contract-status": "merchant-fields-documented",
+        "description": "Comercios explícitos de la empresa, ordenados por nombre visible e ID. Veinte por página; requiere membresía. can_edit informa rol owner/accountant."
+      }
+    },
+    "/api/companies/{company_id}/merchants/{merchant_id}/name/": {
+      "patch": {
+        "operationId": "rename_merchant_patch",
+        "summary": "rename_merchant",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "merchant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "400": {
+            "description": "Nombre vacío o mayor de 250 caracteres; errores por campo."
+          },
+          "200": {
+            "description": "Resultado exitoso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "display_name": {
+                      "type": "string",
+                      "maxLength": 250
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "display_name"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol de escritura insuficiente."
+          },
+          "404": {
+            "description": "Membresía/comercio de la empresa o página no encontrados."
+          }
+        },
+        "x-contract-status": "merchant-fields-documented",
+        "description": "Cambia solo el nombre visible, con owner/accountant. Conserva identidad normalizada, alias, vínculos y descripciones originales. Audita cambios efectivos; repetir el mismo nombre no genera otra auditoría. No consolida comercios ni reasigna alias.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "display_name": {
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "display_name"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{company_id}/movements/": {
+      "get": {
+        "operationId": "movements_get",
+        "summary": "movements",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado exitoso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "can_edit": {
+                      "type": "boolean"
+                    },
+                    "results": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "normalized_description": {
+                            "type": "string"
+                          },
+                          "merchant_name": {
+                            "type": "string"
+                          },
+                          "merchant_id": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "merchant_display_name": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "amount": {
+                            "type": "string",
+                            "description": "Importe decimal exacto."
+                          },
+                          "category": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          },
+                          "categories": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "date",
+                          "description",
+                          "normalized_description",
+                          "merchant_name",
+                          "merchant_id",
+                          "merchant_display_name",
+                          "amount",
+                          "category",
+                          "source",
+                          "categories"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "can_edit",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía/movimiento de la empresa o página no encontrados."
+          }
+        },
+        "x-contract-status": "movement-fields-documented",
+        "description": "Movimientos de la empresa por fecha e ID descendentes; veinte por página. Requiere membresía. categories contiene opciones válidas según el signo. Sin filtros adicionales implementados."
+      }
+    },
+    "/api/companies/{company_id}/movements/{transaction_id}/category-suggestion/": {
+      "get": {
+        "operationId": "category_suggestion_get",
+        "summary": "category_suggestion",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      }
+    },
+    "/api/companies/{company_id}/movements/{transaction_id}/category/": {
+      "patch": {
+        "operationId": "correct_patch",
+        "summary": "correct",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "400": {
+            "description": "Categoría/preferencia inválidas o regla solicitada para valor cero."
+          },
+          "200": {
+            "description": "Resultado exitoso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "category": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "manual"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "category",
+                    "source"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión/CSRF rechazados o rol insuficiente."
+          },
+          "404": {
+            "description": "Membresía/movimiento de la empresa o página no encontrados."
+          }
+        },
+        "x-contract-status": "movement-fields-documented",
+        "description": "Corrección explícita por owner/accountant. category debe estar en las opciones del movimiento. remember es booleano JSON, opcional false; crea/actualiza regla por descripción normalizada y dirección de esta empresa. No admite recordar movimientos cero. Registra cada corrección.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "category"
+                ],
+                "properties": {
+                  "category": {
+                    "type": "string"
+                  },
+                  "remember": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{company_id}/name/": {
+      "patch": {
+        "operationId": "rename_company_patch",
+        "summary": "rename_company",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/obligations/": {
+      "get": {
+        "operationId": "obligations_get",
+        "summary": "obligations",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      },
+      "post": {
+        "operationId": "obligations_post",
+        "summary": "obligations",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/obligations/{obligation_id}/": {
+      "patch": {
+        "operationId": "edit_obligation_patch",
+        "summary": "edit_obligation",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "obligation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/obligations/{obligation_id}/candidates/": {
+      "get": {
+        "operationId": "settlement_candidates_get",
+        "summary": "settlement_candidates",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "obligation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      }
+    },
+    "/api/companies/{company_id}/obligations/{obligation_id}/history/": {
+      "get": {
+        "operationId": "obligation_history_get",
+        "summary": "obligation_history",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "obligation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      }
+    },
+    "/api/companies/{company_id}/obligations/{obligation_id}/settlements/": {
+      "get": {
+        "operationId": "settlements_get",
+        "summary": "settlements",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "obligation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      },
+      "post": {
+        "operationId": "settlements_post",
+        "summary": "settlements",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "obligation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/obligations/{obligation_id}/settlements/{settlement_id}/reverse/": {
+      "post": {
+        "operationId": "reverse_settlement_post",
+        "summary": "reverse_settlement",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "obligation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "settlement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/recurrence-occurrences/{occurrence_id}/unlink/": {
+      "post": {
+        "operationId": "unlink_occurrence_post",
+        "summary": "unlink_occurrence",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "occurrence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/recurrences/": {
+      "get": {
+        "operationId": "recurrences_get",
+        "summary": "recurrences",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      },
+      "post": {
+        "operationId": "recurrences_post",
+        "summary": "recurrences",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/team/": {
+      "get": {
+        "operationId": "team_get",
+        "summary": "team",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      },
+      "post": {
+        "operationId": "team_post",
+        "summary": "team",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/companies/{company_id}/team/{member_id}/": {
+      "delete": {
+        "operationId": "change_member_delete",
+        "summary": "change_member",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      },
+      "patch": {
+        "operationId": "change_member_patch",
+        "summary": "change_member",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida.",
+        "x-request-schema-pending": true
+      }
+    },
+    "/api/health/": {
+      "get": {
+        "operationId": "health_get",
+        "summary": "health",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      }
+    },
+    "/api/platform/users/": {
+      "get": {
+        "operationId": "platform_users_get",
+        "summary": "platform_users",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Usuarios visibles al administrador.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "previous": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "results": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "is_active": {
+                            "type": "boolean"
+                          },
+                          "is_staff": {
+                            "type": "boolean"
+                          },
+                          "is_superuser": {
+                            "type": "boolean"
+                          },
+                          "company_count": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "username",
+                          "email",
+                          "is_active",
+                          "is_staff",
+                          "is_superuser",
+                          "company_count"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "next",
+                    "previous",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión no autorizada para administración de plataforma."
+          },
+          "404": {
+            "description": "Página no encontrada."
+          }
+        },
+        "x-contract-status": "platform-fields-documented",
+        "description": "Consulta transversal de usuarios para superusuario activo con is_staff. Owner/accountant/viewer y staff sin superusuario no autorizan acceso. Datos personales, sin contraseñas ni hashes; orden por ID ascendente, veinte por página. No permite modificar cuentas.",
+        "x-required-role": "active-staff-superuser"
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessionid",
+        "description": "Sesión Django HttpOnly, establecida por login/registro."
+      }
+    }
+  }
+}

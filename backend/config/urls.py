@@ -1,14 +1,22 @@
 from django.urls import path
 
+from apps.accounts.audit import audit_history
 from apps.accounts.onboarding import add_company
+from apps.accounts.platform import platform_users
 from apps.accounts.profile import profile
 from apps.accounts.recovery import recover_password, reset_password
 from apps.accounts.registration import register
 from apps.accounts.team import change_member, rename_company, team
 from apps.accounts.views import companies, csrf, login_view, logout_view, me
-from apps.banking.views import accounts, imports
-from apps.classify.views import correct, delete_rule, movements, rules
+from apps.banking.connections import bank_connections, bank_revoke, bank_sync
+from apps.banking.coverage import confirm_coverage
+from apps.banking.merchant_views import merchant_aliases, merchants, rename_merchant
+from apps.banking.views import accounts, imports, update_balance
+from apps.classify.views import category_suggestion, correct, delete_rule, movements, rules
+from apps.forecast.alert_history import alert_history
+from apps.forecast.alerts import threshold
 from apps.forecast.history import history
+from apps.forecast.live_baseline import baseline_forecast
 from apps.forecast.obligations import (
     edit_obligation,
     obligation_history,
@@ -18,10 +26,34 @@ from apps.forecast.obligations import (
     settlements,
 )
 from apps.forecast.recurrences import recurrences, unlink_occurrence
+from apps.forecast.runs import forecast_runs
 from apps.forecast.views import dashboard
 from apps.invoices.views import confirm_invoice, invoice_imports, invoices, link_obligation
+from config.web import frontend, health
 
 urlpatterns = [
+    path("api/companies/<int:company_id>/merchant-aliases/", merchant_aliases),
+    path("api/platform/users/", platform_users),
+    path("api/companies/<int:company_id>/merchants/<int:merchant_id>/name/", rename_merchant),
+    path(
+        "api/companies/<int:company_id>/movements/<int:transaction_id>/category-suggestion/",
+        category_suggestion,
+    ),
+    path("", frontend),
+    path("api/health/", health),
+    path("api/companies/<int:company_id>/merchants/", merchants),
+    path("api/companies/<int:company_id>/bank-connections/", bank_connections),
+    path("api/companies/<int:company_id>/bank-connections/<int:connection_id>/sync/", bank_sync),
+    path(
+        "api/companies/<int:company_id>/bank-connections/<int:connection_id>/revoke/", bank_revoke
+    ),
+    path("api/companies/<int:company_id>/forecast-runs/", forecast_runs),
+    path("api/companies/<int:company_id>/experimental-forecast/", baseline_forecast),
+    path("api/companies/<int:company_id>/accounts/<int:account_id>/coverage/", confirm_coverage),
+    path("api/companies/<int:company_id>/audit/", audit_history),
+    path("api/companies/<int:company_id>/alert-history/", alert_history),
+    path("api/companies/<int:company_id>/liquidity-threshold/", threshold),
+    path("api/companies/<int:company_id>/accounts/<int:account_id>/balance/", update_balance),
     path("api/auth/profile/", profile),
     path("api/companies/create/", add_company),
     path("api/companies/<int:company_id>/classification-rules/", rules),

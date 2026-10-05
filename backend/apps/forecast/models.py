@@ -72,3 +72,36 @@ class RecurrenceOccurrence(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["company", "key"], name="unique_recurrence_occurrence")
         ]
+
+
+class AlertEvaluation(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.PROTECT)
+    user = models.ForeignKey("auth.User", on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    fingerprint = models.CharField(max_length=64)
+    evidence = models.JSONField()
+    result = models.JSONField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "fingerprint"], name="unique_alert_evaluation"
+            )
+        ]
+
+
+class ForecastRun(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.PROTECT)
+    user = models.ForeignKey("auth.User", on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    fingerprint = models.CharField(max_length=64)
+    method = models.CharField(max_length=32)
+    horizon = models.PositiveSmallIntegerField()
+    as_of = models.DateField()
+    evidence = models.JSONField()
+    result = models.JSONField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["company", "fingerprint"], name="unique_forecast_run")
+        ]

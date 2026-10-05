@@ -1,5 +1,64 @@
 # Arranque y pruebas
 
+## Pronóstico híbrido con recurrencias (corte vigente)
+
+En «Pronóstico híbrido experimental», el método «Patrón semanal y recurrencias confirmadas» estima
+las fechas futuras de patrones confirmados vigentes. Requiere cobertura del historial. Revisa primero
+Recurrencias: una confirmación antigua ya no sirve si cambió la evidencia. La tabla separa obligaciones,
+recurrencias estimadas y flujo variable; consultar o guardar no crea obligaciones ni cambia saldo.
+Si hay una obligación sin vínculo de igual fecha/sentido, el cálculo pide revisarla. Una obligación
+vinculada parcialmente pagada aporta solo su pendiente; cancelada o saldada no se estima otra vez.
+El escenario principal de obligaciones conserva su contrato; estos métodos siguen experimentales.
+No requieren credenciales externas para el cálculo local. 123 pruebas SQLite ejecutadas (2 omitidas)
+y build aprobados; el entorno remoto y la revisión visual completa siguen pendientes.
+
+## Estado actual de la demo local (octubre de 2026)
+
+Con Docker Desktop abierto, ejecuta `./scripts/start-dev.ps1` desde la raíz. El script deja
+PostgreSQL, Redis, backend, worker Celery y frontend activos. Abre
+`http://127.0.0.1:5173/#/dashboard` e inicia sesión. Para probar Mock Bank no necesitas una
+cuenta bancaria, credenciales ni acciones externas adicionales: en «Fuente bancaria de prueba»
+marca la autorización local y pulsa «Conectar Mock Bank». La carga de 120 movimientos sintéticos
+se procesa en segundo plano; la tabla muestra su estado. Puedes sincronizar de nuevo (sin duplicar
+movimientos) y revocar el acceso. Tras revocarlo, el historial permanece; puedes autorizar una
+reconexión que reutiliza la misma cuenta y no duplica su saldo. Si Docker/Redis o el worker no están activos, la
+sincronización no se completa; vuelve a ejecutar `start-dev.ps1`.
+
+Las secciones históricas de este archivo documentan cortes anteriores. El estado funcional vigente
+está en [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+
+## Respaldo local y ensayo de recuperación
+
+`scripts/db-backup.py --restore-check` guarda un archivo PostgreSQL binario y un manifiesto con
+SHA-256 en `.local-backups/`, carpeta ignorada por Git. La comprobación crea una base temporal,
+restaura el archivo, consulta migraciones/empresas/movimientos y elimina esa base temporal. **Nunca
+sobrescribe `liquidity`**. El 2 de octubre se verificó la restauración de 34 migraciones, 2 empresas
+y 65 movimientos. El script se puede ejecutar manualmente:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\db-backup.py --restore-check
+```
+
+En este equipo quedó registrada la tarea de Windows `Horizonte Local Backup`, diaria a las 02:00,
+mediante `scripts/register-backup-task.ps1`. Se ejecutó manualmente desde el Programador de tareas
+y terminó con código 0; la próxima ejecución queda programada. Si cambias la hora o reinstalas el
+proyecto, vuelve a ejecutar el script de registro. La tarea requiere una sesión de Windows abierta,
+Docker Desktop en marcha y espacio disponible. Puedes consultar su último resultado con
+`Get-ScheduledTaskInfo -TaskName 'Horizonte Local Backup'`.
+
+Estos respaldos permanecen **en el mismo equipo y sin cifrado**; utiliza solo datos sintéticos o de
+desarrollo. Para datos reales faltan almacenamiento externo cifrado, política de retención,
+supervisión de fallos y un procedimiento de recuperación de producción probado.
+
+## Comercios identificados
+
+En el dashboard, «Comercios identificados» agrupa los movimientos cuya descripción contiene
+una etiqueta explícita como `Comercio: Café 24`. CSV/XLSX y fuentes conectadas usan alias propios
+por empresa y proveedor. El texto original y la etiqueta extraída permanecen en el movimiento.
+Para probarlo sin datos externos, importa un CSV con la columna `description` que incluya esa
+etiqueta; después pulsa «Actualizar» en la lista de comercios. Las descripciones ambiguas no se
+asignan automáticamente.
+
 ## Qué debes hacer fuera de la aplicación
 
 **Demo local: no requiere registro bancario, API keys, suscripciones, SMTP, Redis ni Docker.**
@@ -344,3 +403,33 @@ En Empresa y equipo abre Crear otra empresa. Indica nombre, NIT, cuenta manual, 
 ## Mi cuenta
 
 Desde Mi cuenta puedes actualizar el correo de recuperación y cambiar la contraseña indicando la actual. La nueva requiere al menos 10 caracteres y los validadores de Django. La sesión actual se conserva y las demás se invalidan cuando vuelvan a realizar una petición. Un cambio inválido no guarda el correo parcialmente. No se envía correo de verificación; SMTP externo sigue pendiente de configuración para probar recuperación con entrega real. Editar la cuenta local no requiere servicios externos. Las pruebas usan usuarios temporales y no cambian demo/demo1234.
+
+
+## Cobertura del historial
+
+El dashboard revisa los últimos 365 días hasta el corte y muestra métricas separadas por cuenta. Sin movimientos, amplitud menor de 90 días y amplitud de al menos 90 días son etiquetas descriptivas, no requisitos validados de un modelo ni niveles de confianza. Se muestran también días activos para no confundir dos movimientos distantes con historial completo. No se incluyen fechas futuras. La proyección sigue basada en obligaciones incluso sin historial; la selección y calibración de modelos continúa pendiente. No requiere servicios externos.
+
+
+## Saldos y cortes manuales
+
+Owner/accountant pueden declarar saldo COP y fecha de corte desde el dashboard. El corte no puede ser futuro ni anterior a movimientos registrados. Cambiarlo no modifica movimientos ni concilia obligaciones automáticamente. Usa el saldo real del extracto, incluidos movimientos del día; todas las cuentas deben tener el mismo corte. Los cambios quedan auditados. No requiere conexión bancaria ni servicios externos.
+
+
+## Umbral de liquidez
+
+El propietario configura un mínimo COP no negativo en el dashboard. La alerta compara saldo al corte y proyección de obligaciones con ese mínimo: igualdad no activa alerta, un saldo menor sí. Muestra primera fecha, días futuros por debajo y brecha máxima (incluido el corte). Contador y Consulta solo leen la configuración. Cambios auditados; no requiere servicios externos. No calcula probabilidades; las evaluaciones se guardan explícitamente en el historial.
+
+
+## Historial de evaluaciones de liquidez
+
+Owner/accountant pueden guardar evaluaciones de 30/60/90 días desde el dashboard. Se conservan corte, saldo, umbral, cuentas, obligaciones y resultado del método obligations_v1. Datos idénticos reutilizan la misma evaluación; cambios generan otra. Viewer solo consulta el listado paginado de su empresa. No hay evaluación programada ni notificaciones externas; no requiere servicios externos para probar el historial.
+
+
+## Consulta de auditoría
+
+En Empresa y equipo, propietario y contador consultan fecha, usuario, acción y valores antes/después. La lista está paginada y admite filtro exacto por código de acción, por ejemplo account.balance_updated. Consulta no tiene acceso; no existen endpoints para editar o borrar registros de auditoría. Solo aparecen acciones ya instrumentadas, no todos los accesos. No requiere servicios externos.
+
+
+## Referencia estadística experimental
+
+Para habilitarla, importa movimientos de cada cuenta y confirma en Saldos de cuentas manuales que los 90 días previos al corte están completos, incluidos días sin actividad. En el dashboard elige horizonte y método. Si falta cobertura o hay menos de cuatro días con flujo variable, la sección explica por qué no muestra resultados. El gráfico y la tabla muestran por separado obligaciones y flujo variable estimado. Este cálculo no produce intervalos ni probabilidades. Cambiar el corte o importar movimientos nuevos dentro del periodo retira la confirmación; tendrás que revisar los datos y confirmarla de nuevo. No requiere servicios externos.

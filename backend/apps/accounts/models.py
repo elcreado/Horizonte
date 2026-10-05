@@ -5,6 +5,7 @@ from django.db import models
 class Company(models.Model):
     name = models.CharField(max_length=200)
     nit = models.CharField(max_length=30, unique=True)
+    liquidity_threshold = models.DecimalField(max_digits=18, decimal_places=2, default=0)
 
 
 class CompanyMember(models.Model):
@@ -32,3 +33,21 @@ class AuditLog(models.Model):
     before = models.JSONField(default=dict)
     after = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class BackgroundTask(models.Model):
+    name = models.CharField(max_length=120)
+    args = models.JSONField(default=list)
+    kwargs = models.JSONField(default=dict)
+    status = models.CharField(max_length=12, default="queued", db_index=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    available_at = models.DateTimeField(db_index=True)
+    lease = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(null=True)
+
+
+class RateLimitBucket(models.Model):
+    key = models.CharField(max_length=64, unique=True)
+    requests = models.PositiveIntegerField(default=0)
+    expires_at = models.DateTimeField(db_index=True)

@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from apps.accounts.models import Company
 from apps.banking.models import BankAccount, Transaction
 
+from .alerts import threshold_alert
+from .coverage import history_coverage
 from .models import Obligation
 from .services import project_obligations
 
@@ -48,6 +50,8 @@ def dashboard(request, company_id):
     return Response(
         {
             "company": company.name,
+            "liquidity_alert": threshold_alert(points, company.liquidity_threshold, balance, as_of),
+            "coverage": history_coverage(accounts, as_of),
             "currency": "COP",
             "as_of": as_of.isoformat(),
             "balance": str(balance),

@@ -1,6 +1,6 @@
 # Plataforma de Inteligencia de Liquidez para Microempresas
 
-> **Estado consolidado vigente:** [matriz de implementación](docs/IMPLEMENTATION_STATUS.md). Incluye obligaciones, conciliación e importación XML; el objetivo completo sigue en desarrollo.
+> **Estado consolidado vigente:** [matriz de implementación](docs/IMPLEMENTATION_STATUS.md). Incluye obligaciones, conciliación e importación XML; el objetivo completo sigue en desarrollo. La [hoja de ruta de entregables](docs/ROADMAP_ENTREGABLES.md) detalla los pasos para la primera versión funcional, la viabilidad de escritorio y las metas de una segunda versión móvil.
 
 > **Estado v0.1:** base ejecutable con Inicio público, Django/React, sesión, aislamiento por empresa, datos sintéticos y escenario de obligaciones a 30/60/90 días. Este documento describe el alcance objetivo de la tesis, no funcionalidades ya terminadas.
 >

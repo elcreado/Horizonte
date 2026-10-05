@@ -5,10 +5,13 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.accounts.models import CompanyMember
+from apps.classify.models import ClassificationRule
 from apps.classify.services import classify
 from config.celery import app
 
+from . import sync  # noqa: F401 - registra la tarea en el worker Celery
 from .imports import parse_csv
+from .merchants import resolve_merchants
 from .models import BankAccount, ImportJob, Transaction
 from .normalization import normalize_movement
 from .xlsx import parse_xlsx
@@ -35,34 +38,82 @@ def import_csv(job_id: int) -> None:
                 if job.file_format == "xlsx"
                 else parse_csv(job.content)
             )
-            created = 0
-            for row in rows:
+            unique_rows = {row["external_id"]: row for row in rows}
+            identifiers = list(unique_rows)
+            existing = {}
+            for offset in range(0, len(identifiers), 1000):
+                existing.update(
+                    {
+                        item.external_id: item
+                        for item in Transaction.objects.filter(
+                            account=account, external_id__in=identifiers[offset : offset + 1000]
+                        )
+                    }
+                )
+            remembered_rules = {
+                (rule.normalized_description, rule.direction): rule.category
+                for rule in ClassificationRule.objects.filter(company_id=account.company_id)
+            }
+            pending = []
+            for row in unique_rows.values():
                 if row["date"] > account.balance_date.isoformat():
                     raise ValueError(
                         "Hay movimientos posteriores al corte del saldo. Actualiza el corte antes de importarlos."
                     )
-                movement, new = Transaction.objects.get_or_create(
-                    account=account,
-                    external_id=row["external_id"],
-                    defaults={
-                        **{key: row[key] for key in ["date", "amount", "description"]},
-                        **normalize_movement(row["description"]),
-                    },
+                movement = existing.get(row["external_id"])
+                if movement:
+                    if (
+                        str(movement.date) != row["date"]
+                        or movement.amount != Decimal(row["amount"])
+                        or movement.description != row["description"]
+                    ):
+                        raise ValueError(
+                            "Un ID existente tiene datos distintos. No se importó ninguna fila."
+                        )
+                    continue
+                category, source = classify(
+                    account.company_id, row["description"], Decimal(row["amount"]), remembered_rules
                 )
-                if not new and (
-                    str(movement.date) != row["date"]
-                    or str(movement.amount) != row["amount"]
-                    or movement.description != row["description"]
-                ):
-                    raise ValueError(
-                        "Un ID existente tiene datos distintos. No se importó ninguna fila."
+                pending.append(
+                    Transaction(
+                        account=account,
+                        **row,
+                        **normalize_movement(row["description"]),
+                        category=category,
+                        classification_source=source,
                     )
-                if new:
-                    movement.category, movement.classification_source = classify(
-                        account.company_id, row["description"], Decimal(row["amount"])
-                    )
-                    movement.save(update_fields=["category", "classification_source"])
-                created += int(new)
+                )
+            merchant_ids = resolve_merchants(
+                account.company_id, "manual_upload", (item.merchant_name for item in pending)
+            )
+            for item in pending:
+                item.merchant_id = merchant_ids.get(item.merchant_name)
+            # El lock de cuenta serializa importadores; la restricción única sigue siendo obligatoria.
+            Transaction.objects.bulk_create(pending, batch_size=500)
+            created = len(pending)
+            if (
+                created
+                and account.history_complete_from
+                and any(
+                    account.history_complete_from.isoformat()
+                    <= row["date"]
+                    <= account.history_complete_through.isoformat()
+                    for row in unique_rows.values()
+                    if row["external_id"] not in existing
+                )
+            ):
+                account.history_complete_from = None
+                account.history_complete_through = None
+                account.history_confirmed_at = None
+                account.history_confirmed_by = None
+                account.save(
+                    update_fields=[
+                        "history_complete_from",
+                        "history_complete_through",
+                        "history_confirmed_at",
+                        "history_confirmed_by",
+                    ]
+                )
             job.status = "completed"
             job.created_count = created
             job.duplicate_count = len(rows) - created

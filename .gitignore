@@ -3,12 +3,16 @@ __pycache__/
 *.py[cod]
 *.sqlite3
 .env
+.env.hosted
 node_modules/
 dist/
+desktop/release/
+data/generated/
 .ruff_cache/
 .pytest_cache/
 
 .local-logs/
+.local-backups/
 
 .env.example
 .editorconfig
