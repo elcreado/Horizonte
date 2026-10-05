@@ -87,6 +87,11 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   sin materializarlas. Prueba comprueba inclusión de los días 1/30, exclusión de 31,
   canceladas, saldadas y ajenas, con saldo final y contador de vencidas conservados.
   Reduce objetos cargados fuera del horizonte; no certifica latencia p95 ni concurrencia.
+  `scripts/measure_hosted_dashboard.py --samples 10` prepara un ensayo HTTP acotado:
+  autenticación de QA desde archivo privado ignorado, calentamiento y 5–30 muestras
+  secuenciales por horizonte; guarda únicamente tiempos/estados sin respuestas financieras.
+  Usa mediana y percentil 95 por rango más próximo. No es prueba de render ni concurrencia;
+  la cuenta y composición de datos deben contextualizar cualquier resultado.
   El dashboard ofrece una tabla desplegable de fecha/saldo para todos los puntos del
   escenario, con dos decimales, caption y encabezados de fila/columna. Es una alternativa
   textual al gráfico; compilación comprobada, recorrido real con Narrador aún pendiente.
