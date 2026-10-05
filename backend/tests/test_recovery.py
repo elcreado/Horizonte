@@ -8,7 +8,7 @@ from django.core import mail
 from django.core.cache import cache
 from django.core.management import call_command
 from django.db import DatabaseError
-from django.test import TestCase, override_settings
+from django.test import TransactionTestCase, override_settings
 from rest_framework.test import APIClient
 
 from apps.accounts.models import BackgroundTask
@@ -19,7 +19,8 @@ from apps.accounts.tasks import send_password_recovery
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
     CSRF_TRUSTED_ORIGINS=["http://127.0.0.1:5173"],
 )
-class RecoveryTests(TestCase):
+class RecoveryTests(TransactionTestCase):
+    # Incluye el comando worker, que renueva conexiones fuera de transacciones activas.
     @override_settings(BACKGROUND_MODE="database")
     def test_database_queue_failure_returns_generic_503_without_message(self):
         with patch(

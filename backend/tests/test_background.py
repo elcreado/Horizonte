@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.db import DatabaseError
-from django.test import TestCase, override_settings
+from django.test import TransactionTestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -19,7 +19,9 @@ from config.background import QueueUnavailable, create_job, enqueue, run_one
 
 
 @override_settings(BACKGROUND_MODE="database")
-class BackgroundTests(TestCase):
+class BackgroundTests(TransactionTestCase):
+    # El comando limpia conexiones: debe ejecutarse fuera de la transacción
+    # envolvente de TestCase, como ocurre en el proceso worker real.
     def test_expired_worker_cannot_overwrite_recovered_attempt(self):
         for recovered_fails in (False, True):
             with self.subTest(recovered_fails=recovered_fails):
