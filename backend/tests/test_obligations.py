@@ -13,6 +13,48 @@ from config.api_inventory import build_inventory
 
 
 class ObligationTests(TestCase):
+    def test_multiple_pages_preserve_tied_dates_and_tenant_isolation(self):
+        created = []
+        for index in range(40):
+            created.append(
+                Obligation.objects.create(
+                    company=self.company,
+                    reference=f"page-{index}",
+                    description=f"Page {index}",
+                    due_date=self.obligation.due_date,
+                    direction="out",
+                    outstanding_amount="10",
+                    cancelled=index % 3 == 0,
+                )
+            )
+        foreign = Obligation.objects.create(
+            company=self.other,
+            reference="foreign-page",
+            description="Private",
+            due_date=self.obligation.due_date,
+            direction="in",
+            outstanding_amount="999",
+        )
+        expected = sorted(
+            [self.obligation, *created], key=lambda row: (row.cancelled, row.due_date, row.pk)
+        )
+        collected = []
+        for page_number, size in ((1, 20), (2, 20), (3, 1)):
+            with self.subTest(page=page_number):
+                response = self.client.get(f"{self.base}?page={page_number}")
+                self.assertEqual(response.status_code, 200)
+                page = response.json()
+                self.assertEqual(page["count"], 41)
+                self.assertEqual(len(page["results"]), size)
+                self.assertEqual(page["next"] is None, page_number == 3)
+                self.assertEqual(page["previous"] is None, page_number == 1)
+                self.assertTrue(page["can_edit"])
+                collected.extend(row["id"] for row in page["results"])
+        self.assertEqual(collected, [row.pk for row in expected])
+        self.assertEqual(len(set(collected)), 41)
+        self.assertNotIn(foreign.pk, collected)
+        self.assertEqual(self.client.get(f"{self.base}?page=4").status_code, 404)
+
     def setUp(self):
         self.user = get_user_model().objects.create_user(username="finance")
         self.company = Company.objects.create(name="Finance", nit="finance")

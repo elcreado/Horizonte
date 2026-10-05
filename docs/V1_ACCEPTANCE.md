@@ -23,6 +23,9 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
 - [ ] Revisar aceptación de empresas/roles (RF-02), conectores sintéticos (RF-03/RF-16),
   importaciones (RF-04/RF-05), normalización/clasificación/correcciones (RF-06/RF-07/RF-08)
   con corpus representativo. Las pruebas de fixtures no demuestran exactitud general.
+  Obligaciones: recorrido de 41 registros propios en tres páginas (20/20/1), con empate
+  de vencimiento y cancelaciones, conserva orden estable sin pérdidas/duplicados;
+  excluye obligación ajena y rechaza cuarta página inexistente. Prueba local aprobada.
   La carga CSV/XLSX rechaza localmente extensión distinta, archivo vacío o tamaño superior
   a 2 MiB antes de consultar CSRF/enviar; el backend conserva su validación independiente.
   Pérdida de conexión al enviar advierte consultar trabajos antes de repetir, porque la
