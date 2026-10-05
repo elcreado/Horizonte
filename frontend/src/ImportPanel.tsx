@@ -50,13 +50,16 @@ export function ImportPanel({ company, revision, onChanged }: { company: string;
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSending(true); setError('');
     const form = event.currentTarget;
+    const payload = new FormData(form);
     try {
       const tokenResponse = await fetch('/api/auth/csrf/');
+      if (!tokenResponse.ok) throw new Error('No se pudo verificar la sesión. Reintenta cuando el servidor esté disponible.');
       const token = await tokenResponse.json();
+      if (typeof token.csrfToken !== 'string' || !token.csrfToken) throw new Error('Respuesta de sesión inválida. Recarga e intenta de nuevo.');
       const response = await fetch(`/api/companies/${company}/imports/`, {
-        method: 'POST', headers: { 'X-CSRFToken': token.csrfToken }, body: new FormData(form),
+        method: 'POST', headers: { 'X-CSRFToken': token.csrfToken }, body: payload,
       });
-      const result = await response.json();
+      const result = await response.json().catch(() => { throw new Error('No se pudo leer el resultado de la carga. Consulta las importaciones antes de volver a enviar el archivo.'); });
       if (!response.ok) throw new Error(result.detail || 'No se pudo cargar el archivo.');
       setJobs(previous => [result, ...previous].slice(0, 20)); form.reset();
     } catch (e) { setError((e as Error).message); }

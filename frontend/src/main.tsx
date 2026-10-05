@@ -46,7 +46,9 @@ async function api<T>(path: string, body?: object, signal?: AbortSignal): Promis
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (body) {
     const response = await fetch('/api/auth/csrf/');
+    if (!response.ok) throw new Error('No se pudo verificar la sesión. Reintenta cuando el servidor esté disponible.');
     const token = await response.json();
+    if (typeof token.csrfToken !== 'string' || !token.csrfToken) throw new Error('Respuesta de sesión inválida. Recarga e intenta de nuevo.');
     headers['X-CSRFToken'] = token.csrfToken;
   }
   const response = await fetch(`/api${path}`, {
