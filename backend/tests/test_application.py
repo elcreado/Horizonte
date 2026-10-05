@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
@@ -9,11 +10,44 @@ from rest_framework.test import APIClient
 
 from apps.accounts.models import Company, CompanyMember
 from apps.banking.models import BankAccount, Transaction
+from apps.forecast.models import Obligation
 from apps.forecast.services import project_obligations
 from config.api_inventory import build_inventory
 
 
 class ApplicationTests(TestCase):
+    def test_dashboard_only_materializes_pending_obligations_in_selected_horizon(self):
+        cutoff = date(2026, 1, 1)
+        for reference, offset, cancelled, amount, company in (
+            ("at-cutoff", 0, False, "30", self.company),
+            ("past", -1, False, "40", self.company),
+            ("first", 1, False, "10", self.company),
+            ("last", 30, False, "20", self.company),
+            ("outside", 31, False, "999", self.company),
+            ("cancelled", 1, True, "999", self.company),
+            ("settled", 1, False, "0", self.company),
+            ("foreign", 1, False, "999", self.other),
+        ):
+            Obligation.objects.create(
+                company=company,
+                reference=reference,
+                description=reference,
+                due_date=cutoff + timedelta(days=offset),
+                direction="out",
+                cancelled=cancelled,
+                outstanding_amount=amount,
+            )
+        with patch("apps.forecast.views.project_obligations", wraps=project_obligations) as project:
+            response = self.client.get(f"/api/companies/{self.company.pk}/dashboard/?horizon=30")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([row.reference for row in project.call_args.args[3]], ["first", "last"])
+        result = response.json()
+        self.assertEqual(result["overdue_count"], 2)
+        self.assertEqual(Decimal(result["payable"]), 30)
+        self.assertEqual(Decimal(result["points"][-1]["balance"]), 70)
+        self.assertEqual(len(result["points"]), 30)
+        self.assertEqual(len(result["obligations"]), 2)
+
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="owner", password="a-long-test-password"

@@ -83,6 +83,10 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
 - [ ] Verificar accesibilidad, móvil web, tiempos de renderizado/p95, carga concurrente,
   disponibilidad controlada y seguridad conforme a los criterios del README/SPECS.
   HTTP 200 y una importación rápida no prueban estos requisitos.
+  Dashboard filtra las obligaciones pendientes al horizonte en SQL y cuenta vencidas
+  sin materializarlas. Prueba comprueba inclusión de los días 1/30, exclusión de 31,
+  canceladas, saldadas y ajenas, con saldo final y contador de vencidas conservados.
+  Reduce objetos cargados fuera del horizonte; no certifica latencia p95 ni concurrencia.
   El dashboard ofrece una tabla desplegable de fecha/saldo para todos los puntos del
   escenario, con dos decimales, caption y encabezados de fila/columna. Es una alternativa
   textual al gráfico; compilación comprobada, recorrido real con Narrador aún pendiente.

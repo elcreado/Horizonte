@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 
 from django.shortcuts import get_object_or_404
@@ -33,16 +34,14 @@ def dashboard(request, company_id):
         )
     as_of = dates.pop()
     balance = sum((account.balance for account in accounts), Decimal("0"))
-    obligations = list(
-        Obligation.objects.filter(
-            company=company, outstanding_amount__gt=0, cancelled=False
-        ).order_by("due_date")
+    pending = Obligation.objects.filter(company=company, outstanding_amount__gt=0, cancelled=False)
+    overdue_count = pending.filter(due_date__lte=as_of).count()
+    upcoming = list(
+        pending.filter(due_date__gt=as_of, due_date__lte=as_of + timedelta(days=horizon)).order_by(
+            "due_date"
+        )
     )
-    points = project_obligations(balance, as_of, horizon, obligations)
-    end = points[-1]["date"]
-    upcoming = [
-        item for item in obligations if as_of < item.due_date and item.due_date.isoformat() <= end
-    ]
+    points = project_obligations(balance, as_of, horizon, upcoming)
     negative = [point for point in points if Decimal(point["balance"]) < 0]
     transactions = Transaction.objects.filter(account__company=company).order_by("-date", "-id")[
         :20
@@ -70,7 +69,7 @@ def dashboard(request, company_id):
                     Decimal("0"),
                 )
             ),
-            "overdue_count": sum(o.due_date <= as_of for o in obligations),
+            "overdue_count": overdue_count,
             "first_deficit": negative[0]["date"] if negative else None,
             "minimum_balance": str(min(Decimal(p["balance"]) for p in points)),
             "points": points,
