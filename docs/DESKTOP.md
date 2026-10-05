@@ -42,7 +42,7 @@ no necesita Python, Node, Redis, PostgreSQL ni Docker.
   Electron requiere combinar handlers de consulta y solicitud:
   [documentación de sesión](https://www.electronjs.org/docs/latest/api/session#sessetpermissioncheckhandlerhandler).
 
-## Infraestructura pendiente de autorización y despliegue
+## Infraestructura de pruebas y alternativa de despliegue
 
 **Configuración vigente de pruebas:** presupuesto 0 USD. Seguir `HOSTING_FREE.md` y `render.yaml`:
 web y cola persistente en un servicio Render Free, PostgreSQL Supabase Free. El esquema Celery/Redis
@@ -81,3 +81,4 @@ Preparar un instalador no cierra los pendientes del modelo predictivo y del alca
 consultar `ROADMAP_ENTREGABLES.md`. El objetivo completo sigue en ejecución.
 
 Recorrido de uso y aceptación: [USER_MANUAL.md](USER_MANUAL.md).
+Ensayo reproducible con resultados esperados: [DESKTOP_ACCEPTANCE.md](DESKTOP_ACCEPTANCE.md).

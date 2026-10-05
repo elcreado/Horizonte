@@ -1,16 +1,16 @@
 # Manual de uso y pruebas de Horizonte
 
-Estado: 4 de octubre de 2026. Describe las funciones actuales; no certifica el cierre del
+Estado: 5 de octubre de 2026. Describe las funciones actuales; no certifica el cierre del
 entregable. Utilizar empresas, archivos y correos de prueba. No cargar información bancaria real.
 
 ## Instalar y conectar el escritorio
 
-- Ejecutar el instalador Windows `desktop/release/verified/Horizonte Setup 0.1.0.exe`.
+- Ejecutar el instalador Windows `desktop/release/hosted/Horizonte Setup 0.1.0.exe`.
   El ejecutable se generó y su arranque se comprobó; instalación, actualización y desinstalación
   en un equipo limpio siguen pendientes. No está firmado.
 - Abrir Horizonte y escribir el origen HTTPS del servidor, sin rutas ni credenciales.
-  La URL definitiva se facilitará después del despliegue; actualmente no hay servidor remoto
-  confirmado. El instalador no incluye una base de datos ni un backend local.
+  El formulario ofrece `https://horizonte-demo.onrender.com`, servidor de pruebas disponible.
+  El instalador no incluye una base de datos ni un backend local.
 - Conectar. La pantalla Inicio debe estar disponible sin haber iniciado sesión.
 - Para cambiar de servidor usar el menú Servidor. El cambio borra la sesión del origen anterior.
 - El usuario final necesita Windows y acceso a Internet. No necesita Docker, Python ni Node.
@@ -97,6 +97,8 @@ entregable. Utilizar empresas, archivos y correos de prueba. No cargar informaci
   de investigación no prueban precisión con empresas reales.
 
 ## Recorrido de aceptación pendiente
+
+Para una prueba con cifras exactas, seguir [ensayo de escritorio](DESKTOP_ACCEPTANCE.md).
 
 Registrar fecha, versión del instalador, servidor, resultado y evidencia de cada paso. Esta
 lista es un procedimiento pendiente; no representa pruebas de usuario ya ejecutadas.
