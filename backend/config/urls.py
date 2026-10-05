@@ -15,6 +15,7 @@ from apps.banking.views import accounts, imports, update_balance
 from apps.classify.views import category_suggestion, correct, delete_rule, movements, rules
 from apps.forecast.alert_history import alert_history
 from apps.forecast.alerts import threshold
+from apps.forecast.calendar import obligation_calendar
 from apps.forecast.history import history
 from apps.forecast.live_baseline import baseline_forecast
 from apps.forecast.obligations import (
@@ -32,6 +33,7 @@ from apps.invoices.views import confirm_invoice, invoice_imports, invoices, link
 from config.web import frontend, health
 
 urlpatterns = [
+    path("api/companies/<int:company_id>/obligation-calendar/", obligation_calendar),
     path("api/companies/<int:company_id>/merchant-aliases/", merchant_aliases),
     path("api/platform/users/", platform_users),
     path("api/companies/<int:company_id>/merchants/<int:merchant_id>/name/", rename_merchant),

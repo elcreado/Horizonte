@@ -6,6 +6,12 @@ pendientes históricos no sustituyen este estado vigente.
 
 ## Corte verificado del 5 de octubre
 
+- Calendario mensual agregado de obligaciones implementado y conectado a React: todos los
+  días, cobros/pagos pendientes por vencimiento, conteos, selector de mes y reintento.
+  Excluye canceladas/saldadas y consulta todas las obligaciones del mes, sin depender de
+  la página visible de la lista. Se actualiza con revisiones financieras; importes en tabla.
+  API prueba aislamiento y febrero bisiesto. Build aprobado; QA visual y despliegue pendientes.
+
 - Historiales de alertas/pronósticos permiten reintentar consultas tras fallos y advierten
   consultar antes de repetir un guardado cuya respuesta se perdió. GET descarta respuestas
   canceladas; CSRF/POST de guardado cancelables al desmontar, sin actualizar vistas obsoletas.

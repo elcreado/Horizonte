@@ -78,4 +78,9 @@ a { color: #215f4e; }
 
 .obligation-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 20px 0; margin-bottom: 20px; border-bottom: 1px solid #dce5dd; }
 .obligation-form select { width: 100%; }
+.obligation-calendar { min-width: 900px; table-layout: fixed; }
+.obligation-calendar td { vertical-align: top; height: 115px; overflow-wrap: anywhere; }
+.obligation-calendar time { font-weight: 700; }
+.obligation-calendar p { margin: 8px 0; }
+.obligation-calendar caption { text-align: left; padding: 12px 0; }
 @media (max-width: 650px) { .obligation-form { grid-template-columns: 1fr; } }

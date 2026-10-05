@@ -5146,6 +5146,37 @@
         }
       }
     },
+    "/api/companies/{company_id}/obligation-calendar/": {
+      "get": {
+        "operationId": "obligation_calendar_get",
+        "summary": "obligation_calendar",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
+          },
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          }
+        },
+        "x-contract-status": "route-inventory-only",
+        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+      }
+    },
     "/api/companies/{company_id}/obligations/": {
       "get": {
         "operationId": "obligations_get",

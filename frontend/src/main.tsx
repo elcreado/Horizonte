@@ -18,6 +18,7 @@ import { Team } from './Team';
 import { PasswordRecovery } from './PasswordRecovery';
 const Invoices = React.lazy(() => import('./Invoices').then(module => ({ default: module.Invoices })));
 const Obligations = React.lazy(() => import('./Obligations').then(module => ({ default: module.Obligations })));
+const ObligationCalendar = React.lazy(() => import('./ObligationCalendar').then(module => ({ default: module.ObligationCalendar })));
 import { Recurrences } from './Recurrences';
 const Movements = React.lazy(() => import('./Movements').then(module => ({ default: module.Movements })));
 const Merchants = React.lazy(() => import('./Merchants').then(module => ({ default: module.Merchants })));
@@ -186,6 +187,7 @@ function App() {
       {company && <History key={company} company={company} refresh={financialRevision} />}
       {company && <Invoices key={company} company={company} onChange={() => setFinancialRevision(n => n + 1)} />}
       {company && <Obligations key={company} company={company} refresh={financialRevision} onChange={() => setFinancialRevision(n => n + 1)} />}
+      {company && <ObligationCalendar key={company} company={company} refresh={financialRevision} />}
       {company && <Movements key={company} company={company} refresh={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
       {company && <Merchants key={company} company={company} />}
       {company && <ClassificationRules key={company} company={company} />}
