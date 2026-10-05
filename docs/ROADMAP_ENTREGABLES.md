@@ -4,15 +4,17 @@
 
 ## Estado actual comprobado
 
-**Actualización del 5 de octubre:** el listado siguiente conserva el corte previo. Desde entonces
-se construyó el instalador Electron/NSIS, se publicó `codex/v1-hosted` y se creó el servicio
-Render Free en el workspace Horizonte. El despliegue inicial falló por falta de configuración
-PostgreSQL. En `.env.hosted` solo falta ahora `POSTGRES_PASSWORD`; no hay aceptación remota.
-La última suite completa ejecutó 187 pruebas: 182 aprobadas y 5 omitidas por PostgreSQL;
-posteriormente se añadió una prueba CSRF aprobada en el módulo de comercios (14 pruebas).
-La compilación separa aplicación (98,80 kB), dependencias (197,04 kB) y gráficos (365,76 kB),
-sin el aviso anterior de paquete mayor de 500 kB. Esto no prueba rendimiento real del navegador.
-El cliente de escritorio depende del servidor; el usuario final no necesita Docker.
+**Estado vigente del 5 de octubre:** Render Free y Supabase están conectados y operativos.
+CI del calendario `37379774142` terminó correctamente; commit `67d2350` desplegado,
+Inicio y salud HTTP 200 y bundle actualizado comprobado. Suite local: 197 pruebas,
+192 aprobadas y 5 omitidas; CI PostgreSQL aprobada. Instalador vigente:
+`desktop/release/hosted/Horizonte Setup 0.1.0.exe`, con URL remota precargada.
+El usuario final necesita Windows e internet, sin Docker/Python/Node/PostgreSQL local.
+Instalación/desinstalación limpia y QA visual siguen pendientes. Respaldo manual y
+restauración estructural/Client Django verificados; respaldo diario rechazado por el usuario.
+Correo real pendiente de configuración. Véase [aceptación V1](V1_ACCEPTANCE.md).
+
+### Corte histórico inicial (no describe la versión vigente)
 
 - [x] Inicio público sin sesión; registro, acceso/cierre de sesión, recuperación local de contraseña y gestión básica de cuenta, empresas y roles.
 - [x] Django/DRF, React/Vite, PostgreSQL/Redis y worker Celery en el arranque local. Las rutas de la interfaz consumen `/api` mediante el proxy de Vite en desarrollo.
@@ -58,7 +60,7 @@ Los pasos están en orden de dependencia. Cada uno termina con una evidencia de 
 5. **Hacer reproducible la entrega y su operación.**
    - [ ] Crear imágenes/versiones de backend, frontend y worker y un Compose de aplicación completo, o documentar expresamente la instalación manual elegida; agregar migraciones, health checks y configuración de arranque.
    - [ ] Ejecutar CI sobre PostgreSQL además de SQLite, incluyendo migraciones, pruebas backend, lint/formato y build frontend; añadir una prueba de aceptación de navegador para el flujo principal.
-   - [ ] Ensayar backup y restauración fuera del equipo local, con retención, cifrado y comprobación de fallos; medir p95 del dashboard y carga con workers.
+   - [ ] Completar la política de respaldo manual y recuperación, con retención, cifrado y comprobación de fallos; medir p95 del dashboard y carga con workers. El respaldo y la restauración local ya se ensayaron. No se programarán respaldos diarios, por decisión del usuario.
    - [ ] Preparar manual de usuario, manual técnico, contrato OpenAPI y guía corta de prueba con credenciales de demo creadas localmente.
    - **Aceptación:** desde un equipo limpio se sigue una única guía y se completa el flujo de demostración sin editar código; una restauración documentada recupera los datos de prueba.
 
@@ -70,7 +72,7 @@ Los pasos están en orden de dependencia. Cada uno termina con una evidencia de 
 
 - **Opción recomendada para un primer instalador:** empaquetar la interfaz en una ventana Tauri o Electron y mantener Django, PostgreSQL, Redis y Celery en un servidor de prueba seguro. Así el usuario final instala una app de escritorio que sigue funcional en línea, sin Docker local. Hay que introducir una URL de API configurable, decidir un origen estable para cookies/CSRF, HTTPS, inicio/cierre de sesión y actualización del instalador. El modo sin conexión no estaría disponible.
 - **Opción sin servidor y sin Docker:** empaquetar Django/Python como proceso auxiliar, sustituir o integrar las dependencias PostgreSQL/Redis/Celery de manera soportada, iniciar y detener procesos con seguridad, migrar la BD, guardar datos en una ruta de usuario, hacer backups y gestionar puertos/local-only. Requiere pruebas de importaciones, concurrencia y actualización del esquema. Es un proyecto aparte y no está listo hoy.
-- **Elección implementada para el primer instalador:** Electron con NSIS para Windows x64 y servidor remoto HTTPS. Existe `desktop/release/permissions/Horizonte Setup 0.1.0.exe` (sin firma). La prueba automatizada verifica restricciones del cliente y permisos en la configuración local; faltan instalación/desinstalación en Windows limpio y el recorrido autenticado remoto. Tauri queda como alternativa futura; no es el cliente actual.
+- **Elección implementada para el primer instalador:** Electron con NSIS para Windows x64 y servidor remoto HTTPS. Existe `desktop/release/hosted/Horizonte Setup 0.1.0.exe` (sin firma). La prueba automatizada verifica restricciones del cliente y permisos en la configuración local; faltan instalación/desinstalación en Windows limpio y el recorrido autenticado remoto. Tauri queda como alternativa futura; no es el cliente actual.
 - **Prueba de viabilidad antes de prometer entrega:** crear un prototipo Windows que abre Inicio sin sesión, inicia sesión contra API de prueba, sube un CSV, espera el job y muestra dashboard; cerrarlo y abrirlo otra vez sin pérdida de sesión indebida. Después probar instalación, actualización y desinstalación en una máquina limpia. Solo entonces decidir soporte Windows; macOS/Linux requieren builds y QA propios.
 
 Referencias del empaquetado: [Tauri sidecars](https://v2.tauri.app/develop/sidecar/), [requisitos Windows de Tauri](https://v2.tauri.app/start/prerequisites/), [distribución de Electron](https://www.electronjs.org/docs/latest/tutorial/distribution-overview/) y [seguridad de Electron](https://www.electronjs.org/docs/latest/tutorial/security/).
@@ -87,7 +89,8 @@ La exclusión de “aplicación móvil nativa” en `README.md`/`SPECS.md` sigue
 
 ## Acciones externas para probar o distribuir
 
-- **Prueba local actual:** abrir Docker Desktop y ejecutar `scripts/start-dev.ps1`; no hacen falta cuenta bancaria ni credenciales externas para Mock Bank. Para primeras instalaciones sí hacen falta Python/Node y descarga de dependencias. Si falla la cola, verificar Redis y worker.
+- **Prueba del usuario con el instalador:** Windows x64 e internet; conectar a `https://horizonte-demo.onrender.com`. No necesita Docker ni herramientas de desarrollo. Render Free puede suspenderse y tardar al reactivarse.
+- **Desarrollo local opcional:** abrir Docker Desktop y ejecutar `scripts/start-dev.ps1`; no hacen falta cuenta bancaria ni credenciales externas para Mock Bank. Sí requiere Python/Node y dependencias; no es un requisito para probar el instalador.
 - **Prueba de correo real en Render Free:** configurar Resend mediante API HTTPS y un remitente permitido; los puertos SMTP habituales están bloqueados. Sin estas credenciales solo se verifica la recuperación con correo simulado. Véase `HOSTING_FREE.md`.
 - **Prueba de banco real o sandbox:** crear cuenta de desarrollador y conceder acceso del proveedor elegido; el proyecto no puede inventar esas credenciales.
 - **Escritorio en línea:** disponer de servidor HTTPS accesible para el instalador y un equipo Windows limpio para ensayo. **Escritorio sin conexión:** requiere el trabajo adicional descrito arriba, no solo Docker Desktop.

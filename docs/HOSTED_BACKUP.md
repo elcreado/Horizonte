@@ -26,7 +26,9 @@ vigentes, sesión con CSRF y cuenta QA existente, consultas de cuentas/movimient
 facturas/obligaciones y dashboard de 30/60/90 días, cierre de sesión y rechazo posterior.
 El resultado se registra en `functional` del manifiesto `.restore.json`. Es un Client Django,
 sin navegador ni workers; no demuestra UI Electron ni entrega de correo.
-El respaldo automático sigue pendiente; este ensayo no demuestra RNF-08 completo.
+El respaldo diario se excluye por decisión del usuario; no queda como tarea pendiente.
+Este ensayo no demuestra RNF-08 completo en su redacción original: quedan límites de
+cifrado, retención y copia externa del procedimiento manual.
 
 ```powershell
 .venv\Scripts\python.exe scripts/verify_local_restore.py .local-backups/horizonte-20261005T150254Z-eefff7b7.dump --pg-bin "C:\Program Files\PostgreSQL\18\bin"

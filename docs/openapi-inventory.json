@@ -2741,18 +2741,402 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "horizon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                30,
+                60,
+                90
+              ],
+              "default": 30
+            }
           }
         ],
         "responses": {
-          "2XX": {
-            "description": "Operación aceptada; contrato de cuerpo pendiente de documentación detallada."
-          },
           "default": {
             "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Escenario contractual y evidencia observada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "company": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "COP"
+                      ]
+                    },
+                    "as_of": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "balance": {
+                      "type": "string",
+                      "description": "Importe decimal exacto en COP."
+                    },
+                    "horizon": {
+                      "type": "integer",
+                      "enum": [
+                        30,
+                        60,
+                        90
+                      ]
+                    },
+                    "method": {
+                      "type": "string"
+                    },
+                    "notice": {
+                      "type": "string"
+                    },
+                    "receivable": {
+                      "type": "string",
+                      "description": "Importe decimal exacto en COP."
+                    },
+                    "payable": {
+                      "type": "string",
+                      "description": "Importe decimal exacto en COP."
+                    },
+                    "overdue_count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "first_deficit": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "minimum_balance": {
+                      "type": "string",
+                      "description": "Importe decimal exacto en COP."
+                    },
+                    "points": {
+                      "type": "array",
+                      "minItems": 30,
+                      "maxItems": 90,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "balance": {
+                            "type": "string",
+                            "description": "Importe decimal exacto en COP."
+                          }
+                        },
+                        "required": [
+                          "date",
+                          "balance"
+                        ]
+                      },
+                      "description": "Un punto por día futuro; longitud igual a horizon, sin incluir el corte."
+                    },
+                    "liquidity_alert": {
+                      "type": "object",
+                      "properties": {
+                        "threshold": {
+                          "type": "string",
+                          "description": "Importe decimal exacto en COP."
+                        },
+                        "currently_below": {
+                          "type": "boolean"
+                        },
+                        "first_below": {
+                          "type": "string",
+                          "format": "date",
+                          "nullable": true
+                        },
+                        "projected_days_below": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "shortfall_at_minimum": {
+                          "type": "string",
+                          "description": "Importe decimal exacto en COP."
+                        }
+                      },
+                      "required": [
+                        "threshold",
+                        "currently_below",
+                        "first_below",
+                        "projected_days_below",
+                        "shortfall_at_minimum"
+                      ]
+                    },
+                    "coverage": {
+                      "type": "object",
+                      "properties": {
+                        "start": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "as_of": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "accounts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "account_id": {
+                                "type": "integer"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "empty",
+                                  "limited",
+                                  "extended"
+                                ]
+                              },
+                              "count": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "first": {
+                                "type": "string",
+                                "format": "date",
+                                "nullable": true
+                              },
+                              "last": {
+                                "type": "string",
+                                "format": "date",
+                                "nullable": true
+                              },
+                              "span_days": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "active_days": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "days_since_last": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "nullable": true
+                              },
+                              "other_category_count": {
+                                "type": "integer",
+                                "minimum": 0
+                              }
+                            },
+                            "required": [
+                              "account_id",
+                              "name",
+                              "state",
+                              "count",
+                              "first",
+                              "last",
+                              "span_days",
+                              "active_days",
+                              "days_since_last",
+                              "other_category_count"
+                            ]
+                          }
+                        },
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "obligations_only"
+                          ]
+                        },
+                        "notice": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "start",
+                        "as_of",
+                        "accounts",
+                        "method",
+                        "notice"
+                      ]
+                    },
+                    "obligations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "due_date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "direction": {
+                            "type": "string",
+                            "enum": [
+                              "in",
+                              "out"
+                            ]
+                          },
+                          "amount": {
+                            "type": "string",
+                            "description": "Importe decimal exacto en COP."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "description",
+                          "due_date",
+                          "direction",
+                          "amount"
+                        ]
+                      }
+                    },
+                    "transactions": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string"
+                          },
+                          "amount": {
+                            "type": "string",
+                            "description": "Importe decimal exacto en COP."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "date",
+                          "description",
+                          "category",
+                          "amount"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "company",
+                    "currency",
+                    "as_of",
+                    "balance",
+                    "horizon",
+                    "method",
+                    "notice",
+                    "receivable",
+                    "payable",
+                    "overdue_count",
+                    "first_deficit",
+                    "minimum_balance",
+                    "points",
+                    "liquidity_alert",
+                    "coverage",
+                    "obligations",
+                    "transactions"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Horizonte inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sesión ausente o rechazada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa o membresía no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Sin cuentas, moneda distinta de COP o fechas de corte diferentes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ]
+                }
+              }
+            }
           }
         },
-        "x-contract-status": "route-inventory-only",
-        "description": "Inventario de método/ruta y autenticación. No representa esquema completo de entrada o salida."
+        "x-contract-status": "dashboard-fields-documented",
+        "description": "Todos los miembros de la empresa. Suma saldos COP con corte común y proyecta pendientes no cancelados posteriores al corte hasta horizon, suponiendo pago puntual. Los vencidos solo se cuentan; no se trasladan al futuro. first_deficit y minimum_balance consideran puntos futuros; liquidity_alert incluye el saldo actual. coverage observa 365 días hasta el corte, sin certificar completitud ni confianza predictiva. transactions contiene los 20 movimientos más recientes, incluso posteriores al corte. No entrega probabilidades ni cuantiles estadísticos."
       }
     },
     "/api/companies/{company_id}/experimental-forecast/": {

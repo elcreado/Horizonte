@@ -4,6 +4,7 @@ from django.test import TestCase
 
 from apps.banking.models import BankAccount, Transaction
 from apps.forecast.coverage import history_coverage
+from config.api_inventory import build_inventory
 from tests.test_imports import ImportTests
 
 
@@ -53,3 +54,15 @@ class CoverageTests(TestCase):
         self.assertEqual(row["span_days"], 1)
         self.assertEqual(row["other_category_count"], 0)
         self.assertEqual(response.data["balance"], "500.00")
+        operation = build_inventory()["paths"]["/api/companies/{company_id}/dashboard/"]["get"]
+        schema = operation["responses"]["200"]["content"]["application/json"]["schema"]
+        body = response.json()
+        self.assertEqual(set(body), set(schema["properties"]))
+        for field in ("coverage", "liquidity_alert"):
+            self.assertEqual(set(body[field]), set(schema["properties"][field]["properties"]))
+        account_schema = schema["properties"]["coverage"]["properties"]["accounts"]["items"]
+        self.assertEqual(set(body["coverage"]["accounts"][0]), set(account_schema["properties"]))
+        self.assertEqual(len(body["points"]), body["horizon"])
+        self.assertIsInstance(body["coverage"]["as_of"], str)
+        self.assertIsInstance(body["transactions"][0]["amount"], str)
+        self.assertIn("409", operation["responses"])
