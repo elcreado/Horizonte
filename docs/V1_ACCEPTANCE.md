@@ -23,6 +23,10 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
 - [ ] Revisar aceptación de empresas/roles (RF-02), conectores sintéticos (RF-03/RF-16),
   importaciones (RF-04/RF-05), normalización/clasificación/correcciones (RF-06/RF-07/RF-08)
   con corpus representativo. Las pruebas de fixtures no demuestran exactitud general.
+  La carga CSV/XLSX rechaza localmente extensión distinta, archivo vacío o tamaño superior
+  a 2 MiB antes de consultar CSRF/enviar; el backend conserva su validación independiente.
+  Pérdida de conexión al enviar advierte consultar trabajos antes de repetir, porque la
+  recepción puede haber ocurrido. Controles se deshabilitan durante el envío; QA visual pendiente.
 - [ ] Completar validación temporal del híbrido y recurrencias (RF-09/RF-10): implementación
   experimental y evaluación sintética existentes; falta corpus independiente y reconstrucción
   de evidencia pasada antes de evaluar datos reales corregidos después del corte.
