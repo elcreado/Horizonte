@@ -38,6 +38,10 @@ no declara cierre por tener CI verde. Respaldo diario excluido por decisión del
   vacío. Se corrigió autorización previa a validación en saldo, cobertura y nombre de comercio.
   Suite local posterior: 199 pruebas, 194 aprobadas y 5 omitidas. No sustituye pruebas con
   objetos existentes ajenos, todos los roles, XSS, carga ni una auditoría ASVS completa.
+  Ampliación posterior: saldo, cobertura, nombre de comercio y categoría rechazan IDs de
+  objetos ajenos existentes bajo empresa propia y conservan los datos originales. Las 26
+  escrituras también rechazan sesión real con cookie sin CSRF (403 con detalle CSRF), sin
+  `force_authenticate`. Cuatro pruebas de la matriz aprobadas; faltan los demás objetos/roles.
 - [x] Ensayar respaldo manual y restauración aislada sin Docker: 32 tablas, restricciones,
   migraciones y recorrido Client Django comprobados. Archivos privados fuera de Git;
   no acredita UI, cifrado ni copia externa. No activar respaldo diario.
