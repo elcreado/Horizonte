@@ -1,10 +1,10 @@
 # Plataforma de Inteligencia de Liquidez para Microempresas
 
-> **Estado consolidado vigente:** [matriz de implementación](docs/IMPLEMENTATION_STATUS.md). Incluye obligaciones, conciliación e importación XML; el objetivo completo sigue en desarrollo. La [hoja de ruta de entregables](docs/ROADMAP_ENTREGABLES.md) detalla los pasos para la primera versión funcional, la viabilidad de escritorio y las metas de una segunda versión móvil.
+> **Revisión del 15 de octubre de 2026:** [resumen de objetivos y pendientes](docs/ESTADO_Y_PENDIENTES.md), [índice de documentación](docs/README.md) y [verificaciones](docs/IMPLEMENTATION_STATUS.md). La primera versión de escritorio funcional está entregada para pruebas; el alcance académico completo sigue parcial. [Hoja de ruta y V2 móvil](docs/ROADMAP_ENTREGABLES.md).
 
-> **Prueba vigente sin Docker:** servidor Render Free con PostgreSQL en Supabase y cliente Windows Electron/NSIS. Inicio es público. Importaciones CSV/XLSX/XML, Mock Bank, obligaciones, conciliaciones y escenarios de caja están implementados; los modelos estadísticos siguen experimentales. [Manual de uso](docs/USER_MANUAL.md), [instalador y huella](docs/DESKTOP_RELEASE.md) y [aceptación pendiente](docs/V1_ACCEPTANCE.md). El objetivo completo todavía no está cerrado.
+> **Prueba vigente sin Docker:** servidor Render Free con PostgreSQL en Supabase y cliente Windows Electron/NSIS. Inicio es público. Importaciones CSV/XLSX/XML, Mock Bank, obligaciones, conciliaciones y escenarios de caja están implementados; los modelos estadísticos siguen experimentales. [Manual de uso](docs/USER_MANUAL.md), [instalador y huella](docs/desktop/DESKTOP_RELEASE.md) y [aceptación pendiente](docs/acceptance/V1_ACCEPTANCE.md). El objetivo completo todavía no está cerrado.
 >
-> **Arranque y acciones externas:** [docs/TESTING.md](docs/TESTING.md). **Convenciones:** [CODESTYLE.md](CODESTYLE.md). **Revisión:** [docs/REVISION.md](docs/REVISION.md). La demo no requiere claves bancarias ni servicios de pago.
+> **Arranque y acciones externas:** [docs/TESTING.md](docs/TESTING.md). **Convenciones:** [CODESTYLE.md](CODESTYLE.md). Los cortes antiguos están en [archivo histórico](docs/archive/README.md). La demo no requiere claves bancarias ni servicios de pago.
 
 
 **Diseño e implementación de una plataforma web de inteligencia de liquidez para microempresas mediante agregación de datos financieros y modelos predictivos de flujo de caja.**
@@ -251,30 +251,35 @@ El sistema **NO**:
 ```text
 proyecto/
 ├── README.md          # Este documento
-├── SPECS.md           # Especificación técnica completa
-├── docs/
-│   ├── anteproyecto/  # Documento de tesis (problema, marco teórico, bibliografía)
-│   └── diagramas/     # Arquitectura, modelo E-R, casos de uso
+├── SPECS.md           # Requisitos y arquitectura objetivo
+├── docs/              # Índice, estado, pendientes y manuales vigentes
+│   ├── desktop/       # Entrega Windows y distribución
+│   ├── acceptance/    # Recorridos y criterios de aceptación
+│   ├── operations/    # Hosting, workers, respaldos y administración
+│   ├── security/      # Threat model
+│   ├── research/      # Métodos y resultados experimentales
+│   └── archive/       # Cortes anteriores conservados, no guías vigentes
 ├── backend/           # Django + DRF
 │   ├── apps/
 │   │   ├── accounts/  # Autenticación, empresas, roles
 │   │   ├── banking/   # Conexiones, cuentas, transacciones
 │   │   ├── invoices/  # Facturación recibida/emitida
 │   │   ├── classify/  # Categorización
-│   │   ├── forecast/  # Modelo predictivo y alertas
-│   │   └── integrations/  # Adaptadores Open Finance
+│   │   └── forecast/  # Modelo predictivo, obligaciones y alertas
 │   └── tests/
-├── workers/           # Celery tasks (ETL, forecast)
 ├── frontend/          # React + TypeScript + Vite
-├── data/              # Datasets sintéticos y scripts de generación
-├── ml/                # Notebooks y experimentos predictivos
-├── deploy/            # Docker Compose, Nginx, CI/CD
+├── desktop/           # Electron, pruebas y salida local del instalador
+├── data/              # Datos y salidas experimentales locales
+├── scripts/           # Arranque, build, respaldo y verificaciones
+├── .github/workflows/ # CI SQLite/PostgreSQL/frontend/escritorio
+├── compose.yaml       # PostgreSQL y Redis para desarrollo opcional
+├── render.yaml        # Configuración del servicio alojado
 └── CODESTYLE.md       # Convenciones de implementación
 ```
 
 ---
 
-**Pipeline implementado:** carga CSV/XLSX idempotente, validación y procesamiento asíncrono con registro de resultado; XML con revisión, obligaciones y conciliación reversible. El servidor gratuito utiliza cola persistente en PostgreSQL; Celery sigue como alternativa de despliegue. La estructura anterior es objetivo. La antigüedad del historial no garantiza precisión: se requieren calidad, cobertura y resultados fuera de muestra.
+**Pipeline implementado:** carga CSV/XLSX idempotente, validación y procesamiento asíncrono con registro de resultado; XML con revisión, obligaciones y conciliación reversible. El servidor gratuito utiliza cola persistente en PostgreSQL; Celery sigue como alternativa de despliegue. El árbol anterior refleja la organización actual. La antigüedad del historial no garantiza precisión: se requieren calidad, cobertura y resultados fuera de muestra.
 
 La aplicación alojada y el instalador permiten probar las importaciones sin Docker ni Redis local. Ver [manual de uso](docs/USER_MANUAL.md); para desarrollo local, [arranque y pruebas](docs/TESTING.md).
 

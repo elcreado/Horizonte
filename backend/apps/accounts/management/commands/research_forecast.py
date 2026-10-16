@@ -21,7 +21,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Compara ARIMA(1,0,0) con dependencias opcionales locales.",
         )
-        parser.add_argument("--report", default="docs/RESEARCH_RESULTS.md")
+        parser.add_argument("--report", default="docs/research/RESEARCH_RESULTS.md")
         parser.add_argument(
             "--arima-ses-fallback",
             action="store_true",

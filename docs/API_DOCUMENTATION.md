@@ -2,6 +2,12 @@
 
 `openapi-inventory.json` registra las rutas reales de Django en formato OpenAPI 3.0.3.
 
+Revisión del 15 de octubre de 2026: **50 rutas y 64 operaciones**, ninguna limitada a
+`route-inventory-only`. Dashboard, obligaciones/conciliación, recurrencias, pronósticos y
+evidencia versionada también tienen contratos de campos. Sigue siendo parcial por revisión
+pendiente de errores/ejemplos y algunas instantáneas históricas; no usar el número de rutas
+como prueba de contrato completo. [Brechas](ESTADO_Y_PENDIENTES.md).
+
 Calendario GET `/api/companies/{company_id}/obligation-calendar/`: mes YYYY-MM,
 todos los días sin paginación, importes pendientes COP exactos, conteos y errores documentados.
 Se excluyen canceladas/saldadas; todos los roles del tenant pueden consultarlo.
@@ -46,8 +52,9 @@ Regenerar y revisar cuando cambie la API. No se consultan datos financieros ni s
 Contratos de campos/respuesta exitosa implementados para CSRF, me, login, logout, recuperación
 y reset, registro, consulta/actualización de perfil y creación de empresas. Los campos toman
 longitudes, obligatoriedad, patrones, fechas y precisión decimal de sus serializadores; también se
-documentan validadores adicionales y límites. Logout 204 no declara cuerpo. Errores mantienen
-respuesta genérica: sus formatos y códigos específicos requieren ampliación.
+documentan validadores adicionales y límites. Logout 204 no declara cuerpo. Autenticación
+documenta errores JSON y CSRF público que puede devolver HTML; falta revisión equivalente
+de todas las familias y ejemplos completos.
 
 Saldo PATCH y cobertura POST de cuentas manuales incluyen entrada derivada de sus
 serializadores, salida 200 con fechas de cobertura anulables y códigos 400/403/404/409.
@@ -111,11 +118,10 @@ Reglas de clasificación GET/DELETE documentan campos, paginación/orden, capaci
 y eliminación auditada sin modificar categorías existentes. DELETE no requiere cuerpo y
 devuelve 204 sin contenido; CSRF sigue requerido. Usan `classification-rule-fields-documented`.
 
-**Pendiente:** cuerpos JSON/multipart financieros, campos, validaciones, códigos de respuesta específicos,
-paginación/filtros y ejemplos de todos los endpoints. Las respuestas genéricas y extensiones
-`x-contract-status` / `x-request-schema-pending` marcan esa ausencia; las diez operaciones de
-autenticación cubiertas usan `auth-fields-documented`. No usar este inventario
-para generar un cliente completo o afirmar que el entregable OpenAPI está terminado.
+**Pendiente:** completar y contrastar cuerpos de error, ejemplos y variantes de evidencia
+histórica en todas las familias. Revisar cada operación, sus validaciones y capacidades antes
+de generar clientes. `x-contract-status` describe cobertura documental, no aceptación de la
+función ni evidencia de todos sus casos. No afirmar que el entregable OpenAPI está terminado.
 
 El inventario excluye HEAD/OPTIONS implícitos. La autorización por roles, throttles y comportamiento
 financiero debe verificarse mediante contratos y pruebas, no se infiere del archivo de rutas.

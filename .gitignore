@@ -16,3 +16,6 @@ data/generated/
 
 .env.example
 .editorconfig
+
+
+docs

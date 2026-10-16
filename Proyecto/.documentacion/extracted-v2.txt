@@ -1,0 +1,2500 @@
+PAGE 1
+  
+ 
+  
+Base de datos de Horizonte 
+Diseño relacional normalizado a FN3 
+Adrian Perez Pacheco 
+Documento 1111043406 
+15 de octubre de 2026 
+
+PAGE 2
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+2 
+Contenido 
+1  Introducción 
+2  Planteamiento del problema 
+3  Justificación 
+4  Objetivos 
+5  Alcance y contexto de implementación 
+6  Mapa de módulos y requerimientos de datos 
+7  Reglas de negocio e integridad 
+8  Modelo entidad relación MER 
+9  Modelo relacional inicial y proceso de normalización 
+10  Modelo relacional final en FN3 
+11  Diccionario de datos y verificación por tabla 
+12  Diseño físico y estrategia transaccional 
+13  Correspondencia con la implementación existente 
+14  Consultas SQL de validación 
+15  Escenario ilustrativo y plan de pruebas 
+16  Conclusiones 
+17  Referencias del proyecto 
+18  Anexo de definición física en PostgreSQL 
+  
+
+PAGE 3
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+3 
+1. Introducción 
+Horizonte integra movimientos bancarios, facturas y obligaciones para analizar la liquidez de 
+microempresas. Este documento diseña su base de datos relacional en PostgreSQL, define las 
+entidades y sus restricciones, presenta el modelo entidad relación y el  modelo relacional, y 
+desarrolla la normalización hasta la tercera forma normal o FN3. 
+La propuesta organiza el dato financiero por empresa y separa tres hechos diferentes: dinero 
+registrado en una cuenta, documentos de facturación y cobros o pagos esperados. Una factura 
+no demuestra un recaudo; la conciliación relaciona la obligación con el  movimiento que 
+efectivamente ocurrió. Esta distinción evita contabilizar dos veces el mismo flujo en las 
+proyecciones. 
+El esquema lógico final formaliza y normaliza los módulos de los modelos Django del proyecto. 
+Su implementación requiere migraciones: los modelos actuales aún incluyen campos JSON, 
+categorías como texto y algunos identificadores empresariales repetidos. El diseño físico incluido 
+corresponde a la propuesta normalizada y no constituye una modificación del código ni de una 
+base de datos en producción. 
+2. Planteamiento del problema 
+La información de caja puede quedar dispersa entre extractos, archivos de carga, facturas y 
+compromisos futuros. Al consolidarla sin reglas comunes aparecen movimientos duplicados, 
+categorías escritas de varias maneras, saldos cuyo corte no coincide y obligaciones sin evidencia 
+de cumplimiento. Las listas guardadas dentro de documentos JSON también dificultan consultar 
+las relaciones mediante claves foráneas. 
+En el proyecto, una conexión depende de un consentimiento que ya identifica la empresa; repetir 
+esa empresa en ambos registros permite inconsistencias. De forma similar, los nombres de 
+categoría se repiten en movimientos, reglas y correcciones. Los resulta dos de pronóstico, las 
+evidencias y los alcances necesitan relaciones propias si se pretende un modelo relacional 
+consultable e íntegro. 
+La pregunta de diseño es cómo centralizar la información de liquidez de varias empresas, 
+preservar su trazabilidad y eliminar dependencias parciales y transitivas, manteniendo 
+deduplicación, conciliación y reproducción histórica de los cálculos. 
+3. Justificación 
+Una base relacional normalizada permite identificar cada hecho una sola vez y unirlo mediante 
+claves explícitas. PostgreSQL aporta importes decimales exactos, restricciones de integridad y 
+transacciones para coordinar importaciones y conciliaciones concurr entes. La separación entre 
+hechos actuales y observaciones históricas permite explicar un pronóstico sin depender de datos 
+que pudieron cambiar después. 
+
+PAGE 4
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+4 
+4. Objetivos 
+4.1 Objetivo general 
+Diseñar una base de datos relacional para Horizonte que integre empresas, usuarios, 
+movimientos, facturas, obligaciones, conciliaciones y evaluaciones de liquidez mediante un 
+esquema normalizado hasta FN3. 
+4.2 Objetivos específicos 
+• Identificar las entidades y los requerimientos de información de los módulos existentes. 
+• Definir claves candidatas, claves primarias, relaciones, cardinalidades y reglas de pertenencia 
+empresarial. 
+• Transformar listas y resultados estructurados en relaciones con atributos atómicos. 
+• Demostrar la eliminación de dependencias parciales y transitivas en todas las tablas del modelo 
+final. 
+• Especificar tipos de datos, restricciones, índices y operaciones transaccionales para 
+PostgreSQL. 
+• Proponer consultas y casos de validación que comprueben integridad, deduplicación y 
+trazabilidad. 
+5. Alcance y contexto de implementación 
+Se incluyen los módulos accounts, banking, classify, invoices y forecast, así como la cola 
+persistente y los límites de solicitudes usados por la aplicación. El modelo financiero opera en 
+COP, con importes NUMERIC de 18 dígitos y 2 decimales; los eventos utilizan TIMESTAMPTZ y 
+las fechas de negocio se interpretan en America/Bogota. 
+Las fuentes de prueba son archivos CSV y XLSX, facturas XML y el adaptador Mock Bank. El 
+diseño no inicia transferencias, no reemplaza contabilidad oficial y no supone conexión bancaria 
+real en producción. La clasificación y los métodos de proyección se do cumentan como 
+consumidores de la base de datos; la precisión estadística requiere evaluación independiente. 
+Las tablas internas de Django para sesiones, grupos, permisos, contenido y migraciones siguen 
+siendo administradas por el framework. No constituyen entidades financieras ni se rediseñan 
+aquí. usuario representa los atributos de auth_user necesarios para re lacionar a los actores del 
+dominio. 
+6. Mapa de módulos y requerimientos de datos 
+Módulo Datos y responsabilidad 
+Identidad y acceso empresa usuario rol membresia; pertenencia y permisos por empresa. 
+Integración bancaria proveedor consentimiento alcance conexion cuenta corte_cuenta; autorización y 
+saldos. 
+Movimientos y 
+clasificación 
+tercero alias_tercero categoria movimiento regla_clasificacion cambio_clasificacion; 
+ETL y corrección. 
+
+PAGE 5
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+5 
+Módulo Datos y responsabilidad 
+Facturación y conciliación factura parte_factura obligacion conciliacion; caja esperada y aplicación de pagos. 
+Recurrencias y 
+proyección 
+revision_recurrencia evidencias ocurrencias pronostico entradas y puntos diarios. 
+Riesgo y operación evaluacion_alerta alerta factor_alerta auditoria tarea y limite_solicitud; trazabilidad y 
+procesamiento. 
+El flujo de datos es fuente financiera → importación o sincronización → movimiento normalizado 
+→ clasificación → conciliación con obligación. En paralelo, el XML genera factura y, después de 
+confirmación, una obligación. Los cortes y las obligaciones pendi entes alimentan el pronóstico; 
+sus resultados alimentan las alertas. Cada modificación relevante produce auditoría. 
+7. Reglas de negocio e integridad 
+Regla Condición 
+RN01 Cada movimiento pertenece a una sola cuenta y cada cuenta a una empresa. Todos los objetos 
+financieros de una operación deben pertenecer a la misma empresa. 
+RN02 La pareja cuenta e identificador externo es única. Reintentar un archivo no crea un segundo 
+movimiento con la misma identidad. 
+RN03 Una conexión requiere un consentimiento vigente; revocarlo impide nuevas sincronizaciones. Cada 
+consentimiento respalda a lo sumo una conexión. 
+RN04 Solo existe una conexión activa por empresa y proveedor. Una cuenta admite como máximo una 
+conexión y una conexión como máximo una cuenta. 
+RN05 El propietario puede administrar y el contador operar sobre datos financieros; consulta solo lee. La 
+condición de superusuario se conserva separada de los roles empresariales. 
+RN06 Una factura se deduplica por empresa y CUFE. El número comercial por sí solo no identifica 
+universalmente una factura. 
+RN07 La conciliación requiere importe positivo, igual empresa y dirección compatible con el signo del 
+movimiento. La suma activa no puede superar ni el importe base de la obligación ni el valor absoluto 
+del movimiento. 
+RN08 Revertir una conciliación registra fecha de reversión y restituye el pendiente calculado. Un reintento 
+con igual obligación y solicitud conserva el resultado original. 
+RN09 Las facturas tienen exactamente dos partes: emisor y receptor. El NIT de la empresa debe coincidir 
+con exactamente una de ellas. 
+RN10 Una factura y su obligación vinculada deben tener la misma empresa y sentido, vencimiento no 
+anterior a emisión y pendiente compatible con el pagadero. 
+RN11 Los snapshots son observaciones inmutables al ejecutar. Un cambio posterior en una categoría, saldo 
+o vencimiento no debe reescribir un resultado histórico. 
+RN12 Los pronósticos tienen horizonte de 30 a 90 días. La falta de movimientos en un período no prueba 
+cobertura completa ni saldo cero. 
+RN13 Los mensajes persistentes tienen hasta tres intentos y reclamo temporal; las operaciones financieras 
+deben ser idempotentes ante entregas repetidas. 
+RN14 Se preservan movimientos y evidencias con borrado restringido. Las listas consultables se guardan 
+como filas, no como arreglos incrustados. 
+
+PAGE 6
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+6 
+8. Modelo entidad relación MER 
+El MER se divide por dominios para conservar la legibilidad. Cada rectángulo representa una 
+entidad; una línea identifica el vínculo y muestra la participación mínima y máxima en sus 
+extremos. La tabla de relaciones complementa los diagramas y enumera toda s las claves 
+foráneas del modelo completo. 1 significa exactamente uno y 0..N significa cero o muchos. 
+8.1 Acceso empresarial 
+ 
+Figura 1 MER del dominio 1 
+Las relaciones auxiliares de importación, entradas históricas, parámetros y auditoría se 
+especifican en el inventario completo que sigue. Los diagramas se leen conjuntamente; las 
+entidades repetidas representan la misma entidad, no copias de los datos. 
+
+
+PAGE 7
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+7 
+8.2 Autorización y fuentes bancarias 
+ 
+Figura 2 MER del dominio 2 
+Las relaciones auxiliares de importación, entradas históricas, parámetros y auditoría se 
+especifican en el inventario completo que sigue. Los diagramas se leen conjuntamente; las 
+entidades repetidas representan la misma entidad, no copias de los datos. 
+8.3 Movimientos documentos y conciliación 
+ 
+Figura 3 MER del dominio 3 
+
+
+PAGE 8
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+8 
+Las relaciones auxiliares de importación, entradas históricas, parámetros y auditoría se 
+especifican en el inventario completo que sigue. Los diagramas se leen conjuntamente; las 
+entidades repetidas representan la misma entidad, no copias de los datos. 
+8.4 Clasificación y terceros 
+ 
+Figura 4 MER del dominio 4 
+Las relaciones auxiliares de importación, entradas históricas, parámetros y auditoría se 
+especifican en el inventario completo que sigue. Los diagramas se leen conjuntamente; las 
+entidades repetidas representan la misma entidad, no copias de los datos. 
+
+
+PAGE 9
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+9 
+8.5 Recurrencias proyección y riesgo 
+ 
+Figura 5 MER del dominio 5 
+Las relaciones auxiliares de importación, entradas históricas, parámetros y auditoría se 
+especifican en el inventario completo que sigue. Los diagramas se leen conjuntamente; las 
+entidades repetidas representan la misma entidad, no copias de los datos. 
+8.6 Inventario completo de relaciones 
+Entidad referida Atributo que referencia Padres por 
+fila 
+Filas por 
+padre 
+empresa membresia.empresa_id 1 0..N 
+usuario membresia.usuario_id 1 0..N 
+rol membresia.rol_codigo 1 0..N 
+empresa consentimiento.empresa_id 1 0..N 
+usuario consentimiento.usuario_id 1 0..N 
+consentimiento consentimiento_alcance.consentimiento_id 1 0..N 
+alcance consentimiento_alcance.alcance_codigo 1 0..N 
+consentimiento conexion.consentimiento_id 1 0..1 
+proveedor conexion.proveedor_codigo 1 0..N 
+empresa cuenta.empresa_id 1 0..N 
+usuario cuenta.confirmado_por 0..1 0..N 
+
+
+PAGE 10
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+10 
+Entidad referida Atributo que referencia Padres por 
+fila 
+Filas por 
+padre 
+cuenta corte_cuenta.cuenta_id 1 0..N 
+empresa tercero.empresa_id 1 0..N 
+tercero alias_tercero.tercero_id 1 0..N 
+proveedor alias_tercero.proveedor_codigo 1 0..N 
+cuenta movimiento.cuenta_id 1 0..N 
+tercero movimiento.tercero_id 0..1 0..N 
+categoria movimiento.categoria_id 1 0..N 
+empresa regla_clasificacion.empresa_id 1 0..N 
+categoria regla_clasificacion.categoria_id 1 0..N 
+movimiento cambio_clasificacion.movimiento_id 1 0..N 
+usuario cambio_clasificacion.usuario_id 1 0..N 
+categoria cambio_clasificacion.categoria_anterior_id 1 0..N 
+categoria cambio_clasificacion.categoria_nueva_id 1 0..N 
+cuenta importacion_movimiento.cuenta_id 1 0..N 
+usuario importacion_movimiento.usuario_id 1 0..N 
+conexion sincronizacion.conexion_id 1 0..N 
+usuario sincronizacion.usuario_id 1 0..N 
+empresa obligacion.empresa_id 1 0..N 
+obligacion conciliacion.obligacion_id 1 0..N 
+movimiento conciliacion.movimiento_id 1 0..N 
+usuario conciliacion.usuario_id 1 0..N 
+empresa factura.empresa_id 1 0..N 
+factura parte_factura.factura_id 1 0..N 
+empresa importacion_factura.empresa_id 1 0..N 
+usuario importacion_factura.usuario_id 1 0..N 
+empresa revision_recurrencia.empresa_id 1 0..N 
+usuario revision_recurrencia.usuario_id 1 0..N 
+revision_recurrenci
+a 
+evidencia_recurrencia.revision_id 1 0..N 
+movimiento evidencia_recurrencia.movimiento_id 1 0..N 
+revision_recurrenci
+a 
+ocurrencia_recurrencia.revision_id 1 0..N 
+obligacion ocurrencia_recurrencia.obligacion_id 1 0..1 
+
+PAGE 11
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+11 
+Entidad referida Atributo que referencia Padres por 
+fila 
+Filas por 
+padre 
+empresa pronostico.empresa_id 1 0..N 
+usuario pronostico.usuario_id 1 0..N 
+pronostico parametro_pronostico.pronostico_id 1 0..N 
+pronostico punto_pronostico.pronostico_id 1 0..N 
+pronostico entrada_cuenta.pronostico_id 1 0..N 
+cuenta entrada_cuenta.cuenta_id 1 0..N 
+pronostico entrada_movimiento.pronostico_id 1 0..N 
+movimiento entrada_movimiento.movimiento_id 1 0..N 
+categoria entrada_movimiento.categoria_observada_id 1 0..N 
+pronostico entrada_obligacion.pronostico_id 1 0..N 
+obligacion entrada_obligacion.obligacion_id 1 0..N 
+pronostico evaluacion_alerta.pronostico_id 1 0..N 
+usuario evaluacion_alerta.usuario_id 1 0..N 
+evaluacion_alerta alerta.evaluacion_id 1 0..N 
+alerta factor_alerta.alerta_id 1 0..N 
+empresa auditoria.empresa_id 1 0..N 
+usuario auditoria.usuario_id 1 0..N 
+auditoria detalle_auditoria.auditoria_id 1 0..N 
+tarea parametro_tarea.tarea_id 1 0..N 
+cuenta cuenta_conexion.cuenta_id 1 0..1 
+conexion cuenta_conexion.conexion_id 1 0..1 
+factura factura_obligacion.factura_id 1 0..1 
+obligacion factura_obligacion.obligacion_id 1 0..1 
+importacion_factura resultado_importacion_factura.importacion_id 1 0..1 
+factura resultado_importacion_factura.factura_id 1 0..N 
+La cardinalidad especial factura → parte_factura exige exactamente dos filas, una por papel; no 
+se expresa únicamente con una FK y se completa con una restricción diferida. Las asociaciones 
+membresia y consentimiento_alcance resuelven relaciones N a M; con ciliacion permite varios 
+movimientos por obligación y varias obligaciones por movimiento, dentro de los límites de importe. 
+9. Modelo relacional inicial y proceso de normalización 
+9.1 Punto de partida sin normalizar 
+Como ficha de análisis, una empresa podría almacenarse junto con sus usuarios, cuentas y 
+movimientos, además de listas de permisos y resultados diarios. Esa representación mezcla 
+
+PAGE 12
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+12 
+entidades y grupos repetidos. Se expresa como EMPRESA_FICHA(empresa, nit, nombre, 
+{usuarios y roles}, {cuentas y movimientos}, {consentimientos y alcances}, {facturas y partes}, 
+{pronósticos y puntos}). Las llaves entre llaves indican colecciones, no valores escalares. 
+Una fila de ejemplo sería una empresa E1 con dos cuentas C1 y C2; C1 incluiría movimientos M1 
+y M2 y un pronóstico P1 contendría varios días. Agregar M3 obligaría a reescribir una colección, 
+y cambiar un nombre de categoría requeriría modificar múltiples apariciones. Esta ficha sirve para 
+explicar la transformación; no representa una tabla creada en el repositorio. 
+9.2 Primera forma normal 
+Se separan los grupos repetidos en relaciones: cada fila representa un solo usuario, movimiento, 
+alcance, parte de factura o punto diario. Se prohíben listas dentro de atributos consultables. Los 
+archivos temporales de importación permanecen como documento s opacos de transporte y se 
+purgan; su contenido financiero se descompone antes de persistirse en las tablas del dominio. 
+MOVIMIENTO_1FN(cuenta_id, externo_id, empresa_id, nit, 
+ nombre_empresa, fecha, importe, categoria_id, nombre_categoria) 
+PK(cuenta_id, externo_id) 
+La clave identifica un movimiento dentro de una cuenta. Ya no hay celdas con varias 
+transacciones, pero empresa_id depende solo de cuenta_id. El nombre de categoría depende de 
+categoria_id, por lo que aún existen redundancias. 
+9.3 Segunda forma normal 
+Se eliminan dependencias de una parte de las claves compuestas. En MOVIMIENTO_1FN, 
+cuenta_id → empresa_id no necesita externo_id. Por ello la empresa sale del movimiento y se 
+relaciona mediante cuenta. En membresia, el nombre del usuario no depende de empr esa_id y 
+el nombre del rol no depende de usuario_id; ambos se conservan en sus entidades maestras. 
+CUENTA_2FN(id, empresa_id, nombre) 
+MOVIMIENTO_2FN(cuenta_id, externo_id, fecha, importe, 
+ categoria_id, nombre_categoria) 
+MEMBRESIA(empresa_id, usuario_id, rol_codigo) 
+Introducir un identificador artificial por sí solo no demuestra FN2: se deben examinar también las 
+claves candidatas naturales. En movimiento se revisa (cuenta_id, externo_id); en membresia se 
+revisa (empresa_id, usuario_id); en puntos de pronóstico se rev isa la ejecución, la fecha y el 
+escenario. 
+9.4 Tercera forma normal 
+Se eliminan dependencias transitivas de atributos no clave. Si movimiento_id → categoria_id y 
+categoria_id → nombre_categoria, el nombre pertenece solo a categoria. Si conexion_id → 
+consentimiento_id y consentimiento_id → empresa_id, la empresa se obtiene por el 
+consentimiento y se elimina de conexion. Se aplica la misma separación entre alias y tercero y 
+entre evaluación de alerta y pronóstico. 
+CATEGORIA(id, nombre) 
+MOVIMIENTO(id, cuenta_id, externo_id, fecha, importe, categoria_id, ...) 
+CONSENTIMIENTO(id, empresa_id, usuario_id, ...) 
+CONEXION(id, consentimiento_id, proveedor_codigo, ...) 
+Formalmente, para toda dependencia funcional no trivial X → A, X debe ser superclave o A debe 
+ser atributo primo. En el esquema final, con las dependencias declaradas, los determinantes de 
+atributos descriptivos son claves candidatas. Los catálogos con nombre único tienen también esa 
+
+PAGE 13
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+13 
+clave alternativa. La FN3 se verifica con respecto a estas reglas semánticas y no se deduce 
+únicamente del uso de PK numéricas. 
+9.5 Descomposición sin pérdida y conservación de dependencias 
+Separar MOVIMIENTO y CATEGORIA es sin pérdida porque la intersección categoria_id es clave 
+de CATEGORIA. Separar CONEXION y CONSENTIMIENTO también es sin pérdida por 
+consentimiento_id, clave del consentimiento. Las dependencias de cada maestro se mantienen  
+localmente; las asociaciones se reconstruyen mediante FK y JOIN. La unicidad condicionada por 
+empresa que atraviesa varias tablas se mantiene como regla transaccional o trigger, sin 
+reintroducir empresa_id redundante. 
+Anomalía inicial Transformación final Efecto 
+Nombres de categoría repetidos categoria y FK desde movimientos 
+reglas y cambios 
+Una actualización del catálogo no exige 
+reescribir hechos. 
+empresa_id en conexión y 
+consentimiento 
+Empresa solo en consentimiento Se impiden dos empresas para una 
+misma autorización. 
+scopes como lista alcance y consentimiento_alcance Cada permiso puede validarse y 
+consultarse por FK. 
+before y after como objetos auditoria y detalle_auditoria Cada cambio elemental tiene una 
+identidad propia. 
+Factura con data duplicada factura y parte_factura CUFE número importes y partes tienen 
+una sola ubicación. 
+result y evidence con listas punto_pronostico y tablas de entrada Los resultados diarios y observaciones 
+tienen claves explícitas. 
+Saldo pendiente materializado importe_base y conciliaciones 
+activas 
+El pendiente se calcula sin doble 
+mantenimiento. 
+9.6 Tratamiento de datos históricos 
+Un valor observado en una ejecución no tiene la misma semántica que el valor vigente de su 
+objeto de origen. Por ejemplo, (pronostico_id, movimiento_id) determina importe_observado; 
+movimiento_id por sí solo no lo determina, porque una ejecución posterior puede utilizar una 
+versión distinta. Esta definición evita atribuir dependencias transitivas falsas a los snapshots. Los 
+nombres originales de banco y de partes de factura son evidencias documentales inmutables, no 
+duplicados mantenidos de un maestro actual. 
+10. Modelo relacional final en FN3 
+El modelo contiene 44 relaciones. PK identifica la clave primaria, UQ una clave alternativa y FK 
+una referencia a la clave primaria indicada. NULL permite ausencia de valor; los demás atributos 
+son obligatorios. Las claves compuestas se presentan completas. La siguiente notación es el MR 
+íntegro y coincide con el diccionario y el SQL del anexo. 
+10.1 empresa 
+EMPRESA (id [PK], nit [UQ], nombre, umbral). 
+
+PAGE 14
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+14 
+10.2 usuario 
+USUARIO (id [PK], username [UQ], password_hash, nombres, apellidos, email, activo, 
+superusuario, fecha_registro, ultimo_acceso). 
+10.3 rol 
+ROL (codigo [PK], nombre [UQ]). 
+10.4 membresia 
+MEMBRESIA (empresa_id [PK, FK→empresa], usuario_id [PK, FK→usuario], rol_codigo 
+[FK→rol]). 
+10.5 proveedor 
+PROVEEDOR (codigo [PK], nombre [UQ]). 
+10.6 consentimiento 
+CONSENTIMIENTO (id [PK], empresa_id [FK→empresa], usuario_id [FK→usuario], 
+otorgado_en, revocado_en). 
+10.7 alcance 
+ALCANCE (codigo [PK], descripcion). 
+10.8 consentimiento alcance 
+CONSENTIMIENTO_ALCANCE (consentimiento_id [PK, FK→consentimiento], alcance_codigo 
+[PK, FK→alcance]). 
+10.9 conexion 
+CONEXION (id [PK], consentimiento_id [FK→consentimiento, UQ], proveedor_codigo 
+[FK→proveedor], estado, creada_en, revocada_en). 
+10.10 cuenta 
+CUENTA (id [PK], empresa_id [FK→empresa], nombre, historial_desde, historial_hasta, 
+confirmado_en, confirmado_por [FK→usuario]). 
+10.11 corte cuenta 
+CORTE_CUENTA (cuenta_id [PK, FK→cuenta], fecha [PK], saldo). 
+10.12 tercero 
+TERCERO (id [PK], empresa_id [FK→empresa], nombre_normalizado, nombre_visible). 
+Clave candidata adicional: (empresa_id,nombre_normalizado). 
+10.13 alias tercero 
+ALIAS_TERCERO (id [PK], tercero_id [FK→tercero], proveedor_codigo [FK→proveedor], 
+alias_normalizado). 
+Clave candidata adicional: (tercero_id,proveedor_codigo,alias_normalizado). 
+
+PAGE 15
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+15 
+10.14 categoria 
+CATEGORIA (id [PK], nombre [UQ]). 
+10.15 movimiento 
+MOVIMIENTO (id [PK], cuenta_id [FK→cuenta], externo_id, fecha, importe, descripcion, 
+descripcion_normalizada, tercero_id [FK→tercero], tercero_original, categoria_id 
+[FK→categoria], fuente_clasificacion). 
+Clave candidata adicional: (cuenta_id,externo_id). 
+10.16 regla clasificacion 
+REGLA_CLASIFICACION (id [PK], empresa_id [FK→empresa], descripcion_normalizada, 
+direccion, categoria_id [FK→categoria], actualizada_en). 
+Clave candidata adicional: (empresa_id,descripcion_normalizada,direccion). 
+10.17 cambio clasificacion 
+CAMBIO_CLASIFICACION (id [PK], movimiento_id [FK→movimiento], usuario_id [FK→usuario], 
+categoria_anterior_id [FK→categoria], categoria_nueva_id [FK→categoria], recordado, 
+creado_en). 
+10.18 importacion movimiento 
+IMPORTACION_MOVIMIENTO (id [PK], cuenta_id [FK→cuenta], usuario_id [FK→usuario], 
+formato, checksum, contenido, estado, creados, duplicados, error, creada_en, finalizada_en). 
+10.19 sincronizacion 
+SINCRONIZACION (id [PK], conexion_id [FK→conexion], usuario_id [FK→usuario], estado, 
+creados, duplicados, error, creada_en, finalizada_en). 
+10.20 obligacion 
+OBLIGACION (id [PK], empresa_id [FK→empresa], referencia, contraparte_original, descripcion, 
+direccion, vencimiento, importe_base, cancelada). 
+Clave candidata adicional: (empresa_id,referencia). 
+10.21 conciliacion 
+CONCILIACION (id [PK], obligacion_id [FK→obligacion], movimiento_id [FK→movimiento], 
+usuario_id [FK→usuario], importe, solicitud_id, creada_en, revertida_en). 
+Clave candidata adicional: (obligacion_id,solicitud_id). 
+10.22 factura 
+FACTURA (id [PK], empresa_id [FK→empresa], cufe, numero, emision, vencimiento_xml, 
+subtotal, total, pagadero, creada_en). 
+Clave candidata adicional: (empresa_id,cufe). 
+10.23 parte factura 
+PARTE_FACTURA (factura_id [PK, FK→factura], papel [PK], nit_declarado, nombre_declarado). 
+
+PAGE 16
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+16 
+10.24 importacion factura 
+IMPORTACION_FACTURA (id [PK], empresa_id [FK→empresa], usuario_id [FK→usuario], 
+contenido, estado, error, creada_en, finalizada_en). 
+10.25 revision recurrencia 
+REVISION_RECURRENCIA (id [PK], empresa_id [FK→empresa], huella, estado, usuario_id 
+[FK→usuario], actualizada_en). 
+Clave candidata adicional: (empresa_id,huella). 
+10.26 evidencia recurrencia 
+EVIDENCIA_RECURRENCIA (revision_id [PK, FK→revision_recurrencia], movimiento_id [PK, 
+FK→movimiento], fecha_observada, importe_observado). 
+10.27 ocurrencia recurrencia 
+OCURRENCIA_RECURRENCIA (id [PK], revision_id [FK→revision_recurrencia], clave, 
+obligacion_id [FK→obligacion, UQ]). 
+Clave candidata adicional: (revision_id,clave). 
+10.28 pronostico 
+PRONOSTICO (id [PK], empresa_id [FK→empresa], usuario_id [FK→usuario], huella, metodo, 
+horizonte, fecha_corte, creado_en). 
+Clave candidata adicional: (empresa_id,huella). 
+10.29 parametro pronostico 
+PARAMETRO_PRONOSTICO (pronostico_id [PK, FK→pronostico], nombre [PK], valor). 
+10.30 punto pronostico 
+PUNTO_PRONOSTICO (pronostico_id [PK, FK→pronostico], fecha [PK], escenario [PK], saldo). 
+10.31 entrada cuenta 
+ENTRADA_CUENTA (pronostico_id [PK, FK→pronostico], cuenta_id [PK, FK→cuenta], 
+fecha_observada, saldo_observado). 
+10.32 entrada movimiento 
+ENTRADA_MOVIMIENTO (pronostico_id [PK, FK→pronostico], movimiento_id [PK, 
+FK→movimiento], fecha_observada, importe_observado, categoria_observada_id 
+[FK→categoria]). 
+10.33 entrada obligacion 
+ENTRADA_OBLIGACION (pronostico_id [PK, FK→pronostico], obligacion_id [PK, 
+FK→obligacion], vencimiento_observado, pendiente_observado, direccion_observada). 
+10.34 evaluacion alerta 
+EVALUACION_ALERTA (id [PK], pronostico_id [FK→pronostico], usuario_id [FK→usuario], 
+huella, umbral_observado, creada_en). 
+
+PAGE 17
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+17 
+Clave candidata adicional: (pronostico_id,huella). 
+10.35 alerta 
+ALERTA (id [PK], evaluacion_id [FK→evaluacion_alerta], secuencia, nivel, fecha_inicio, 
+fecha_fin, saldo_minimo, mensaje). 
+Clave candidata adicional: (evaluacion_id,secuencia). 
+10.36 factor alerta 
+FACTOR_ALERTA (alerta_id [PK, FK→alerta], posicion [PK], descripcion). 
+10.37 auditoria 
+AUDITORIA (id [PK], empresa_id [FK→empresa], usuario_id [FK→usuario], accion, entidad, 
+objeto_id, creada_en). 
+10.38 detalle auditoria 
+DETALLE_AUDITORIA (auditoria_id [PK, FK→auditoria], campo [PK], valor_anterior, 
+valor_nuevo). 
+10.39 tarea 
+TAREA (id [PK], nombre, estado, intentos, disponible_en, lease, creada_en, finalizada_en). 
+10.40 parametro tarea 
+PARAMETRO_TAREA (tarea_id [PK, FK→tarea], nombre [PK], valor). 
+10.41 limite solicitud 
+LIMITE_SOLICITUD (clave [PK], solicitudes, vence_en). 
+10.42 cuenta conexion 
+CUENTA_CONEXION (cuenta_id [PK, FK→cuenta], conexion_id [FK→conexion, UQ]). 
+10.43 factura obligacion 
+FACTURA_OBLIGACION (factura_id [PK, FK→factura], obligacion_id [FK→obligacion, UQ]). 
+10.44 resultado importacion factura 
+RESULTADO_IMPORTACION_FACTURA (importacion_id [PK, FK→importacion_factura], 
+factura_id [FK→factura], duplicada). 
+11. Diccionario de datos y verificación por tabla 
+Se utilizan BIGINT para identificadores, VARCHAR para códigos y textos acotados, 
+NUMERIC(18,2) para dinero, DATE para fechas de negocio, TIMESTAMPTZ para eventos y 
+UUID para idempotencia y reclamos. Ningún importe financiero utiliza coma flotante. Los nombres 
+SQL se escriben sin tildes para facilitar su uso en PostgreSQL. 
+
+PAGE 18
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+18 
+11.1 empresa 
+Identifica cada microempresa y su umbral operativo de liquidez. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador interno 
+nit VARCHAR(30) UQ NIT normalizado sin separadores 
+nombre VARCHAR(200) Obligatorio Nombre de la microempresa 
+umbral NUMERIC(18,2) Obligatorio Saldo mínimo definido por el 
+propietario 
+Dependencia funcional: (id) → nit, nombre, umbral. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Restricción de dominio: umbral >= 0. 
+11.2 usuario 
+Representa al usuario autenticado sin repetir sus datos en cada empresa. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de auth_user 
+username VARCHAR(150) UQ Nombre único de acceso 
+password_hash VARCHAR(128) Obligatorio Hash de autenticación 
+nombres VARCHAR(150) Obligatorio Nombres del usuario 
+apellidos VARCHAR(150) Obligatorio Apellidos del usuario 
+email VARCHAR(254) Obligatorio Correo de recuperación 
+activo BOOLEAN Obligatorio Habilitación de la cuenta 
+superusuario BOOLEAN Obligatorio Administración global 
+fecha_registro TIMESTAMPTZ Obligatorio Fecha de alta 
+ultimo_acceso TIMESTAMPTZ NULL Último acceso exitoso 
+Dependencia funcional: (id) → username, password_hash, nombres, apellidos, email, activo, 
+superusuario, fecha_registro, ultimo_acceso. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Proyección funcional de auth_user. Django administra permisos, grupos, sesiones y migraciones 
+como infraestructura, fuera del modelo financiero. 
+
+PAGE 19
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+19 
+11.3 rol 
+Catálogo de responsabilidades dentro de una empresa. 
+Atributo Tipo Clave y nulabilidad Descripción 
+codigo VARCHAR(16) PK owner accountant o viewer 
+nombre VARCHAR(40) UQ Propietario Contador o Consulta 
+Dependencia funcional: (codigo) → nombre. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+11.4 membresia 
+Resuelve la relación muchos a muchos entre usuarios y empresas. 
+Atributo Tipo Clave y nulabilidad Descripción 
+empresa_id BIGINT PK FK empresa Empresa autorizada 
+usuario_id BIGINT PK FK usuario Usuario miembro 
+rol_codigo VARCHAR(16) FK rol Rol en esa empresa 
+Dependencia funcional: (empresa_id, usuario_id) → rol_codigo. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+11.5 proveedor 
+Catálogo de adaptadores bancarios identificados por un código estable. 
+Atributo Tipo Clave y nulabilidad Descripción 
+codigo VARCHAR(40) PK Código del adaptador 
+nombre VARCHAR(100) UQ Nombre del proveedor 
+Dependencia funcional: (codigo) → nombre. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+11.6 consentimiento 
+Conserva quién autorizó el acceso bancario y cuándo lo revocó. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de autorización 
+empresa_id BIGINT FK empresa Empresa titular 
+usuario_id BIGINT FK usuario Persona que autorizó 
+
+PAGE 20
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+20 
+Atributo Tipo Clave y nulabilidad Descripción 
+otorgado_en TIMESTAMPTZ Obligatorio Instante de autorización 
+revocado_en TIMESTAMPTZ NULL Instante de revocación 
+Dependencia funcional: (id) → empresa_id, usuario_id, otorgado_en, revocado_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Restricción de dominio: revocado_en IS NULL OR revocado_en >= otorgado_en. 
+11.7 alcance 
+Catálogo de permisos de lectura de una conexión. 
+Atributo Tipo Clave y nulabilidad Descripción 
+codigo VARCHAR(60) PK Código del permiso 
+descripcion VARCHAR(150) Obligatorio Descripción del alcance 
+Dependencia funcional: (codigo) → descripcion. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+11.8 consentimiento alcance 
+Extrae la lista scopes a una asociación con valores atómicos. 
+Atributo Tipo Clave y nulabilidad Descripción 
+consentimiento_id BIGINT PK FK 
+consentimiento 
+Autorización que concede el permiso 
+alcance_codigo VARCHAR(60) PK FK alcance Permiso individual 
+Dependencia funcional: (consentimiento_id, alcance_codigo) → no hay atributos no clave. 
+Verificación FN3: atributos atómicos. La relación contiene únicamente la clave compuesta; no 
+existen dependencias parciales ni transitivas de atributos no clave. 
+11.9 conexion 
+Enlaza una autorización con un adaptador bancario. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de conexión 
+consentimiento_id BIGINT UQ FK 
+consentimiento 
+Consentimiento exclusivo 
+proveedor_codigo VARCHAR(40) FK proveedor Adaptador utilizado 
+
+PAGE 21
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+21 
+Atributo Tipo Clave y nulabilidad Descripción 
+estado VARCHAR(12) Obligatorio active o revoked 
+creada_en TIMESTAMPTZ Obligatorio Creación de la conexión 
+revocada_en TIMESTAMPTZ NULL Momento de revocación 
+Dependencia funcional: (id) → consentimiento_id, proveedor_codigo, estado, creada_en, 
+revocada_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Restricción de dominio: estado IN ('active','revoked'). 
+La empresa se obtiene por consentimiento; no se repite. La exclusividad de una conexión activa 
+por empresa y proveedor se valida mediante un trigger con bloqueo de la fila empresa. 
+11.10 cuenta 
+Registra la cuenta bancaria y la cobertura de su historial. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de cuenta 
+empresa_id BIGINT FK empresa Titular empresarial 
+nombre VARCHAR(120) Obligatorio Nombre de la cuenta 
+historial_desde DATE NULL Primer día confirmado de cobertura 
+historial_hasta DATE NULL Último día confirmado de cobertura 
+confirmado_en TIMESTAMPTZ NULL Fecha de validación del historial 
+confirmado_por BIGINT NULL FK usuario Usuario que confirmó 
+Dependencia funcional: (id) → empresa_id, nombre, historial_desde, historial_hasta, 
+confirmado_en, confirmado_por. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Restricción de dominio: historial_desde IS NULL OR historial_hasta IS NULL OR historial_desde 
+<= historial_hasta. 
+Todas las cuentas operan en COP. La asociación opcional con una conexión se conserva en 
+cuenta_conexion. 
+
+PAGE 22
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+22 
+11.11 corte cuenta 
+Conserva saldos observados por cuenta y fecha sin confundirlos con sumas de movimientos. 
+Atributo Tipo Clave y nulabilidad Descripción 
+cuenta_id BIGINT PK FK cuenta Cuenta observada 
+fecha DATE PK Fecha del corte 
+saldo NUMERIC(18,2) Obligatorio Saldo informado en COP 
+Dependencia funcional: (cuenta_id, fecha) → saldo. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+Sustituye balance y balance_date. El saldo vigente es el corte de fecha máxima; un saldo negativo 
+puede representar sobregiro. 
+11.12 tercero 
+Identifica comercios normalizados en el contexto de una empresa. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador del comercio 
+empresa_id BIGINT FK empresa Empresa que reconoce al tercero 
+nombre_normalizado VARCHAR(250) Obligatorio Nombre canónico para comparación 
+nombre_visible VARCHAR(250) Obligatorio Nombre de presentación 
+Dependencia funcional: (id) → empresa_id, nombre_normalizado, nombre_visible. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (empresa_id,nombre_normalizado). Esta combinación determina los atributos 
+de la fila. 
+11.13 alias tercero 
+Conserva las variantes de un comercio según el proveedor. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador del alias 
+tercero_id BIGINT FK tercero Comercio canónico 
+proveedor_codigo VARCHAR(40) FK proveedor Fuente del alias 
+alias_normalizado VARCHAR(250) Obligatorio Descripción alternativa 
+Dependencia funcional: (id) → tercero_id, proveedor_codigo, alias_normalizado. 
+
+PAGE 23
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+23 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (tercero_id,proveedor_codigo,alias_normalizado). Esta combinación 
+determina los atributos de la fila. 
+La empresa se deriva de tercero. Un trigger impide que el mismo alias del mismo proveedor 
+apunte a terceros distintos de una misma empresa. 
+11.14 categoria 
+Taxonomía compartida de categorías financieras. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de categoría 
+nombre VARCHAR(80) UQ Nombre único como Software u Otros 
+Dependencia funcional: (id) → nombre. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+La dirección del flujo se obtiene del signo del movimiento; una categoría no impone un signo. 
+11.15 movimiento 
+Registra cada ingreso o egreso bancario con deduplicación por cuenta. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de movimiento 
+cuenta_id BIGINT FK cuenta Cuenta de origen 
+externo_id VARCHAR(120) Obligatorio Identificador en la fuente 
+fecha DATE Obligatorio Fecha de negocio 
+importe NUMERIC(18,2) Obligatorio Valor positivo de ingreso o negativo 
+de egreso 
+descripcion VARCHAR(250) Obligatorio Texto original del banco 
+descripcion_normalizada TEXT Obligatorio Texto procesado para clasificación 
+tercero_id BIGINT NULL FK tercero Comercio reconocido 
+tercero_original VARCHAR(250) Obligatorio Nombre recibido de la fuente 
+categoria_id BIGINT FK categoria Categoría vigente 
+fuente_clasificacion VARCHAR(16) Obligatorio Origen de la clasificación 
+Dependencia funcional: (id) → cuenta_id, externo_id, fecha, importe, descripcion, 
+descripcion_normalizada, tercero_id, tercero_original, categoria_id, fuente_clasificacion. 
+
+PAGE 24
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+24 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (cuenta_id,externo_id). Esta combinación determina los atributos de la fila. 
+Restricción de dominio: importe <> 0. 
+tercero_original es evidencia inmutable de la fuente y no una copia editable del nombre canónico; 
+no depende de tercero_id. 
+11.16 regla clasificacion 
+Aprende una categoría por empresa descripción y sentido del flujo. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de regla 
+empresa_id BIGINT FK empresa Empresa donde se aplica 
+descripcion_normalizada VARCHAR(250) Obligatorio Patrón exacto recordado 
+direccion VARCHAR(3) Obligatorio in o out 
+categoria_id BIGINT FK categoria Categoría asignada 
+actualizada_en TIMESTAMPTZ Obligatorio Última modificación 
+Dependencia funcional: (id) → empresa_id, descripcion_normalizada, direccion, categoria_id, 
+actualizada_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (empresa_id,descripcion_normalizada,direccion). Esta combinación 
+determina los atributos de la fila. 
+Restricción de dominio: direccion IN ('in','out'). 
+11.17 cambio clasificacion 
+Conserva el historial de correcciones manuales. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador del evento 
+movimiento_id BIGINT FK movimiento Movimiento corregido 
+usuario_id BIGINT FK usuario Autor de la corrección 
+categoria_anterior_id BIGINT FK categoria Categoría antes del cambio 
+categoria_nueva_id BIGINT FK categoria Categoría después del cambio 
+recordado BOOLEAN Obligatorio Indica si creó o actualizó una regla 
+creado_en TIMESTAMPTZ Obligatorio Instante de la corrección 
+
+PAGE 25
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+25 
+Dependencia funcional: (id) → movimiento_id, usuario_id, categoria_anterior_id, 
+categoria_nueva_id, recordado, creado_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+11.18 importacion movimiento 
+Registra los intentos de importación CSV o XLSX. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador del trabajo 
+cuenta_id BIGINT FK cuenta Cuenta receptora 
+usuario_id BIGINT FK usuario Solicitante 
+formato VARCHAR(4) Obligatorio csv o xlsx 
+checksum CHAR(64) Obligatorio Huella del archivo sin imponer 
+unicidad 
+contenido TEXT NULL Carga temporal eliminada al finalizar 
+estado VARCHAR(12) Obligatorio queued completed o failed 
+creados INTEGER Obligatorio Movimientos creados en este intento 
+duplicados INTEGER Obligatorio Filas omitidas por idempotencia 
+error VARCHAR(300) NULL Diagnóstico sin secretos 
+creada_en TIMESTAMPTZ Obligatorio Fecha de solicitud 
+finalizada_en TIMESTAMPTZ NULL Fin del procesamiento 
+Dependencia funcional: (id) → cuenta_id, usuario_id, formato, checksum, contenido, estado, 
+creados, duplicados, error, creada_en, finalizada_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Restricción de dominio: formato IN ('csv','xlsx') AND creados >= 0 AND duplicados >= 0. 
+Los contadores son el resultado del intento, no el total actual de movimientos. El archivo es una 
+unidad documental temporal, no una lista consultable del modelo financiero. 
+11.19 sincronizacion 
+Registra cada ejecución de sincronización bancaria. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de ejecución 
+conexion_id BIGINT FK conexion Conexión sincronizada 
+usuario_id BIGINT FK usuario Solicitante 
+
+PAGE 26
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+26 
+Atributo Tipo Clave y nulabilidad Descripción 
+estado VARCHAR(12) Obligatorio Estado de procesamiento 
+creados INTEGER Obligatorio Movimientos creados en el intento 
+duplicados INTEGER Obligatorio Duplicados detectados 
+error VARCHAR(300) NULL Diagnóstico resumido 
+creada_en TIMESTAMPTZ Obligatorio Inicio 
+finalizada_en TIMESTAMPTZ NULL Fin 
+Dependencia funcional: (id) → conexion_id, usuario_id, estado, creados, duplicados, error, 
+creada_en, finalizada_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Restricción de dominio: creados >= 0 AND duplicados >= 0. 
+11.20 obligacion 
+Representa un cobro o pago esperado antes de su conciliación. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de obligación 
+empresa_id BIGINT FK empresa Empresa responsable 
+referencia VARCHAR(120) Obligatorio Referencia única por empresa 
+contraparte_original VARCHAR(200) Obligatorio Contraparte declarada al registrar 
+descripcion VARCHAR(200) Obligatorio Concepto de la obligación 
+direccion VARCHAR(3) Obligatorio in para cobro u out para pago 
+vencimiento DATE Obligatorio Fecha esperada de caja 
+importe_base NUMERIC(18,2) Obligatorio Pendiente al registrar la obligación 
+cancelada BOOLEAN Obligatorio Anulación operativa 
+Dependencia funcional: (id) → empresa_id, referencia, contraparte_original, descripcion, 
+direccion, vencimiento, importe_base, cancelada. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (empresa_id,referencia). Esta combinación determina los atributos de la fila. 
+Restricción de dominio: importe_base >= 0 AND direccion IN ('in','out'). 
+El pendiente vigente se calcula restando conciliaciones activas. La contraparte es texto histórico 
+declarado, no un maestro de proveedores. 
+
+PAGE 27
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+27 
+11.21 conciliacion 
+Asocia un abono parcial o total de un movimiento a una obligación. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de aplicación 
+obligacion_id BIGINT FK obligacion Cobro o pago aplicado 
+movimiento_id BIGINT FK movimiento Movimiento bancario real 
+usuario_id BIGINT FK usuario Autor de la aplicación 
+importe NUMERIC(18,2) Obligatorio Importe positivo aplicado 
+solicitud_id UUID Obligatorio Identificador de reintento 
+creada_en TIMESTAMPTZ Obligatorio Fecha de conciliación 
+revertida_en TIMESTAMPTZ NULL Anulación sin borrar evidencia 
+Dependencia funcional: (id) → obligacion_id, movimiento_id, usuario_id, importe, solicitud_id, 
+creada_en, revertida_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (obligacion_id,solicitud_id). Esta combinación determina los atributos de la 
+fila. 
+Restricción de dominio: importe > 0. 
+11.22 factura 
+Guarda la cabecera financiera extraída del XML sin repetirla en un JSON. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de factura 
+empresa_id BIGINT FK empresa Empresa que registra el documento 
+cufe VARCHAR(150) Obligatorio Identificador fiscal del XML 
+numero VARCHAR(100) Obligatorio Número declarado en el documento 
+emision DATE Obligatorio Fecha de emisión 
+vencimiento_xml DATE NULL Vencimiento declarado en el XML 
+subtotal NUMERIC(18,2) Obligatorio Base antes de impuestos declarada 
+total NUMERIC(18,2) Obligatorio Total con impuestos declarado 
+pagadero NUMERIC(18,2) Obligatorio Importe pagadero declarado 
+creada_en TIMESTAMPTZ Obligatorio Registro del documento 
+Dependencia funcional: (id) → empresa_id, cufe, numero, emision, vencimiento_xml, subtotal, 
+total, pagadero, creada_en. 
+
+PAGE 28
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+28 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (empresa_id,cufe). Esta combinación determina los atributos de la fila. 
+Restricción de dominio: subtotal >= 0 AND total >= 0 AND pagadero >= 0. 
+No almacena dirección ni pendiente duplicados. El sentido se deriva del NIT empresarial y las 
+partes del documento. Los importes son valores declarados independientes, no una igualdad 
+aritmética asumida. 
+11.23 parte factura 
+Registra las dos partes históricas del XML como filas atómicas. 
+Atributo Tipo Clave y nulabilidad Descripción 
+factura_id BIGINT PK FK factura Documento de origen 
+papel VARCHAR(8) PK emisor o receptor 
+nit_declarado VARCHAR(30) Obligatorio Identificación histórica del XML 
+nombre_declarado VARCHAR(200) Obligatorio Razón social histórica del XML 
+Dependencia funcional: (factura_id, papel) → nit_declarado, nombre_declarado. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+Restricción de dominio: papel IN ('emisor','receptor'). 
+Cada factura debe tener exactamente un emisor y un receptor. Un NIT no determina 
+universalmente el nombre histórico declarado en documentos de fechas distintas. 
+11.24 importacion factura 
+Conserva intentos de lectura y validación de XML. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador del intento 
+empresa_id BIGINT FK empresa Empresa solicitante 
+usuario_id BIGINT FK usuario Autor de la carga 
+contenido TEXT NULL XML temporal purgado al finalizar 
+estado VARCHAR(12) Obligatorio Estado del procesamiento 
+error VARCHAR(300) NULL Diagnóstico de validación 
+creada_en TIMESTAMPTZ Obligatorio Inicio 
+finalizada_en TIMESTAMPTZ NULL Fin 
+Dependencia funcional: (id) → empresa_id, usuario_id, contenido, estado, error, creada_en, 
+finalizada_en. 
+
+PAGE 29
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+29 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+El resultado se conserva en resultado_importacion_factura; así factura_id no determina una 
+empresa repetida dentro del intento. 
+11.25 revision recurrencia 
+Conserva la decisión humana sobre un patrón recurrente. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de revisión 
+empresa_id BIGINT FK empresa Empresa analizada 
+huella CHAR(64) Obligatorio Huella del patrón en la empresa 
+estado VARCHAR(12) Obligatorio pending confirmed o rejected 
+usuario_id BIGINT FK usuario Usuario que revisó 
+actualizada_en TIMESTAMPTZ Obligatorio Instante de revisión 
+Dependencia funcional: (id) → empresa_id, huella, estado, usuario_id, actualizada_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (empresa_id,huella). Esta combinación determina los atributos de la fila. 
+Restricción de dominio: estado IN ('pending','confirmed','rejected'). 
+11.26 evidencia recurrencia 
+Descompone la evidencia repetida de una recurrencia en movimientos observados. 
+Atributo Tipo Clave y nulabilidad Descripción 
+revision_id BIGINT PK FK 
+revision_recurrencia 
+Revisión del patrón 
+movimiento_id BIGINT PK FK movimiento Movimiento que sustenta el patrón 
+fecha_observada DATE Obligatorio Fecha en la versión evaluada 
+importe_observado NUMERIC(18,2) Obligatorio Valor en la versión evaluada 
+Dependencia funcional: (revision_id, movimiento_id) → fecha_observada, importe_observado. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+Los valores observados son snapshots inmutables; no dependen del estado actual del 
+movimiento. 
+
+PAGE 30
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+30 
+11.27 ocurrencia recurrencia 
+Vincula una materialización del patrón con la obligación generada. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de ocurrencia 
+revision_id BIGINT FK 
+revision_recurrencia 
+Patrón de origen 
+clave CHAR(64) Obligatorio Huella de materialización dentro del 
+patrón 
+obligacion_id BIGINT UQ FK obligacion Obligación generada 
+Dependencia funcional: (id) → revision_id, clave, obligacion_id. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (revision_id,clave). Esta combinación determina los atributos de la fila. 
+No repite empresa_id. Un trigger mantiene además la unicidad de clave por empresa, compatible 
+con RecurrenceOccurrence. 
+11.28 pronostico 
+Cabecera inmutable de una ejecución de proyección de caja. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de ejecución 
+empresa_id BIGINT FK empresa Empresa evaluada 
+usuario_id BIGINT FK usuario Solicitante 
+huella CHAR(64) Obligatorio Huella de entradas y configuración 
+metodo VARCHAR(32) Obligatorio Método y versión utilizados 
+horizonte SMALLINT Obligatorio Días proyectados 
+fecha_corte DATE Obligatorio Fecha de referencia 
+creado_en TIMESTAMPTZ Obligatorio Instante de cálculo 
+Dependencia funcional: (id) → empresa_id, usuario_id, huella, metodo, horizonte, fecha_corte, 
+creado_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (empresa_id,huella). Esta combinación determina los atributos de la fila. 
+Restricción de dominio: horizonte BETWEEN 30 AND 90. 
+
+PAGE 31
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+31 
+11.29 parametro pronostico 
+Registra parámetros escalares de una ejecución reproducible. 
+Atributo Tipo Clave y nulabilidad Descripción 
+pronostico_id BIGINT PK FK pronostico Ejecución propietaria 
+nombre VARCHAR(80) PK Nombre del parámetro 
+valor TEXT Obligatorio Valor escalar serializado sin listas 
+Dependencia funcional: (pronostico_id, nombre) → valor. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+11.30 punto pronostico 
+Almacena el resultado diario por escenario en lugar de un arreglo JSON. 
+Atributo Tipo Clave y nulabilidad Descripción 
+pronostico_id BIGINT PK FK pronostico Ejecución de origen 
+fecha DATE PK Día proyectado 
+escenario VARCHAR(12) PK expected lower o upper 
+saldo NUMERIC(18,2) Obligatorio Saldo proyectado en COP 
+Dependencia funcional: (pronostico_id, fecha, escenario) → saldo. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+Restricción de dominio: escenario IN ('expected','lower','upper'). 
+Los escenarios son salidas del método; lower y upper no se presentan como cuantiles calibrados 
+sin evidencia experimental. 
+11.31 entrada cuenta 
+Conserva el saldo de entrada de cada cuenta en cada pronóstico. 
+Atributo Tipo Clave y nulabilidad Descripción 
+pronostico_id BIGINT PK FK pronostico Ejecución 
+cuenta_id BIGINT PK FK cuenta Cuenta utilizada 
+fecha_observada DATE Obligatorio Corte utilizado al ejecutar 
+saldo_observado NUMERIC(18,2) Obligatorio Saldo de entrada inmutable 
+Dependencia funcional: (pronostico_id, cuenta_id) → fecha_observada, saldo_observado. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+
+PAGE 32
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+32 
+11.32 entrada movimiento 
+Conserva los valores de movimientos utilizados por cada ejecución. 
+Atributo Tipo Clave y nulabilidad Descripción 
+pronostico_id BIGINT PK FK pronostico Ejecución 
+movimiento_id BIGINT PK FK movimiento Movimiento utilizado 
+fecha_observada DATE Obligatorio Fecha del movimiento al ejecutar 
+importe_observado NUMERIC(18,2) Obligatorio Valor utilizado 
+categoria_observada_id BIGINT FK categoria Categoría utilizada al ejecutar 
+Dependencia funcional: (pronostico_id, movimiento_id) → fecha_observada, importe_observado, 
+categoria_observada_id. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+11.33 entrada obligacion 
+Conserva pendientes y vencimientos tal como fueron proyectados. 
+Atributo Tipo Clave y nulabilidad Descripción 
+pronostico_id BIGINT PK FK pronostico Ejecución 
+obligacion_id BIGINT PK FK obligacion Obligación utilizada 
+vencimiento_observado DATE Obligatorio Vencimiento al ejecutar 
+pendiente_observado NUMERIC(18,2) Obligatorio Pendiente utilizado 
+direccion_observada VARCHAR(3) Obligatorio Sentido utilizado 
+Dependencia funcional: (pronostico_id, obligacion_id) → vencimiento_observado, 
+pendiente_observado, direccion_observada. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+Restricción de dominio: pendiente_observado >= 0 AND direccion_observada IN ('in','out'). 
+11.34 evaluacion alerta 
+Registra una evaluación histórica de riesgo con su umbral de entrada. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de evaluación 
+pronostico_id BIGINT FK pronostico Pronóstico evaluado 
+usuario_id BIGINT FK usuario Solicitante de la evaluación 
+huella CHAR(64) Obligatorio Huella de evaluación 
+umbral_observado NUMERIC(18,2) Obligatorio Umbral utilizado en ese instante 
+
+PAGE 33
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+33 
+Atributo Tipo Clave y nulabilidad Descripción 
+creada_en TIMESTAMPTZ Obligatorio Instante de evaluación 
+Dependencia funcional: (id) → pronostico_id, usuario_id, huella, umbral_observado, creada_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (pronostico_id,huella). Esta combinación determina los atributos de la fila. 
+La empresa se deriva del pronóstico. La unicidad histórica por empresa y huella del modelo 
+original se conserva mediante trigger con bloqueo de empresa. 
+11.35 alerta 
+Almacena cada hallazgo de una evaluación de riesgo. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de alerta 
+evaluacion_id BIGINT FK evaluacion_alerta Evaluación de origen 
+secuencia SMALLINT Obligatorio Posición única dentro de la evaluación 
+nivel VARCHAR(12) Obligatorio Nivel de riesgo comunicado 
+fecha_inicio DATE Obligatorio Inicio del período en riesgo 
+fecha_fin DATE Obligatorio Fin del período en riesgo 
+saldo_minimo NUMERIC(18,2) Obligatorio Mínimo proyectado en el período 
+mensaje TEXT Obligatorio Explicación del hallazgo 
+Dependencia funcional: (id) → evaluacion_id, secuencia, nivel, fecha_inicio, fecha_fin, 
+saldo_minimo, mensaje. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Unicidad adicional: (evaluacion_id,secuencia). Esta combinación determina los atributos de la fila. 
+Restricción de dominio: fecha_inicio <= fecha_fin. 
+11.36 factor alerta 
+Separa la lista de factores explicativos de cada alerta. 
+Atributo Tipo Clave y nulabilidad Descripción 
+alerta_id BIGINT PK FK alerta Alerta explicada 
+posicion SMALLINT PK Orden del factor 
+descripcion VARCHAR(250) Obligatorio Factor explicativo en lenguaje natural 
+
+PAGE 34
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+34 
+Dependencia funcional: (alerta_id, posicion) → descripcion. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+11.37 auditoria 
+Registra un evento de modificación sin sobrescribir el historial. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador del evento 
+empresa_id BIGINT FK empresa Contexto empresarial del evento 
+usuario_id BIGINT FK usuario Actor responsable 
+accion VARCHAR(80) Obligatorio Operación ejecutada 
+entidad VARCHAR(80) Obligatorio Tipo de objeto auditado 
+objeto_id VARCHAR(80) Obligatorio Identificador histórico textual 
+creada_en TIMESTAMPTZ Obligatorio Momento del evento 
+Dependencia funcional: (id) → empresa_id, usuario_id, accion, entidad, objeto_id, creada_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+objeto_id es una referencia histórica descriptiva, no una FK polimórfica; conserva eventos aunque 
+el objeto deje de existir. No sustituye las FKs del modelo financiero. 
+11.38 detalle auditoria 
+Descompone before y after en cambios escalares por atributo. 
+Atributo Tipo Clave y nulabilidad Descripción 
+auditoria_id BIGINT PK FK auditoria Evento auditado 
+campo VARCHAR(120) PK Ruta de atributo escalar 
+valor_anterior TEXT NULL Valor antes del evento 
+valor_nuevo TEXT NULL Valor después del evento 
+Dependencia funcional: (auditoria_id, campo) → valor_anterior, valor_nuevo. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+Las colecciones se expanden por ruta e índice; cada fila representa un cambio elemental y no 
+almacena objetos JSON. 
+
+PAGE 35
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+35 
+11.39 tarea 
+Registra los mensajes persistentes de trabajo en segundo plano. 
+Atributo Tipo Clave y nulabilidad Descripción 
+id BIGINT PK Identificador de mensaje 
+nombre VARCHAR(120) Obligatorio Función autorizada a ejecutar 
+estado VARCHAR(12) Obligatorio Estado de la entrega 
+intentos SMALLINT Obligatorio Número de intentos 
+disponible_en TIMESTAMPTZ Obligatorio Instante de próximo procesamiento 
+lease UUID NULL Identificador del reclamo temporal 
+creada_en TIMESTAMPTZ Obligatorio Creación 
+finalizada_en TIMESTAMPTZ NULL Finalización 
+Dependencia funcional: (id) → nombre, estado, intentos, disponible_en, lease, creada_en, 
+finalizada_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Restricción de dominio: intentos BETWEEN 0 AND 3. 
+11.40 parametro tarea 
+Representa argumentos escalares posicionales o nombrados de una tarea. 
+Atributo Tipo Clave y nulabilidad Descripción 
+tarea_id BIGINT PK FK tarea Mensaje propietario 
+nombre VARCHAR(80) PK Nombre o posición arg0 arg1 
+valor TEXT Obligatorio Valor escalar del argumento 
+Dependencia funcional: (tarea_id, nombre) → valor. 
+Verificación FN3: atributos atómicos. Todos los atributos no clave describen la combinación 
+completa, no un componente aislado. 
+El contrato de tareas permite IDs de trabajo y escalares. Se purgan los parámetros al finalizar; el 
+despachador valida nombre y tipo del argumento. 
+
+PAGE 36
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+36 
+11.41 limite solicitud 
+Conserva contadores persistentes para ventanas de autenticación. 
+Atributo Tipo Clave y nulabilidad Descripción 
+clave CHAR(64) PK HMAC de identidad y ventana 
+solicitudes INTEGER Obligatorio Peticiones acumuladas 
+vence_en TIMESTAMPTZ Obligatorio Fin de la ventana 
+Dependencia funcional: (clave) → solicitudes, vence_en. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Restricción de dominio: solicitudes >= 0. 
+11.42 cuenta conexion 
+Separa la asociación opcional entre una cuenta y una conexión. 
+Atributo Tipo Clave y nulabilidad Descripción 
+cuenta_id BIGINT PK FK cuenta Cuenta vinculada 
+conexion_id BIGINT UQ FK conexion Conexión exclusiva de la cuenta 
+Dependencia funcional: (cuenta_id) → conexion_id. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Ambas columnas son claves candidatas. Un trigger valida que la cuenta y el consentimiento 
+pertenezcan a la misma empresa. 
+11.43 factura obligacion 
+Separa el vínculo opcional uno a uno entre factura y obligación. 
+Atributo Tipo Clave y nulabilidad Descripción 
+factura_id BIGINT PK FK factura Documento confirmado 
+obligacion_id BIGINT UQ FK obligacion Obligación respaldada por el 
+documento 
+Dependencia funcional: (factura_id) → obligacion_id. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Ambas columnas son claves candidatas; la empresa y el sentido se verifican sin repetirlos en esta 
+asociación. 
+
+PAGE 37
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+37 
+11.44 resultado importacion factura 
+Registra el documento identificado por un intento exitoso. 
+Atributo Tipo Clave y nulabilidad Descripción 
+importacion_id BIGINT PK FK 
+importacion_factura 
+Intento de importación 
+factura_id BIGINT FK factura Factura creada o ya existente 
+duplicada BOOLEAN Obligatorio Indica si la factura ya existía al 
+importar 
+Dependencia funcional: (importacion_id) → factura_id, duplicada. 
+Verificación FN3: atributos atómicos. La clave primaria es simple; las claves alternativas 
+declaradas también identifican una sola fila. Ningún atributo no clave determina otro atributo no 
+clave bajo las reglas del dominio. 
+Una factura admite muchos intentos; cada intento tiene a lo sumo un resultado. La empresa de 
+la solicitud debe coincidir con la del documento. 
+12. Diseño físico y estrategia transaccional 
+Las PK y UQ crean índices de búsqueda de identidad. Se agregan índices para FK y consultas 
+frecuentes: movimiento(cuenta_id, fecha), obligacion(empresa_id, vencimiento), 
+corte_cuenta(cuenta_id, fecha DESC), pronostico(empresa_id, fecha_corte), tarea(estado , 
+disponible_en) y limite_solicitud(vence_en). La suma de conciliaciones no se resuelve con un 
+CHECK por fila porque requiere consultar varias filas. 
+12.1 Conciliación y concurrencia 
+La operación de conciliación se ejecuta dentro de una transacción. Se bloquean la obligación y 
+el movimiento con SELECT FOR UPDATE en un orden determinista; se comprueba la 
+membresía, la pertenencia empresarial, el signo y los importes ya aplicados. Si la solicitud ya 
+existe, se devuelve el registro anterior. Si no existe y hay cupo en ambos extremos, se inserta la 
+conciliación y su auditoría. La reversión usa los mismos bloqueos. Así dos peticiones simultáneas 
+no consumen el mismo saldo disponible. 
+BEGIN; 
+SELECT id FROM obligacion WHERE id = :obligacion FOR UPDATE; 
+SELECT id FROM movimiento WHERE id = :movimiento FOR UPDATE; 
+-- Validar empresa, signo, idempotencia y límites agregados. 
+-- Insertar conciliacion y auditoria o revertir toda la operación. 
+COMMIT; 
+12.2 Pertenencia e integridad entre tablas 
+Las FK simples verifican existencia, pero no garantizan que todos los objetos sean de la misma 
+empresa. Se requieren triggers o funciones transaccionales para movimiento y tercero; cuenta y 
+conexión; conciliación con obligación y movimiento; factura con ob ligación; ocurrencia con 
+revisión y obligación; evidencias y entradas con su empresa de origen; e importación de factura 
+con documento. El usuario autor debe tener membresía al operar; el historial no se elimina si esa 
+membresía se retira después. 
+
+PAGE 38
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+38 
+La conexión activa se valida bloqueando la fila empresa antes de comprobar otras conexiones 
+del proveedor. Se usa la misma técnica para la unicidad empresarial de alias, ocurrencias y 
+evaluaciones. La relación parte_factura se completa con un CONSTRAINT TR IGGER 
+DEFERRABLE INITIALLY DEFERRED que, al COMMIT, exige un emisor, un receptor y 
+coincidencia exclusiva del NIT empresarial. Debe ejecutarse también ante cambios de NIT o 
+reasignación del documento. 
+12.3 Seguridad y recuperación 
+La aplicación debe filtrar toda consulta por membresía y empresa; una FK no es un mecanismo 
+de autorización. Las contraseñas permanecen en hashes administrados por Django. No se 
+guardan credenciales de acceso bancario en las tablas del dominio. Los archivo s temporales y 
+los parámetros finalizados se purgan, y los diagnósticos excluyen datos sensibles. Una política 
+de filas en PostgreSQL puede reforzar el aislamiento si se configura y prueba para el rol de 
+ejecución. 
+El respaldo debe incluir esquema y datos con una herramienta PostgreSQL compatible, registrar 
+fecha y checksum y restaurarse primero en un entorno aislado. Se comprueban claves, conteos 
+y consultas de negocio antes de dar por recuperado el sistema. Este di seño no acredita una 
+restauración remota ya realizada. 
+13. Correspondencia con la implementación existente 
+Modelo Django actual Relaciones propuestas y cambio 
+Company CompanyMember y auth.User empresa usuario membresia rol; se conserva la pertenencia por 
+empresa. 
+BankConsent y BankConnection consentimiento alcance consentimiento_alcance conexion proveedor; se 
+elimina empresa redundante en conexión. 
+BankAccount cuenta y corte_cuenta; se conserva historial de saldos observados. 
+Merchant y MerchantAlias tercero alias_tercero; empresa se deriva desde tercero. 
+Transaction ClassificationRule 
+ClassificationChange 
+movimiento categoria regla_clasificacion cambio_clasificacion; 
+categorías mediante FK. 
+ImportJob y BankSyncJob importacion_movimiento sincronizacion; se mantienen resultados por 
+intento. 
+Invoice y InvoiceImport factura parte_factura importacion_factura; data se expande en columnas 
+y filas. 
+Obligation y Settlement obligacion conciliacion; importe_base reemplaza el pendiente mutable y 
+se deriva el saldo restante. 
+RecurrenceReview 
+RecurrenceOccurrence 
+revision_recurrencia evidencia_recurrencia ocurrencia_recurrencia; 
+evidence se transforma en filas. 
+ForecastRun pronostico parametro_pronostico punto_pronostico y las tres tablas de 
+entradas; evidence y result se descomponen. 
+AlertEvaluation evaluacion_alerta alerta factor_alerta; resultados asociados a la 
+ejecución evaluada. 
+AuditLog BackgroundTask 
+RateLimitBucket 
+auditoria detalle_auditoria tarea parametro_tarea limite_solicitud; listas y 
+objetos se separan. 
+
+PAGE 39
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+39 
+La migración debe crear catálogos, asignar categorías existentes a sus IDs, expandir los JSON 
+de forma determinista y verificar conteos antes de retirar columnas. El importe base de cada 
+obligación se recupera como pendiente actual más suma de conciliacion es activas; no se utiliza 
+el total de la factura si existen abonos previos. Los cortes se inicializan con balance y 
+balance_date actuales. Las alertas históricas sin vínculo directo a un pronóstico exigen 
+reconstrucción verificable de sus entradas antes de  completar la FK; no debe inventarse esa 
+asociación. 
+14. Consultas SQL de validación 
+14.1 Pendiente de cobros y pagos 
+CREATE VIEW pendiente_obligacion AS 
+SELECT o.id, o.empresa_id, o.direccion, o.vencimiento, 
+       o.cancelada, o.importe_base - COALESCE(SUM( 
+         CASE WHEN c.revertida_en IS NULL THEN c.importe ELSE 0 END 
+       ), 0) AS pendiente 
+FROM obligacion o LEFT JOIN conciliacion c ON c.obligacion_id = o.id 
+GROUP BY o.id; 
+ 
+SELECT direccion, SUM(pendiente) AS total 
+FROM pendiente_obligacion 
+WHERE empresa_id = :empresa AND NOT cancelada 
+GROUP BY direccion; 
+Se conserva una fila por obligación y se consideran solo aplicaciones activas. La cancelación 
+excluye la obligación de caja futura sin eliminar su historial. 
+14.2 Saldo consolidado al mismo corte 
+SELECT SUM(cc.saldo) AS saldo_cop 
+FROM cuenta c JOIN corte_cuenta cc ON cc.cuenta_id = c.id 
+WHERE c.empresa_id = :empresa AND cc.fecha = :fecha 
+HAVING COUNT(*) = (SELECT COUNT(*) FROM cuenta 
+                   WHERE empresa_id = :empresa); 
+Si falta el corte de alguna cuenta, la consulta no devuelve un consolidado engañoso. No se suma 
+el historial bancario como sustituto del saldo observado. 
+14.3 Ingresos y egresos por categoría 
+SELECT cat.nombre, 
+ SUM(CASE WHEN m.importe > 0 THEN m.importe ELSE 0 END) AS ingresos, 
+ SUM(CASE WHEN m.importe < 0 THEN -m.importe ELSE 0 END) AS egresos 
+FROM movimiento m JOIN cuenta c ON c.id = m.cuenta_id 
+JOIN categoria cat ON cat.id = m.categoria_id 
+WHERE c.empresa_id = :empresa 
+  AND m.fecha BETWEEN :desde AND :hasta 
+GROUP BY cat.id, cat.nombre ORDER BY cat.nombre; 
+14.4 Control de sobreaplicación y coherencia empresarial 
+SELECT o.id 
+FROM obligacion o JOIN conciliacion c ON c.obligacion_id = o.id 
+WHERE c.revertida_en IS NULL 
+GROUP BY o.id HAVING SUM(c.importe) > o.importe_base; 
+ 
+SELECT c.id FROM conciliacion c 
+JOIN obligacion o ON o.id = c.obligacion_id 
+JOIN movimiento m ON m.id = c.movimiento_id 
+JOIN cuenta a ON a.id = m.cuenta_id 
+WHERE o.empresa_id <> a.empresa_id 
+   OR (o.direccion = 'in' AND m.importe <= 0) 
+   OR (o.direccion = 'out' AND m.importe >= 0); 
+
+PAGE 40
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+40 
+Ambas consultas deben devolver cero filas. También se agrupan las conciliaciones por 
+movimiento para verificar que su suma activa no supere ABS(importe). 
+15. Escenario ilustrativo y plan de pruebas 
+Escenario de prueba con valores ilustrativos: una empresa tiene una cuenta con corte de COP 2 
+000 000; registra una obligación de pago por COP 600 000 y un egreso bancario de COP 200 
+000. Una conciliación activa por COP 200 000 deja un pendiente de COP 400 000. La proyección 
+utiliza el corte real y solo el pendiente futuro, sin volver a descontar el egreso histórico. Si se 
+revierte la conciliación, el pendiente regresa a COP 600 000 y la reversión queda auditada. 
+Caso Acción Resultado esperado 
+V01 Insertar dos membresías de igual empresa y 
+usuario 
+La PK compuesta rechaza la segunda. 
+V02 Reimportar cuenta e ID externo ya registrados No aparece otro movimiento; se cuenta como 
+duplicado. 
+V03 Usar un tercero de otra empresa en un movimiento La regla de pertenencia rechaza la operación. 
+V04 Sincronizar una conexión con consentimiento 
+revocado 
+La operación se rechaza antes de crear 
+movimientos. 
+V05 Abrir dos conexiones activas del mismo proveedor 
+y empresa 
+La validación concurrente admite una sola. 
+V06 Aplicar COP 200 000 a obligación de COP 600 000 El pendiente calculado es COP 400 000. 
+V07 Repetir la misma solicitud de conciliación Se recupera la conciliación original sin otra 
+aplicación. 
+V08 Aplicar dos conciliaciones simultáneas que 
+superen el cupo 
+El bloqueo impide la sobreaplicación. 
+V09 Revertir una conciliación ya registrada Se conserva la fila y se restituye el pendiente. 
+V10 Registrar el mismo CUFE en una empresa UQ rechaza el duplicado; otro intento puede 
+referirlo. 
+V11 Confirmar una factura sin ambas partes La restricción diferida rechaza el COMMIT. 
+V12 Cambiar un movimiento después de un pronóstico Las entradas observadas y el resultado histórico 
+permanecen iguales. 
+V13 Consultar consolidado con un corte faltante No se devuelve un saldo consolidado incompleto. 
+V14 Borrar una entidad con evidencias relacionadas Las FK restringen el borrado. 
+V15 Leer información con rol viewer o desde otra 
+empresa 
+Solo se permite la lectura de la empresa 
+autorizada; toda escritura se rechaza. 
+Estos son criterios de aceptación del diseño propuesto. Deben ejecutarse sobre una base aislada 
+después de crear las migraciones y los triggers. La validación estructural del documento no 
+acredita ejecución de estos casos ni comportamiento en producción. 
+
+PAGE 41
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+41 
+16. Conclusiones 
+El diseño organiza Horizonte en 44 relaciones y separa identidad empresarial, fuentes financieras, 
+movimientos, obligaciones y resultados analíticos. El MER expresa los vínculos del negocio y el 
+MR identifica todas las PK, claves candidatas y FK necesarias para reconstruirlos. 
+La normalización elimina grupos repetidos, dependencias parciales en asociaciones y 
+dependencias transitivas de categorías, conexiones y alias. Los resultados y entradas históricas 
+se almacenan como hechos de una ejecución, lo que preserva explicaciones au n cuando los 
+datos vigentes cambien. La conciliación y las reglas entre empresas requieren control 
+transaccional adicional a las restricciones declarativas. 
+La adopción del modelo exige una migración controlada del esquema Django actual, validación 
+de la pertenencia empresarial y pruebas de concurrencia. La base de datos resultante 
+proporciona una estructura consistente para consultar caja real, pendientes y escenarios futuros 
+sin confundir documentos con pagos realizados. 
+17. Referencias del proyecto 
+README.md. Plataforma de Inteligencia de Liquidez para Microempresas. Descripción, alcance, 
+actores y reglas de negocio del repositorio. 
+SPECS.md. Especificaciones del proyecto Horizonte. 
+backend/apps/accounts/models.py. Empresas, membresías, auditoría, cola persistente y límites 
+de solicitudes. 
+backend/apps/banking/models.py. Cuentas, consentimientos, conexiones, comercios, 
+movimientos e importaciones. 
+backend/apps/classify/models.py. Reglas y correcciones de clasificación. 
+backend/apps/invoices/models.py y parser.py. Facturas, importaciones y estructura financiera 
+extraída del XML. 
+backend/apps/forecast/models.py. Obligaciones, conciliaciones, recurrencias, alertas y 
+ejecuciones de pronóstico. 
+docs/TECHNICAL_MANUAL.md y docs/IMPLEMENTATION_STATUS.md. Contexto técnico y 
+separación entre alcance previsto y comportamiento verificado. 
+Proyecto/Plantilla.docx. Plantilla institucional de Universidad de Pamplona. 
+Proyecto/Ejemplos. Diseño de una base de datos para la gestión de la Banda Marcial de la 
+Institución Educativa La Frontera y Proyecto BD2 Heladería. Referencias de estructura y 
+presentación. 
+Fecha de revisión de los archivos del proyecto: 15 de octubre de 2026. Las referencias de ejemplo 
+orientan la presentación; las entidades y reglas financieras proceden del proyecto Horizonte. 
+
+PAGE 42
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+42 
+18. Anexo de definición física en PostgreSQL 
+El siguiente DDL materializa las tablas, PK, FK, claves alternativas y CHECK locales del modelo 
+final en el esquema horizonte_fn3. Se utiliza un esquema separado para diferenciar esta 
+propuesta del esquema Django vigente. No se ejecuta contra la base del p royecto. Las reglas 
+entre filas y entre empresas de la sección de integridad requieren implementar sus triggers antes 
+de utilizar este esquema como sistema operativo. 
+18.1 empresa 
+CREATE TABLE empresa ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  nit VARCHAR(30) NOT NULL UNIQUE, 
+  nombre VARCHAR(200) NOT NULL, 
+  umbral NUMERIC(18,2) NOT NULL, 
+  PRIMARY KEY (id), 
+  CHECK (umbral >= 0) 
+); 
+18.2 usuario 
+CREATE TABLE usuario ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  username VARCHAR(150) NOT NULL UNIQUE, 
+  password_hash VARCHAR(128) NOT NULL, 
+  nombres VARCHAR(150) NOT NULL, 
+  apellidos VARCHAR(150) NOT NULL, 
+  email VARCHAR(254) NOT NULL, 
+  activo BOOLEAN NOT NULL, 
+  superusuario BOOLEAN NOT NULL, 
+  fecha_registro TIMESTAMPTZ NOT NULL, 
+  ultimo_acceso TIMESTAMPTZ, 
+  PRIMARY KEY (id) 
+); 
+18.3 rol 
+CREATE TABLE rol ( 
+  codigo VARCHAR(16) NOT NULL, 
+  nombre VARCHAR(40) NOT NULL UNIQUE, 
+  PRIMARY KEY (codigo) 
+); 
+18.4 membresia 
+CREATE TABLE membresia ( 
+  empresa_id BIGINT NOT NULL, 
+  usuario_id BIGINT NOT NULL, 
+  rol_codigo VARCHAR(16) NOT NULL, 
+  PRIMARY KEY (empresa_id, usuario_id), 
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (rol_codigo) REFERENCES rol(codigo) ON DELETE RESTRICT 
+); 
+18.5 proveedor 
+CREATE TABLE proveedor ( 
+  codigo VARCHAR(40) NOT NULL, 
+  nombre VARCHAR(100) NOT NULL UNIQUE, 
+  PRIMARY KEY (codigo) 
+); 
+18.6 consentimiento 
+CREATE TABLE consentimiento ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  empresa_id BIGINT NOT NULL, 
+  usuario_id BIGINT NOT NULL, 
+  otorgado_en TIMESTAMPTZ NOT NULL, 
+  revocado_en TIMESTAMPTZ, 
+  PRIMARY KEY (id), 
+
+PAGE 43
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+43 
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT, 
+  CHECK (revocado_en IS NULL OR revocado_en >= otorgado_en) 
+); 
+18.7 alcance 
+CREATE TABLE alcance ( 
+  codigo VARCHAR(60) NOT NULL, 
+  descripcion VARCHAR(150) NOT NULL, 
+  PRIMARY KEY (codigo) 
+); 
+18.8 consentimiento alcance 
+CREATE TABLE consentimiento_alcance ( 
+  consentimiento_id BIGINT NOT NULL, 
+  alcance_codigo VARCHAR(60) NOT NULL, 
+  PRIMARY KEY (consentimiento_id, alcance_codigo), 
+  FOREIGN KEY (consentimiento_id) REFERENCES consentimiento(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (alcance_codigo) REFERENCES alcance(codigo) ON DELETE RESTRICT 
+); 
+18.9 conexion 
+CREATE TABLE conexion ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  consentimiento_id BIGINT NOT NULL UNIQUE, 
+  proveedor_codigo VARCHAR(40) NOT NULL, 
+  estado VARCHAR(12) NOT NULL, 
+  creada_en TIMESTAMPTZ NOT NULL, 
+  revocada_en TIMESTAMPTZ, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (consentimiento_id) REFERENCES consentimiento(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (proveedor_codigo) REFERENCES proveedor(codigo) ON DELETE RESTRICT, 
+  CHECK (estado IN ('active','revoked')) 
+); 
+18.10 cuenta 
+CREATE TABLE cuenta ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  empresa_id BIGINT NOT NULL, 
+  nombre VARCHAR(120) NOT NULL, 
+  historial_desde DATE, 
+  historial_hasta DATE, 
+  confirmado_en TIMESTAMPTZ, 
+  confirmado_por BIGINT, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (confirmado_por) REFERENCES usuario(id) ON DELETE RESTRICT, 
+  CHECK (historial_desde IS NULL OR historial_hasta IS NULL OR historial_desde <= historial_hasta) 
+); 
+18.11 corte cuenta 
+CREATE TABLE corte_cuenta ( 
+  cuenta_id BIGINT NOT NULL, 
+  fecha DATE NOT NULL, 
+  saldo NUMERIC(18,2) NOT NULL, 
+  PRIMARY KEY (cuenta_id, fecha), 
+  FOREIGN KEY (cuenta_id) REFERENCES cuenta(id) ON DELETE RESTRICT 
+); 
+18.12 tercero 
+CREATE TABLE tercero ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  empresa_id BIGINT NOT NULL, 
+  nombre_normalizado VARCHAR(250) NOT NULL, 
+  nombre_visible VARCHAR(250) NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE RESTRICT, 
+  UNIQUE (empresa_id,nombre_normalizado) 
+); 
+
+PAGE 44
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+44 
+18.13 alias tercero 
+CREATE TABLE alias_tercero ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  tercero_id BIGINT NOT NULL, 
+  proveedor_codigo VARCHAR(40) NOT NULL, 
+  alias_normalizado VARCHAR(250) NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (tercero_id) REFERENCES tercero(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (proveedor_codigo) REFERENCES proveedor(codigo) ON DELETE RESTRICT, 
+  UNIQUE (tercero_id,proveedor_codigo,alias_normalizado) 
+); 
+18.14 categoria 
+CREATE TABLE categoria ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  nombre VARCHAR(80) NOT NULL UNIQUE, 
+  PRIMARY KEY (id) 
+); 
+18.15 movimiento 
+CREATE TABLE movimiento ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  cuenta_id BIGINT NOT NULL, 
+  externo_id VARCHAR(120) NOT NULL, 
+  fecha DATE NOT NULL, 
+  importe NUMERIC(18,2) NOT NULL, 
+  descripcion VARCHAR(250) NOT NULL, 
+  descripcion_normalizada TEXT NOT NULL, 
+  tercero_id BIGINT, 
+  tercero_original VARCHAR(250) NOT NULL, 
+  categoria_id BIGINT NOT NULL, 
+  fuente_clasificacion VARCHAR(16) NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (cuenta_id) REFERENCES cuenta(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (tercero_id) REFERENCES tercero(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (categoria_id) REFERENCES categoria(id) ON DELETE RESTRICT, 
+  UNIQUE (cuenta_id,externo_id), 
+  CHECK (importe <> 0) 
+); 
+18.16 regla clasificacion 
+CREATE TABLE regla_clasificacion ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  empresa_id BIGINT NOT NULL, 
+  descripcion_normalizada VARCHAR(250) NOT NULL, 
+  direccion VARCHAR(3) NOT NULL, 
+  categoria_id BIGINT NOT NULL, 
+  actualizada_en TIMESTAMPTZ NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (categoria_id) REFERENCES categoria(id) ON DELETE RESTRICT, 
+  UNIQUE (empresa_id,descripcion_normalizada,direccion), 
+  CHECK (direccion IN ('in','out')) 
+); 
+18.17 cambio clasificacion 
+CREATE TABLE cambio_clasificacion ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  movimiento_id BIGINT NOT NULL, 
+  usuario_id BIGINT NOT NULL, 
+  categoria_anterior_id BIGINT NOT NULL, 
+  categoria_nueva_id BIGINT NOT NULL, 
+  recordado BOOLEAN NOT NULL, 
+  creado_en TIMESTAMPTZ NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (movimiento_id) REFERENCES movimiento(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (categoria_anterior_id) REFERENCES categoria(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (categoria_nueva_id) REFERENCES categoria(id) ON DELETE RESTRICT 
+); 
+
+PAGE 45
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+45 
+18.18 importacion movimiento 
+CREATE TABLE importacion_movimiento ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  cuenta_id BIGINT NOT NULL, 
+  usuario_id BIGINT NOT NULL, 
+  formato VARCHAR(4) NOT NULL, 
+  checksum CHAR(64) NOT NULL, 
+  contenido TEXT, 
+  estado VARCHAR(12) NOT NULL, 
+  creados INTEGER NOT NULL, 
+  duplicados INTEGER NOT NULL, 
+  error VARCHAR(300), 
+  creada_en TIMESTAMPTZ NOT NULL, 
+  finalizada_en TIMESTAMPTZ, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (cuenta_id) REFERENCES cuenta(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT, 
+  CHECK (formato IN ('csv','xlsx') AND creados >= 0 AND duplicados >= 0) 
+); 
+18.19 sincronizacion 
+CREATE TABLE sincronizacion ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  conexion_id BIGINT NOT NULL, 
+  usuario_id BIGINT NOT NULL, 
+  estado VARCHAR(12) NOT NULL, 
+  creados INTEGER NOT NULL, 
+  duplicados INTEGER NOT NULL, 
+  error VARCHAR(300), 
+  creada_en TIMESTAMPTZ NOT NULL, 
+  finalizada_en TIMESTAMPTZ, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (conexion_id) REFERENCES conexion(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT, 
+  CHECK (creados >= 0 AND duplicados >= 0) 
+); 
+18.20 obligacion 
+CREATE TABLE obligacion ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  empresa_id BIGINT NOT NULL, 
+  referencia VARCHAR(120) NOT NULL, 
+  contraparte_original VARCHAR(200) NOT NULL, 
+  descripcion VARCHAR(200) NOT NULL, 
+  direccion VARCHAR(3) NOT NULL, 
+  vencimiento DATE NOT NULL, 
+  importe_base NUMERIC(18,2) NOT NULL, 
+  cancelada BOOLEAN NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE RESTRICT, 
+  UNIQUE (empresa_id,referencia), 
+  CHECK (importe_base >= 0 AND direccion IN ('in','out')) 
+); 
+18.21 conciliacion 
+CREATE TABLE conciliacion ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  obligacion_id BIGINT NOT NULL, 
+  movimiento_id BIGINT NOT NULL, 
+  usuario_id BIGINT NOT NULL, 
+  importe NUMERIC(18,2) NOT NULL, 
+  solicitud_id UUID NOT NULL, 
+  creada_en TIMESTAMPTZ NOT NULL, 
+  revertida_en TIMESTAMPTZ, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (obligacion_id) REFERENCES obligacion(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (movimiento_id) REFERENCES movimiento(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT, 
+  UNIQUE (obligacion_id,solicitud_id), 
+  CHECK (importe > 0) 
+); 
+
+PAGE 46
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+46 
+18.22 factura 
+CREATE TABLE factura ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  empresa_id BIGINT NOT NULL, 
+  cufe VARCHAR(150) NOT NULL, 
+  numero VARCHAR(100) NOT NULL, 
+  emision DATE NOT NULL, 
+  vencimiento_xml DATE, 
+  subtotal NUMERIC(18,2) NOT NULL, 
+  total NUMERIC(18,2) NOT NULL, 
+  pagadero NUMERIC(18,2) NOT NULL, 
+  creada_en TIMESTAMPTZ NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE RESTRICT, 
+  UNIQUE (empresa_id,cufe), 
+  CHECK (subtotal >= 0 AND total >= 0 AND pagadero >= 0) 
+); 
+18.23 parte factura 
+CREATE TABLE parte_factura ( 
+  factura_id BIGINT NOT NULL, 
+  papel VARCHAR(8) NOT NULL, 
+  nit_declarado VARCHAR(30) NOT NULL, 
+  nombre_declarado VARCHAR(200) NOT NULL, 
+  PRIMARY KEY (factura_id, papel), 
+  FOREIGN KEY (factura_id) REFERENCES factura(id) ON DELETE RESTRICT, 
+  CHECK (papel IN ('emisor','receptor')) 
+); 
+18.24 importacion factura 
+CREATE TABLE importacion_factura ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  empresa_id BIGINT NOT NULL, 
+  usuario_id BIGINT NOT NULL, 
+  contenido TEXT, 
+  estado VARCHAR(12) NOT NULL, 
+  error VARCHAR(300), 
+  creada_en TIMESTAMPTZ NOT NULL, 
+  finalizada_en TIMESTAMPTZ, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT 
+); 
+18.25 revision recurrencia 
+CREATE TABLE revision_recurrencia ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  empresa_id BIGINT NOT NULL, 
+  huella CHAR(64) NOT NULL, 
+  estado VARCHAR(12) NOT NULL, 
+  usuario_id BIGINT NOT NULL, 
+  actualizada_en TIMESTAMPTZ NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT, 
+  UNIQUE (empresa_id,huella), 
+  CHECK (estado IN ('pending','confirmed','rejected')) 
+); 
+18.26 evidencia recurrencia 
+CREATE TABLE evidencia_recurrencia ( 
+  revision_id BIGINT NOT NULL, 
+  movimiento_id BIGINT NOT NULL, 
+  fecha_observada DATE NOT NULL, 
+  importe_observado NUMERIC(18,2) NOT NULL, 
+  PRIMARY KEY (revision_id, movimiento_id), 
+  FOREIGN KEY (revision_id) REFERENCES revision_recurrencia(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (movimiento_id) REFERENCES movimiento(id) ON DELETE RESTRICT 
+); 
+
+PAGE 47
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+47 
+18.27 ocurrencia recurrencia 
+CREATE TABLE ocurrencia_recurrencia ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  revision_id BIGINT NOT NULL, 
+  clave CHAR(64) NOT NULL, 
+  obligacion_id BIGINT NOT NULL UNIQUE, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (revision_id) REFERENCES revision_recurrencia(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (obligacion_id) REFERENCES obligacion(id) ON DELETE RESTRICT, 
+  UNIQUE (revision_id,clave) 
+); 
+18.28 pronostico 
+CREATE TABLE pronostico ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  empresa_id BIGINT NOT NULL, 
+  usuario_id BIGINT NOT NULL, 
+  huella CHAR(64) NOT NULL, 
+  metodo VARCHAR(32) NOT NULL, 
+  horizonte SMALLINT NOT NULL, 
+  fecha_corte DATE NOT NULL, 
+  creado_en TIMESTAMPTZ NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT, 
+  UNIQUE (empresa_id,huella), 
+  CHECK (horizonte BETWEEN 30 AND 90) 
+); 
+18.29 parametro pronostico 
+CREATE TABLE parametro_pronostico ( 
+  pronostico_id BIGINT NOT NULL, 
+  nombre VARCHAR(80) NOT NULL, 
+  valor TEXT NOT NULL, 
+  PRIMARY KEY (pronostico_id, nombre), 
+  FOREIGN KEY (pronostico_id) REFERENCES pronostico(id) ON DELETE RESTRICT 
+); 
+18.30 punto pronostico 
+CREATE TABLE punto_pronostico ( 
+  pronostico_id BIGINT NOT NULL, 
+  fecha DATE NOT NULL, 
+  escenario VARCHAR(12) NOT NULL, 
+  saldo NUMERIC(18,2) NOT NULL, 
+  PRIMARY KEY (pronostico_id, fecha, escenario), 
+  FOREIGN KEY (pronostico_id) REFERENCES pronostico(id) ON DELETE RESTRICT, 
+  CHECK (escenario IN ('expected','lower','upper')) 
+); 
+18.31 entrada cuenta 
+CREATE TABLE entrada_cuenta ( 
+  pronostico_id BIGINT NOT NULL, 
+  cuenta_id BIGINT NOT NULL, 
+  fecha_observada DATE NOT NULL, 
+  saldo_observado NUMERIC(18,2) NOT NULL, 
+  PRIMARY KEY (pronostico_id, cuenta_id), 
+  FOREIGN KEY (pronostico_id) REFERENCES pronostico(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (cuenta_id) REFERENCES cuenta(id) ON DELETE RESTRICT 
+); 
+18.32 entrada movimiento 
+CREATE TABLE entrada_movimiento ( 
+  pronostico_id BIGINT NOT NULL, 
+  movimiento_id BIGINT NOT NULL, 
+  fecha_observada DATE NOT NULL, 
+  importe_observado NUMERIC(18,2) NOT NULL, 
+  categoria_observada_id BIGINT NOT NULL, 
+  PRIMARY KEY (pronostico_id, movimiento_id), 
+  FOREIGN KEY (pronostico_id) REFERENCES pronostico(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (movimiento_id) REFERENCES movimiento(id) ON DELETE RESTRICT, 
+
+PAGE 48
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+48 
+  FOREIGN KEY (categoria_observada_id) REFERENCES categoria(id) ON DELETE RESTRICT 
+); 
+18.33 entrada obligacion 
+CREATE TABLE entrada_obligacion ( 
+  pronostico_id BIGINT NOT NULL, 
+  obligacion_id BIGINT NOT NULL, 
+  vencimiento_observado DATE NOT NULL, 
+  pendiente_observado NUMERIC(18,2) NOT NULL, 
+  direccion_observada VARCHAR(3) NOT NULL, 
+  PRIMARY KEY (pronostico_id, obligacion_id), 
+  FOREIGN KEY (pronostico_id) REFERENCES pronostico(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (obligacion_id) REFERENCES obligacion(id) ON DELETE RESTRICT, 
+  CHECK (pendiente_observado >= 0 AND direccion_observada IN ('in','out')) 
+); 
+18.34 evaluacion alerta 
+CREATE TABLE evaluacion_alerta ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  pronostico_id BIGINT NOT NULL, 
+  usuario_id BIGINT NOT NULL, 
+  huella CHAR(64) NOT NULL, 
+  umbral_observado NUMERIC(18,2) NOT NULL, 
+  creada_en TIMESTAMPTZ NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (pronostico_id) REFERENCES pronostico(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT, 
+  UNIQUE (pronostico_id,huella) 
+); 
+18.35 alerta 
+CREATE TABLE alerta ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  evaluacion_id BIGINT NOT NULL, 
+  secuencia SMALLINT NOT NULL, 
+  nivel VARCHAR(12) NOT NULL, 
+  fecha_inicio DATE NOT NULL, 
+  fecha_fin DATE NOT NULL, 
+  saldo_minimo NUMERIC(18,2) NOT NULL, 
+  mensaje TEXT NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (evaluacion_id) REFERENCES evaluacion_alerta(id) ON DELETE RESTRICT, 
+  UNIQUE (evaluacion_id,secuencia), 
+  CHECK (fecha_inicio <= fecha_fin) 
+); 
+18.36 factor alerta 
+CREATE TABLE factor_alerta ( 
+  alerta_id BIGINT NOT NULL, 
+  posicion SMALLINT NOT NULL, 
+  descripcion VARCHAR(250) NOT NULL, 
+  PRIMARY KEY (alerta_id, posicion), 
+  FOREIGN KEY (alerta_id) REFERENCES alerta(id) ON DELETE RESTRICT 
+); 
+18.37 auditoria 
+CREATE TABLE auditoria ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  empresa_id BIGINT NOT NULL, 
+  usuario_id BIGINT NOT NULL, 
+  accion VARCHAR(80) NOT NULL, 
+  entidad VARCHAR(80) NOT NULL, 
+  objeto_id VARCHAR(80) NOT NULL, 
+  creada_en TIMESTAMPTZ NOT NULL, 
+  PRIMARY KEY (id), 
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT 
+); 
+
+PAGE 49
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+49 
+18.38 detalle auditoria 
+CREATE TABLE detalle_auditoria ( 
+  auditoria_id BIGINT NOT NULL, 
+  campo VARCHAR(120) NOT NULL, 
+  valor_anterior TEXT, 
+  valor_nuevo TEXT, 
+  PRIMARY KEY (auditoria_id, campo), 
+  FOREIGN KEY (auditoria_id) REFERENCES auditoria(id) ON DELETE RESTRICT 
+); 
+18.39 tarea 
+CREATE TABLE tarea ( 
+  id BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, 
+  nombre VARCHAR(120) NOT NULL, 
+  estado VARCHAR(12) NOT NULL, 
+  intentos SMALLINT NOT NULL, 
+  disponible_en TIMESTAMPTZ NOT NULL, 
+  lease UUID, 
+  creada_en TIMESTAMPTZ NOT NULL, 
+  finalizada_en TIMESTAMPTZ, 
+  PRIMARY KEY (id), 
+  CHECK (intentos BETWEEN 0 AND 3) 
+); 
+18.40 parametro tarea 
+CREATE TABLE parametro_tarea ( 
+  tarea_id BIGINT NOT NULL, 
+  nombre VARCHAR(80) NOT NULL, 
+  valor TEXT NOT NULL, 
+  PRIMARY KEY (tarea_id, nombre), 
+  FOREIGN KEY (tarea_id) REFERENCES tarea(id) ON DELETE RESTRICT 
+); 
+18.41 limite solicitud 
+CREATE TABLE limite_solicitud ( 
+  clave CHAR(64) NOT NULL, 
+  solicitudes INTEGER NOT NULL, 
+  vence_en TIMESTAMPTZ NOT NULL, 
+  PRIMARY KEY (clave), 
+  CHECK (solicitudes >= 0) 
+); 
+18.42 cuenta conexion 
+CREATE TABLE cuenta_conexion ( 
+  cuenta_id BIGINT NOT NULL, 
+  conexion_id BIGINT NOT NULL UNIQUE, 
+  PRIMARY KEY (cuenta_id), 
+  FOREIGN KEY (cuenta_id) REFERENCES cuenta(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (conexion_id) REFERENCES conexion(id) ON DELETE RESTRICT 
+); 
+18.43 factura obligacion 
+CREATE TABLE factura_obligacion ( 
+  factura_id BIGINT NOT NULL, 
+  obligacion_id BIGINT NOT NULL UNIQUE, 
+  PRIMARY KEY (factura_id), 
+  FOREIGN KEY (factura_id) REFERENCES factura(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (obligacion_id) REFERENCES obligacion(id) ON DELETE RESTRICT 
+); 
+18.44 resultado importacion factura 
+CREATE TABLE resultado_importacion_factura ( 
+  importacion_id BIGINT NOT NULL, 
+  factura_id BIGINT NOT NULL, 
+  duplicada BOOLEAN NOT NULL, 
+  PRIMARY KEY (importacion_id), 
+  FOREIGN KEY (importacion_id) REFERENCES importacion_factura(id) ON DELETE RESTRICT, 
+  FOREIGN KEY (factura_id) REFERENCES factura(id) ON DELETE RESTRICT 
+); 
+
+PAGE 50
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+50 
+18.45 Índices complementarios 
+CREATE INDEX ix_movimiento_cuenta_fecha ON movimiento(cuenta_id, fecha); 
+CREATE INDEX ix_obligacion_empresa_fecha ON obligacion(empresa_id, vencimiento); 
+CREATE INDEX ix_corte_cuenta_fecha ON corte_cuenta(cuenta_id, fecha DESC); 
+CREATE INDEX ix_pronostico_empresa_fecha ON pronostico(empresa_id, fecha_corte); 
+CREATE INDEX ix_tarea_disponible ON tarea(estado, disponible_en); 
+CREATE INDEX ix_limite_vence ON limite_solicitud(vence_en); 

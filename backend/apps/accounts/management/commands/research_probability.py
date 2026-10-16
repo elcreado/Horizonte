@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--input", default="data/generated")
-        parser.add_argument("--report", default="docs/PROBABILITY_RESULTS.md")
+        parser.add_argument("--report", default="docs/research/PROBABILITY_RESULTS.md")
         parser.add_argument("--step", type=int, default=30)
 
     def handle(self, *args, **options):

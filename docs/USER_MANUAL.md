@@ -1,11 +1,12 @@
 # Manual de uso y pruebas de Horizonte
 
-Estado: 5 de octubre de 2026. Describe las funciones actuales; no certifica el cierre del
-entregable. Utilizar empresas, archivos y correos de prueba. No cargar información bancaria real.
+Revisión documental: 15 de octubre de 2026. Describe la versión funcional de pruebas;
+no certifica el cierre académico ni disponibilidad remota actual. [Estado y pendientes](ESTADO_Y_PENDIENTES.md).
+Utilizar empresas, archivos y correos de prueba. No cargar información bancaria real.
 
 ## Instalar y conectar el escritorio
 
-Huella y alcance de verificación del binario: [DESKTOP_RELEASE.md](DESKTOP_RELEASE.md).
+Huella y alcance de verificación del binario: [DESKTOP_RELEASE.md](desktop/DESKTOP_RELEASE.md).
 
 - Ejecutar el instalador Windows `desktop/release/session-isolation/Horizonte Setup 0.1.0.exe`.
   El ejecutable se generó y su arranque se comprobó; instalación, actualización y desinstalación
@@ -100,7 +101,7 @@ Huella y alcance de verificación del binario: [DESKTOP_RELEASE.md](DESKTOP_RELE
 
 ## Recorrido de aceptación pendiente
 
-Para una prueba con cifras exactas, seguir [ensayo de escritorio](DESKTOP_ACCEPTANCE.md).
+Para una prueba con cifras exactas, seguir [ensayo de escritorio](acceptance/DESKTOP_ACCEPTANCE.md).
 
 Registrar fecha, versión del instalador, servidor, resultado y evidencia de cada paso. Esta
 lista es un procedimiento pendiente; no representa pruebas de usuario ya ejecutadas.
@@ -121,8 +122,9 @@ lista es un procedimiento pendiente; no representa pruebas de usuario ya ejecuta
 
 ## Acciones externas necesarias
 
-- Administrador: cuentas Render Free y Supabase Free, repositorio accesible por Render y
-  credenciales guardadas fuera de Git. Ver `HOSTING_FREE.md`.
+- Solo para recrear u operar el alojamiento: cuentas Render/Supabase, repositorio accesible
+  y credenciales fuera de Git. El usuario que consume el servidor existente no necesita
+  crear esas cuentas. Ver `operations/HOSTING_FREE.md`.
 - Correo real: cuenta y credencial del proveedor HTTPS, remitente permitido y un destinatario
   de prueba autorizado. Para destinatarios generales hace falta un dominio verificado; no se
   contratará uno con el presupuesto de 0 USD.
@@ -140,7 +142,8 @@ En **Comercios identificados**, propietario y contador pueden pulsar **Editar no
 escribir hasta 250 caracteres y elegir **Guardar** o **Cancelar**. El guardado queda auditado.
 El nombre visible cambia sin modificar descripciones originales, alias ni vínculos de movimientos.
 Los usuarios de consulta no ven la acción. Esto no consolida comercios duplicados ni cambia
-la asignación de alias de una fuente; esa gestión todavía está pendiente.
+la asignación de alias de una fuente. La asignación de etiquetas implementada se explica abajo;
+la consolidación de comercios duplicados permanece fuera de esa función.
 ## Asignar etiquetas de comercios
 
 En Comercios, un propietario o contador puede seleccionar un comercio de la página actual

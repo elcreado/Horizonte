@@ -11,7 +11,7 @@ def main():
     parser.add_argument("--env", type=Path, default=Path(".env.hosted"))
     arguments = parser.parse_args()
     if not arguments.env.is_file():
-        print("Falta el archivo de configuración. Crea .env.hosted según docs/HOSTING_FREE.md.")
+        print("Falta el archivo de configuración. Crea .env.hosted según docs/operations/HOSTING_FREE.md.")
         return 1
     try:
         values = read_environment(arguments.env)

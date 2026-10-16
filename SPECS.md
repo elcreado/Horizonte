@@ -1,8 +1,8 @@
 # SPECS.md — Especificación Técnica
 
-> **Estado consolidado vigente:** [matriz de implementación](docs/IMPLEMENTATION_STATUS.md). Incluye obligaciones, conciliación e importación XML; el objetivo completo sigue en desarrollo.
+> **Revisión documental del 15 de octubre de 2026:** [objetivos y pendientes](docs/ESTADO_Y_PENDIENTES.md) e [índice](docs/README.md). Se conservan los requisitos originales; escritorio funcional no implica cierre académico. Las decisiones y cortes anteriores están separados en `docs/archive/`.
 
-> **Estado de ejecución vigente:** Django + CSRF y React alojados en Render Free, PostgreSQL en Supabase y cliente Windows Electron/NSIS para pruebas sin Docker. ETL CSV/XLSX/XML, Mock Bank, roles, obligaciones y conciliación reversible implementados. Pronósticos y cuantiles estadísticos experimentales, sin calibración demostrada. [Manual](docs/USER_MANUAL.md) · [Aceptación pendiente](docs/V1_ACCEPTANCE.md). Respaldo manual únicamente: no activar respaldo diario automático.
+> **Estado de ejecución vigente:** Django + CSRF y React alojados en Render Free, PostgreSQL en Supabase y cliente Windows Electron/NSIS para pruebas sin Docker. ETL CSV/XLSX/XML, Mock Bank, roles, obligaciones y conciliación reversible implementados. Pronósticos y cuantiles estadísticos experimentales, sin calibración demostrada. [Manual](docs/USER_MANUAL.md) · [Aceptación pendiente](docs/acceptance/V1_ACCEPTANCE.md). Respaldo manual únicamente: no activar respaldo diario automático.
 
 
 **Plataforma de Inteligencia de Liquidez para Microempresas**
