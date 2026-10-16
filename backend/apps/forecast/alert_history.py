@@ -1,6 +1,5 @@
 import hashlib
 import json
-from decimal import Decimal
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -11,9 +10,8 @@ from rest_framework.response import Response
 from apps.accounts.models import AuditLog, CompanyMember
 from apps.banking.models import BankAccount
 
-from .alerts import threshold_alert
 from .models import AlertEvaluation, Obligation
-from .services import project_obligations
+from .views import build_dashboard
 
 
 def serialize(row):
@@ -54,19 +52,21 @@ def alert_history(request, company_id):
         dates = {account.balance_date for account in accounts}
         if len(dates) != 1 or any(account.currency != "COP" for account in accounts):
             return Response({"detail": "Se requieren cuentas COP con el mismo corte."}, status=409)
-        cutoff = dates.pop()
-        balance = sum((account.balance for account in accounts), Decimal("0"))
+        try:
+            summary = build_dashboard(company, horizon)
+        except ValueError as error:
+            return Response({"detail": str(error)}, status=409)
         obligations = list(
             Obligation.objects.filter(
                 company_id=company_id, cancelled=False, outstanding_amount__gt=0
             ).order_by("pk")
         )
         evidence = {
-            "method": "obligations_v1",
-            "as_of": cutoff.isoformat(),
+            "method": "summary_v2",
+            "as_of": summary["as_of"],
             "horizon": horizon,
             "threshold": str(company.liquidity_threshold),
-            "balance": str(balance),
+            "balance": summary["balance"],
             "accounts": [{"id": row.pk, "balance": str(row.balance)} for row in accounts],
             "obligations": [
                 {
@@ -79,8 +79,8 @@ def alert_history(request, company_id):
                 for row in obligations
             ],
         }
-        points = project_obligations(balance, cutoff, horizon, obligations)
-        result = threshold_alert(points, company.liquidity_threshold, balance, cutoff)
+        evidence["summary_points"] = summary["points"]
+        result = summary["liquidity_alert"]
         fingerprint = hashlib.sha256(json.dumps(evidence, sort_keys=True).encode()).hexdigest()
         row, created = AlertEvaluation.objects.get_or_create(
             company_id=company_id,

@@ -11,7 +11,7 @@ def apply_alert_history_contract(path, method, operation):
     date = {"type": "string", "format": "date"}
     evidence = object_response(
         {
-            "method": {"type": "string", "enum": ["obligations_v1"]},
+            "method": {"type": "string", "enum": ["obligations_v1", "summary_v2"]},
             "as_of": date,
             "horizon": {"type": "integer", "enum": [30, 60, 90]},
             "threshold": money,
@@ -34,6 +34,11 @@ def apply_alert_history_contract(path, method, operation):
             },
         }
     )
+    evidence["properties"]["summary_points"] = {
+        "type": "array",
+        "items": object_response({"date": date, "balance": money}),
+        "description": "Presente en summary_v2; trayectoria congelada del resumen con movimientos y compromisos.",
+    }
     result = object_response(
         {
             "threshold": money,
@@ -55,7 +60,7 @@ def apply_alert_history_contract(path, method, operation):
     operation["responses"].pop("2XX", None)
     operation.pop("x-request-schema-pending", None)
     operation["description"] = (
-        "Evalúa solo obligaciones pendientes no canceladas y saldo declarado, con umbral "
+        "Evalúa la estimación del resumen con movimientos registrados, compromisos y saldo disponible, con umbral "
         "determinístico. Evidencia congelada; no predice cobros ni probabilidad de déficit. "
         "El mismo fingerprint reutiliza la evaluación y no duplica la auditoría. "
         "first_below es el corte si el saldo actual está bajo el umbral; en otro caso la "

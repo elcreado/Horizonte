@@ -18,6 +18,7 @@ from apps.forecast.alerts import threshold
 from apps.forecast.calendar import obligation_calendar
 from apps.forecast.history import history
 from apps.forecast.live_baseline import baseline_forecast
+from apps.forecast.monthly import cancel_monthly, monthly_schedules
 from apps.forecast.obligations import (
     edit_obligation,
     obligation_history,
@@ -33,6 +34,10 @@ from apps.invoices.views import confirm_invoice, invoice_imports, invoices, link
 from config.web import frontend, health
 
 urlpatterns = [
+    path("api/companies/<int:company_id>/monthly-schedules/", monthly_schedules),
+    path(
+        "api/companies/<int:company_id>/monthly-schedules/<int:schedule_id>/cancel/", cancel_monthly
+    ),
     path("api/companies/<int:company_id>/obligation-calendar/", obligation_calendar),
     path("api/companies/<int:company_id>/merchant-aliases/", merchant_aliases),
     path("api/platform/users/", platform_users),

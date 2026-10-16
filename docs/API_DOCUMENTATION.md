@@ -153,3 +153,16 @@ inventario aprobadas después del cambio.
 `GET .../movements/` añade `account_name` y `entry_source` (`manual|imported`). `source` conserva el origen de clasificación.
 
 El pronóstico experimental y las ejecuciones guardadas admiten `method=manual_average`: todo el historial registrado hasta el corte común, con cobertura completa confirmada y mínimo siete días; promedio diario neto residual, obligaciones futuras y horizontes 30/60/90. No genera cuantiles. Los otros métodos mantienen 90 días. El contrato generado está en `openapi-inventory.json`.
+
+
+## Programaciones mensuales y Resumen
+
+`GET/POST /api/companies/{company_id}/monthly-schedules/`. POST con sesión/CSRF y rol propietario/contador:
+
+```json
+{"request_id":"d8ad8f40-47e8-41b6-a751-95017776f271","description":"Sueldos","direction":"out","amount":"1000000.00","day":1,"start_date":"2026-11-01","end_date":null}
+```
+
+201 al crear; mismo UUID/empresa y datos devuelve 200; clave con otros datos 409. Día 1–31, importe Decimal positivo, fecha final opcional no anterior a inicial. GET devuelve results y can_edit. `POST .../monthly-schedules/{schedule_id}/cancel/` detiene futuras generaciones y cancela obligaciones futuras sin conciliaciones, sin borrar historial. Fechas con día inexistente usan fin de mes. Vencimientos son obligaciones únicas para conciliación, calendario, dashboard y pronósticos. No realiza transferencias.
+
+Dashboard mantiene su formato JSON y ahora estima con todos los movimientos registrados, descontando importes conciliados, más compromisos. La caja disponible suma solo movimientos posteriores al saldo declarado; as_of es el mayor entre el corte declarado y la última operación ocurrida. Sin historial conserva el escenario de compromisos. La alerta guardada usa summary_v2 con summary_points; instantáneas anteriores obligations_v1 se conservan.

@@ -48,5 +48,5 @@ def history_coverage(accounts, as_of):
         "as_of": as_of,
         "accounts": result,
         "method": "obligations_only",
-        "notice": "La proyección actual utiliza únicamente obligaciones. La amplitud del historial no mide confianza ni garantiza que se hayan importado todos los movimientos. Un día sin registros puede ser inactividad o falta de datos.",
+        "notice": "La amplitud del historial no mide confianza ni garantiza que se hayan registrado todos los movimientos. El resumen utiliza el historial disponible para una estimación orientativa. Un día sin registros puede ser inactividad o falta de datos.",
     }

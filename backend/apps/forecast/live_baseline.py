@@ -51,6 +51,11 @@ def build_forecast(
     Para guardar, el llamador usa una transacción y bloquea cuentas/obligaciones.
     La serie confirmada y los flujos conocidos hacen reproducible el cálculo.
     """
+    from django.utils import timezone
+
+    from .monthly import materialize_monthly
+
+    materialize_monthly(member.company_id, timezone.localdate() + timedelta(days=366))
     company_id = member.company_id
     if lock:
         Company.objects.select_for_update().get(pk=company_id)

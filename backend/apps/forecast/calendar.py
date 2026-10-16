@@ -29,6 +29,9 @@ def obligation_calendar(request, company_id):
         end = date(year, number, length)
     except ValueError:
         return Response({"detail": "Mes requerido en formato YYYY-MM válido."}, status=400)
+    from .monthly import materialize_monthly
+
+    materialize_monthly(company_id, end)
     rows = (
         Obligation.objects.filter(
             company_id=company_id,

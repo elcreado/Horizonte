@@ -21,6 +21,7 @@ from .forecast_runs_contract import apply_forecast_runs_contract
 from .history_contract import apply_history_contract
 from .invoice_contracts import apply_invoice_contract
 from .merchant_contracts import apply_merchant_contract
+from .monthly_contract import apply_monthly_contract
 from .movement_contracts import apply_movement_contract
 from .obligation_contract import apply_obligation_contract
 from .obligation_queries_contract import apply_obligation_queries_contract
@@ -95,6 +96,7 @@ def build_inventory() -> dict:
             apply_banking_contract(path, method, operation)
             apply_merchant_contract(path, method, operation)
             apply_movement_contract(path, method, operation)
+            apply_monthly_contract(path, method, operation)
             apply_platform_contract(path, method, operation)
             apply_invoice_contract(path, method, operation)
             apply_threshold_contract(path, method, operation)

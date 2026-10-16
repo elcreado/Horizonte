@@ -48,9 +48,11 @@ Deja también esta ventana abierta. Abre **[http://127.0.0.1:5173](http://127.0.
 
 Desde Inicio, elige crear cuenta y empresa; declara la cuenta manual, el saldo y su corte. Luego registra ingresos y egresos y sigue el apartado «Primera versión web» de este manual. Para ver la estimación inicial, registra toda la actividad de siete días y confirma ese periodo en Saldos de cuentas. Puedes reproducir las cifras del [guion de prueba](PLAN_DEMO_FUNCIONAL.md).
 
-### 5. Opcional: procesar archivos y Mock Bank
+### 5. Cola de importaciones y Mock Bank
 
-La captura manual y las predicciones funcionan con las dos ventanas anteriores. Para probar importaciones CSV/XLSX/XML o sincronizar Mock Bank, abre una **tercera ventana CMD** y ejecuta el worker de la cola local:
+Con `BACKGROUND_MODE=database`, `runserver` inicia automáticamente el worker local: las dos ventanas anteriores bastan también para importar CSV/XLSX/XML y sincronizar Mock Bank. Reinicia el backend después de actualizar esta versión. La consola debe indicar «Cola local activa».
+
+Solo si decides operar el worker por separado, define `set DJANGO_LOCAL_WORKER=0` en la ventana del backend antes de iniciarlo y abre una tercera ventana CMD:
 
 ```bat
 cd /d C:\Users\elcre\Desktop\Programas\Proyecto
@@ -60,7 +62,7 @@ set BACKGROUND_MODE=database
 .venv\Scripts\python.exe backend\manage.py run_background
 ```
 
-Sin este proceso, esos trabajos permanecen en cola. Este modo tampoco necesita Redis.
+No inicies ese worker adicional si `runserver` ya muestra «Cola local activa». La cola de BD no necesita Redis. Una importación ya en cola se procesa al arrancar el worker; consulta el resultado antes de volver a subirla.
 
 ### Apagar y resolver problemas básicos
 
@@ -82,7 +84,7 @@ La barra lateral separa las herramientas; cada opción abre su propia vista y co
 
 La conexión bancaria es opcional. Para llevar el registro por tu cuenta, entra en **Movimientos**. La fecha comienza en **hoy, hora de Colombia**, y vuelve a hoy después de guardar. Cámbiala cuando registres una operación pasada. Puedes guardar varios ingresos y egresos el mismo día, incluso con la misma descripción e importe; cada guardado confirmado representa una operación nueva. Reintentar un envío sin confirmar conserva su identidad para evitar duplicados.
 
-Puedes registrar operaciones de hoy aunque el corte de la cuenta sea anterior. Esos movimientos se guardan en el historial, pero entran en la predicción cuando actualices el corte y su saldo en **Cuentas y saldos**. El saldo no cambia automáticamente: debe representar el dinero disponible al corte, incluidos los movimientos de ese día.
+Puedes registrar operaciones de hoy aunque el corte de la cuenta sea anterior. Esos movimientos se guardan y afectan inmediatamente el Resumen. Para incorporarlos a los pronósticos avanzados al corte, actualiza la fecha y el saldo en **Cuentas y saldos**. El saldo no cambia automáticamente: debe representar el dinero disponible al corte, incluidos los movimientos de ese día.
 
 La **estimación inicial** considera todos los movimientos registrados anteriores o iguales al corte, desde el primero, y no solo los últimos siete días. Confirma la cobertura completa de ese intervalo, con un mínimo de siete días. Los movimientos posteriores al corte se excluyen hasta actualizarlo. Las conciliaciones siguen evitando contar pagos dos veces; los métodos estadísticos avanzados conservan sus ventanas y requisitos de historial.
 
@@ -250,3 +252,12 @@ de la empresa; afecta las próximas importaciones, sin modificar los movimientos
 El listado «Etiquetas por fuente» muestra las asignaciones vigentes, incluidas las detectadas
 automáticamente, en páginas de veinte filas. Se actualiza al guardar una asignación o pulsar
 Actualizar. Si falla la consulta, utiliza Reintentar.
+
+
+## Gráfica del resumen y pagos mensuales
+
+El Resumen ahora combina movimientos registrados y compromisos futuros. Cada ingreso/egreso adicional modifica el promedio diario orientativo y recalcula la gráfica, sin exigir confirmación de cobertura para esa vista. La caja disponible parte del saldo declarado y suma solo los movimientos posteriores a ese corte; los anteriores ya están incluidos. Si faltan registros, completa el historial: los días vacíos se asumen cero en esta estimación, que no es un modelo validado. Los pronósticos avanzados mantienen sus controles de cobertura.
+
+En **Cobros y pagos → Pagos y cobros mensuales**, introduce concepto (por ejemplo «Sueldos»), valor, día 1 y fecha inicial; pulsa **Programar todos los meses**. Deja vacía la fecha final para que continúe cada mes. Cada vencimiento aparece en calendario y proyecciones; febrero y los meses cortos usan el último día si elegiste 29–31. No realiza transferencias. Para cambiar importe o frecuencia, detén la programación y crea otra. Detener cancela vencimientos futuros sin conciliaciones y conserva historial. Cuando el pago ya ocurra, concílialo con su movimiento para no contarlo de nuevo como pendiente ni como flujo variable.
+
+Para probar la importación, reinicia el backend, entra en **Fuentes de datos**, descarga el ejemplo y súbelo a la cuenta manual. Debe terminar con dos movimientos nuevos; una segunda carga muestra duplicados omitidos. Los estados y errores aparecen bajo el formulario. Si el archivo contiene fechas posteriores al saldo declarado, actualiza primero el corte. No se necesita ejecutar manualmente un tercer proceso con el arranque local estándar de esta versión.

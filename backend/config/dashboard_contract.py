@@ -91,8 +91,8 @@ def apply_dashboard_contract(path, method, operation):
     }
     operation["x-contract-status"] = "dashboard-fields-documented"
     operation["description"] = (
-        "Todos los miembros de la empresa. Suma saldos COP con corte común y proyecta "
-        "pendientes no cancelados posteriores al corte hasta horizon, suponiendo pago puntual. "
+        "Todos los miembros de la empresa. Parte de saldos COP con corte común, suma movimientos posteriores sin duplicar los incluidos al corte y añade promedio neto diario orientativo de todo el historial registrado (mínimo siete días en el denominador). Proyecta "
+        "pendientes no cancelados posteriores al corte hasta horizon, suponiendo pago puntual. Incluye programaciones mensuales. No requiere cobertura confirmada; advierte que días sin registros se asumen cero. "
         "Los vencidos solo se cuentan; no se trasladan al futuro. first_deficit y minimum_balance "
         "consideran puntos futuros; liquidity_alert incluye el saldo actual. coverage observa "
         "365 días hasta el corte, sin certificar completitud ni confianza predictiva. "

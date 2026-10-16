@@ -1,3 +1,4 @@
+import { MonthlySchedules } from './MonthlySchedules';
 import { ManualMovement } from './ManualMovement';
 import React, { FormEvent, useEffect, useLayoutEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -190,17 +191,17 @@ function App() {
       {company && !data && !error && <p role="status">Cargando panorama…</p>}
       {company && <React.Suspense fallback={<p role="status">Cargando sección…</p>}>
       {sectionId === 'overview' && <>
-      {data && <><div className="notice"><strong>ESCENARIO DE OBLIGACIONES</strong> {data.notice} Corte: {dateLabel(data.as_of)}.</div>
+      {data && <><div className="notice"><strong>ESTIMACIÓN DE CAJA</strong> {data.notice} Corte: {dateLabel(data.as_of)}.</div>
         <section className="cards" aria-label="Resumen financiero">
           {[['Saldo disponible', data.balance], [`Por cobrar · ${horizon} días`, data.receivable], [`Por pagar · ${horizon} días`, data.payable]].map(([label, value]) => <article key={label}><p>{label}</p><strong>{money(value)}</strong><small>COP · pesos colombianos</small></article>)}
-          <article className={data.first_deficit ? 'risk' : ''}><p>Escenario de liquidez</p><strong>{data.first_deficit ? `Déficit: ${dateLabel(data.first_deficit)}` : 'Sin déficit previsto'}</strong><small>Según las obligaciones registradas</small></article>
+          <article className={data.first_deficit ? 'risk' : ''}><p>Escenario de liquidez</p><strong>{data.first_deficit ? `Déficit: ${dateLabel(data.first_deficit)}` : 'Sin déficit previsto'}</strong><small>Según movimientos y compromisos registrados</small></article>
         </section>
         <section className="panel"><div className="toolbar"><div><h2>La trayectoria de tu caja</h2><p>{data.method}</p></div><div className="periods" aria-label="Horizonte">{[30, 60, 90].map(n => <button className={horizon === n ? 'active' : 'secondary'} aria-pressed={horizon === n} key={n} onClick={() => setHorizon(n)}>{n} días</button>)}</div></div>
           <div className="chart" role="img" aria-label={`Saldo mínimo proyectado ${money(data.minimum_balance)}. ${data.first_deficit ? `Primer déficit ${data.first_deficit}` : 'Sin déficit en el horizonte'}`}>
             <React.Suspense fallback={<p role="status">Cargando gráfico…</p>}><DashboardChart points={data.points} dateLabel={dateLabel} money={money} /></React.Suspense>
-          </div><p className="footnote">Saldo mínimo: {money(data.minimum_balance)}. Este escenario no equivale a P50 ni tiene intervalos de confianza.</p>
+          </div><p className="footnote">Saldo mínimo: {money(data.minimum_balance)}. Se recalcula con cada movimiento y compromiso. Es una estimación orientativa, sin intervalos de confianza.</p>
           <details><summary>Ver saldos proyectados por día</summary><div className="table-wrap"><table>
-            <caption>Escenario de obligaciones a {horizon} días · COP · corte {dateLabel(data.as_of)}</caption>
+            <caption>Estimación de caja a {horizon} días · COP · corte {dateLabel(data.as_of)}</caption>
             <thead><tr><th scope="col">Fecha</th><th scope="col">Saldo proyectado COP</th></tr></thead>
             <tbody>{data.points.map(point => <tr key={point.date}><th scope="row">{dateLabel(point.date)}</th><td>{new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(point.balance))}</td></tr>)}</tbody>
           </table></div></details>
@@ -212,7 +213,7 @@ function App() {
       </>}
       </>}
       {sectionId === 'movements' && <><ManualMovement key={`ManualMovement-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /><Movements key={`Movements-${company}`} company={company} refresh={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /></>}
-      {sectionId === 'obligations' && <><Obligations key={`Obligations-${company}`} company={company} refresh={financialRevision} onChange={() => setFinancialRevision(n => n + 1)} /><ObligationCalendar key={`ObligationCalendar-${company}`} company={company} refresh={financialRevision} /></>}
+      {sectionId === 'obligations' && <><MonthlySchedules key={`MonthlySchedules-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /><Obligations key={`Obligations-${company}`} company={company} refresh={financialRevision} onChange={() => setFinancialRevision(n => n + 1)} /><ObligationCalendar key={`ObligationCalendar-${company}`} company={company} refresh={financialRevision} /></>}
       {sectionId === 'invoices' && <Invoices key={`Invoices-${company}`} company={company} onChange={() => setFinancialRevision(n => n + 1)} />}
       {sectionId === 'forecasts' && <><div className="toolbar"><label>Horizonte de predicción<select value={horizon} onChange={event => setHorizon(Number(event.target.value))}>{[30, 60, 90].map(days => <option key={days} value={days}>{days} días</option>)}</select></label><a href="#/dashboard/accounts">Revisar saldo, corte y cobertura</a></div><ForecastPreview key={`ForecastPreview-${company}`} company={company} horizon={horizon} revision={financialRevision} /><Recurrences key={`Recurrences-${company}`} company={company} horizon={horizon} onChanged={() => setFinancialRevision(n => n + 1)} /></>}
       {sectionId === 'history' && <History key={`History-${company}`} company={company} refresh={financialRevision} />}

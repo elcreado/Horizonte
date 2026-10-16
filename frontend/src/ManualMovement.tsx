@@ -53,16 +53,16 @@ export function ManualMovement({ company, revision, onChanged }: { company: stri
       }
       receipt.current = null; setPending(false); form.reset(); setDate(businessToday());
       setNotice(body.date > (accounts?.find(item => String(item.id) === body.account_id)?.balance_date || '')
-        ? 'Movimiento guardado después del corte actual. Actualiza el saldo y la fecha de corte en Cuentas y saldos para incluirlo en la predicción.'
-        : 'Movimiento guardado. El saldo declarado no cambia. Revisa la cobertura del historial en Cuentas y saldos antes de recalcular el pronóstico.');
+        ? 'Movimiento guardado e incluido en la estimación del Resumen. Para los pronósticos avanzados al corte, actualiza el saldo y la fecha en Cuentas y saldos.'
+        : 'Movimiento guardado. La gráfica del Resumen se recalculó; el saldo declarado no se vuelve a sumar. Revisa la cobertura para los pronósticos avanzados.');
       onChanged();
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   }
   const selected = accounts?.find(item => String(item.id) === account);
   return <section className="panel"><h2>Registrar movimiento</h2>
-    <p>Lleva tus transacciones manualmente sin conectar un banco. La fecha inicial es hoy (hora de Colombia); puedes cambiarla si la operación ocurrió antes. Puedes registrar varios movimientos el mismo día. El historial hasta el corte alimenta la estimación; el saldo declarado ya incluye esas operaciones y no se suma otra vez. Los compromisos futuros van en Cobros y pagos.</p>
-    {selected && date > selected.balance_date && <p className="notice">El corte de esta cuenta es {selected.balance_date}. Puedes guardar el movimiento; para incorporarlo a la predicción, actualiza después el corte y el saldo en <a href="#/dashboard/accounts">Cuentas y saldos</a>.</p>}
+    <p>Lleva tus transacciones manualmente sin conectar un banco. La fecha inicial es hoy (hora de Colombia); puedes cambiarla si la operación ocurrió antes. Puedes registrar varios movimientos el mismo día. El Resumen se recalcula con cada movimiento; el saldo declarado ya incluye esas operaciones y no se suma otra vez. Los compromisos futuros van en Cobros y pagos.</p>
+    {selected && date > selected.balance_date && <p className="notice">El corte de esta cuenta es {selected.balance_date}. El Resumen incluirá esta operación al guardarla. Para los modelos avanzados actualiza el corte y el saldo en <a href="#/dashboard/accounts">Cuentas y saldos</a>.</p>}
     {error && <p role="alert" className="error">{error}</p>}{notice && <p role="status">{notice}</p>}
     {!accounts && !error && <p role="status">Cargando cuentas…</p>}
     {!accounts && error && <button onClick={() => setReload(value => value + 1)}>Reintentar consulta</button>}

@@ -145,7 +145,7 @@ class ApplicationTests(TestCase):
             self.client.get(f"/api/companies/{self.company.id}/dashboard/").status_code, 409
         )
 
-    def test_seed_is_idempotent_and_dashboard_matches_obligations(self):
+    def test_seed_is_idempotent_and_dashboard_uses_history_and_obligations(self):
         from io import StringIO
         from unittest.mock import patch
 
@@ -172,9 +172,12 @@ class ApplicationTests(TestCase):
             self.assertEqual(Decimal(result["balance"]), Decimal("8500000"))
             self.assertEqual(Decimal(result["receivable"]), Decimal("5500000"))
             self.assertEqual(Decimal(result["payable"]), Decimal("12800000"))
-            self.assertEqual(Decimal(result["minimum_balance"]), Decimal("-1200000"))
+            self.assertEqual(Decimal(result["minimum_balance"]), Decimal("-280000"))
             self.assertEqual(len(result["points"]), horizon)
-            self.assertEqual(Decimal(result["points"][-1]["balance"]), Decimal("1200000"))
+            self.assertEqual(
+                Decimal(result["points"][-1]["balance"]),
+                Decimal("1200000") + Decimal("40000") * horizon,
+            )
             self.assertEqual(
                 result["first_deficit"],
                 (date.fromisoformat(result["as_of"]) + timedelta(days=23)).isoformat(),

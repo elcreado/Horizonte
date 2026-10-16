@@ -66,7 +66,9 @@ export function ImportPanel({ company, revision, onChanged }: { company: string;
       }).catch(() => { throw new Error('Se perdió la conexión durante la carga. Consulta las importaciones antes de volver a enviar el archivo: el servidor puede haberlo recibido.'); });
       const result = await response.json().catch(() => { throw new Error('No se pudo leer el resultado de la carga. Consulta las importaciones antes de volver a enviar el archivo.'); });
       if (!response.ok) throw new Error(result.detail || 'No se pudo cargar el archivo.');
+      observedJobs.current = new Map([...(observedJobs.current || new Map<number, string>()), [result.id, result.status]]);
       setJobs(previous => [result, ...previous].slice(0, 20)); form.reset();
+      if (result.status === 'completed') notify.current();
     } catch (e) { setError((e as Error).message); }
     finally { setSending(false); }
   }
@@ -85,7 +87,7 @@ export function ImportPanel({ company, revision, onChanged }: { company: string;
     {statusError && <p className="error" role="alert">{statusError} Se volverá a consultar automáticamente.</p>}
     {accountsError && <p className="error" role="alert">{accountsError} Se volverá a consultar automáticamente.</p>}
     <div aria-live="polite">{jobs.map(job => <p key={job.id}><strong>Importación #{job.id}: </strong>
-      {job.status === 'queued' ? 'En cola o procesando. Puede tardar si el servicio se está reactivando. Si no avanza, vuelve a consultar más tarde o contacta al administrador.' : job.status === 'completed' ? `${job.created_count} movimientos nuevos y ${job.duplicate_count} duplicados omitidos.` : job.error}
+      {job.status === 'queued' ? 'En cola o procesando. Puede tardar si el servicio se está reactivando. En local, reinicia el backend con runserver: inicia también la cola. Si usas un worker independiente, comprueba que esté encendido.' : job.status === 'completed' ? `${job.created_count} movimientos nuevos y ${job.duplicate_count} duplicados omitidos.` : job.error}
     </p>)}</div>
   </section>;
 }

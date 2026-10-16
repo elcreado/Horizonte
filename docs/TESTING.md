@@ -106,3 +106,12 @@ Preparar una empresa nueva por ensayo con [guion reproducible](PLAN_DEMO_FUNCION
 - API: fecha omitida usa hoy; un corte anterior no bloquea el registro; el saldo declarado permanece igual. El futuro se rechaza.
 - API: un ingreso de 140 trece días antes del corte y un egreso de 70 al corte producen promedio diario de 5 en catorce días. Una operación posterior al corte queda fuera; confirmar solo siete días devuelve cobertura insuficiente.
 - Los enlaces de navegación usan hash y permiten acceso directo. No se certificó una revisión visual móvil completa.
+
+
+## Resumen, pagos mensuales y cola local
+
+Suite completa: 231 pruebas, 226 aprobadas y cinco omitidas por requerir PostgreSQL. Ejecución fuera del sandbox para permitir temporales. Build React/TypeScript y Ruff aprobados.
+
+Pruebas nuevas cubren: movimiento manual modifica gráfica sin volver a sumar saldo al corte; movimiento posterior actualiza caja una vez; alerta guardada coincide con Resumen; programación mensual idempotente y reflejada en calendario/proyección; cancelación; día 31 y febrero bisiesto; permisos; archivo de ejemplo procesado por worker real y reimportación sin duplicados, continuidad de mensualidades después de años sin consultar; arranque/cierre del worker junto a runserver.
+
+Navegador local, empresa sintética aislada con 500.000 COP: añadir ingreso 70.000 produjo pendiente positiva (+10.000 diarios) en el resumen; programar «Sueldos» 100.000 para el día 1 creó vencimientos mensuales a partir del próximo mes. Descarga/subida del ejemplo revisada con la propia interfaz: completó con dos movimientos nuevos y cero duplicados, usando el worker iniciado automáticamente por runserver. El resumen cambió tras la carga. La segunda subida del mismo archivo terminó con cero movimientos nuevos y dos duplicados omitidos. No se ha desplegado esta rama en el alojamiento remoto.

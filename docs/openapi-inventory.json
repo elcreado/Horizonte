@@ -1722,7 +1722,8 @@
                               "method": {
                                 "type": "string",
                                 "enum": [
-                                  "obligations_v1"
+                                  "obligations_v1",
+                                  "summary_v2"
                                 ]
                               },
                               "as_of": {
@@ -1799,6 +1800,27 @@
                                     "amount"
                                   ]
                                 }
+                              },
+                              "summary_points": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "date": {
+                                      "type": "string",
+                                      "format": "date"
+                                    },
+                                    "balance": {
+                                      "type": "string",
+                                      "description": "Importe decimal exacto COP."
+                                    }
+                                  },
+                                  "required": [
+                                    "date",
+                                    "balance"
+                                  ]
+                                },
+                                "description": "Presente en summary_v2; trayectoria congelada del resumen con movimientos y compromisos."
                               }
                             },
                             "required": [
@@ -1905,7 +1927,7 @@
           }
         },
         "x-contract-status": "alert-history-fields-documented",
-        "description": "Evalúa solo obligaciones pendientes no canceladas y saldo declarado, con umbral determinístico. Evidencia congelada; no predice cobros ni probabilidad de déficit. El mismo fingerprint reutiliza la evaluación y no duplica la auditoría. first_below es el corte si el saldo actual está bajo el umbral; en otro caso la primera fecha futura, o null. projected_days_below cuenta únicamente días futuros."
+        "description": "Evalúa la estimación del resumen con movimientos registrados, compromisos y saldo disponible, con umbral determinístico. Evidencia congelada; no predice cobros ni probabilidad de déficit. El mismo fingerprint reutiliza la evaluación y no duplica la auditoría. first_below es el corte si el saldo actual está bajo el umbral; en otro caso la primera fecha futura, o null. projected_days_below cuenta únicamente días futuros."
       },
       "post": {
         "operationId": "alert_history_post",
@@ -1994,7 +2016,8 @@
                         "method": {
                           "type": "string",
                           "enum": [
-                            "obligations_v1"
+                            "obligations_v1",
+                            "summary_v2"
                           ]
                         },
                         "as_of": {
@@ -2071,6 +2094,27 @@
                               "amount"
                             ]
                           }
+                        },
+                        "summary_points": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "balance": {
+                                "type": "string",
+                                "description": "Importe decimal exacto COP."
+                              }
+                            },
+                            "required": [
+                              "date",
+                              "balance"
+                            ]
+                          },
+                          "description": "Presente en summary_v2; trayectoria congelada del resumen con movimientos y compromisos."
                         }
                       },
                       "required": [
@@ -2146,7 +2190,8 @@
                         "method": {
                           "type": "string",
                           "enum": [
-                            "obligations_v1"
+                            "obligations_v1",
+                            "summary_v2"
                           ]
                         },
                         "as_of": {
@@ -2223,6 +2268,27 @@
                               "amount"
                             ]
                           }
+                        },
+                        "summary_points": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "balance": {
+                                "type": "string",
+                                "description": "Importe decimal exacto COP."
+                              }
+                            },
+                            "required": [
+                              "date",
+                              "balance"
+                            ]
+                          },
+                          "description": "Presente en summary_v2; trayectoria congelada del resumen con movimientos y compromisos."
                         }
                       },
                       "required": [
@@ -2316,7 +2382,7 @@
           }
         },
         "x-contract-status": "alert-history-fields-documented",
-        "description": "Evalúa solo obligaciones pendientes no canceladas y saldo declarado, con umbral determinístico. Evidencia congelada; no predice cobros ni probabilidad de déficit. El mismo fingerprint reutiliza la evaluación y no duplica la auditoría. first_below es el corte si el saldo actual está bajo el umbral; en otro caso la primera fecha futura, o null. projected_days_below cuenta únicamente días futuros.",
+        "description": "Evalúa la estimación del resumen con movimientos registrados, compromisos y saldo disponible, con umbral determinístico. Evidencia congelada; no predice cobros ni probabilidad de déficit. El mismo fingerprint reutiliza la evaluación y no duplica la auditoría. first_below es el corte si el saldo actual está bajo el umbral; en otro caso la primera fecha futura, o null. projected_days_below cuenta únicamente días futuros.",
         "requestBody": {
           "required": false,
           "content": {
@@ -3734,7 +3800,7 @@
           }
         },
         "x-contract-status": "dashboard-fields-documented",
-        "description": "Todos los miembros de la empresa. Suma saldos COP con corte común y proyecta pendientes no cancelados posteriores al corte hasta horizon, suponiendo pago puntual. Los vencidos solo se cuentan; no se trasladan al futuro. first_deficit y minimum_balance consideran puntos futuros; liquidity_alert incluye el saldo actual. coverage observa 365 días hasta el corte, sin certificar completitud ni confianza predictiva. transactions contiene los 20 movimientos más recientes, incluso posteriores al corte. No entrega probabilidades ni cuantiles estadísticos."
+        "description": "Todos los miembros de la empresa. Parte de saldos COP con corte común, suma movimientos posteriores sin duplicar los incluidos al corte y añade promedio neto diario orientativo de todo el historial registrado (mínimo siete días en el denominador). Proyecta pendientes no cancelados posteriores al corte hasta horizon, suponiendo pago puntual. Incluye programaciones mensuales. No requiere cobertura confirmada; advierte que días sin registros se asumen cero. Los vencidos solo se cuentan; no se trasladan al futuro. first_deficit y minimum_balance consideran puntos futuros; liquidity_alert incluye el saldo actual. coverage observa 365 días hasta el corte, sin certificar completitud ni confianza predictiva. transactions contiene los 20 movimientos más recientes, incluso posteriores al corte. No entrega probabilidades ni cuantiles estadísticos."
       }
     },
     "/api/companies/{company_id}/experimental-forecast/": {
@@ -7959,6 +8025,433 @@
             }
           }
         }
+      }
+    },
+    "/api/companies/{company_id}/monthly-schedules/": {
+      "get": {
+        "operationId": "monthly_schedules_get",
+        "summary": "monthly_schedules",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado; creación idempotente por UUID/empresa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "can_edit": {
+                      "type": "boolean"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "direction": {
+                            "type": "string",
+                            "enum": [
+                              "in",
+                              "out"
+                            ]
+                          },
+                          "amount": {
+                            "type": "string",
+                            "description": "Decimal positivo exacto COP."
+                          },
+                          "day": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 31
+                          },
+                          "start_date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "end_date": {
+                            "type": "string",
+                            "format": "date",
+                            "nullable": true
+                          },
+                          "active": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "description",
+                          "direction",
+                          "amount",
+                          "day",
+                          "start_date",
+                          "end_date",
+                          "active"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "can_edit",
+                    "results"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos inválidos o rango de fechas invertido."
+          },
+          "403": {
+            "description": "Sesión, CSRF o rol rechazados."
+          },
+          "404": {
+            "description": "Empresa/membresía/programación propia no encontrada."
+          }
+        },
+        "x-contract-status": "monthly-schedules-fields-documented",
+        "description": "Programaciones mensuales manuales. Lectura para miembros; creación/cancelación para propietario/contador con CSRF. Cada vencimiento genera una obligación única, disponible en calendario, resumen y pronóstico; no realiza transferencias. Días ausentes usan el último día del mes. Se mantiene una ventana móvil de vencimientos futuros. Cancelar detiene expansión y cancela obligaciones futuras sin conciliaciones; conserva historial."
+      },
+      "post": {
+        "operationId": "monthly_schedules_post",
+        "summary": "monthly_schedules",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "409": {
+            "description": "Misma clave con otros datos."
+          },
+          "200": {
+            "description": "Resultado; creación idempotente por UUID/empresa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "direction": {
+                      "type": "string",
+                      "enum": [
+                        "in",
+                        "out"
+                      ]
+                    },
+                    "amount": {
+                      "type": "string",
+                      "description": "Decimal positivo exacto COP."
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    },
+                    "start_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "end_date": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "active": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "description",
+                    "direction",
+                    "amount",
+                    "day",
+                    "start_date",
+                    "end_date",
+                    "active"
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Resultado; creación idempotente por UUID/empresa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "direction": {
+                      "type": "string",
+                      "enum": [
+                        "in",
+                        "out"
+                      ]
+                    },
+                    "amount": {
+                      "type": "string",
+                      "description": "Decimal positivo exacto COP."
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    },
+                    "start_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "end_date": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "active": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "description",
+                    "direction",
+                    "amount",
+                    "day",
+                    "start_date",
+                    "end_date",
+                    "active"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos inválidos o rango de fechas invertido."
+          },
+          "403": {
+            "description": "Sesión, CSRF o rol rechazados."
+          },
+          "404": {
+            "description": "Empresa/membresía/programación propia no encontrada."
+          }
+        },
+        "x-contract-status": "monthly-schedules-fields-documented",
+        "description": "Programaciones mensuales manuales. Lectura para miembros; creación/cancelación para propietario/contador con CSRF. Cada vencimiento genera una obligación única, disponible en calendario, resumen y pronóstico; no realiza transferencias. Días ausentes usan el último día del mes. Se mantiene una ventana móvil de vencimientos futuros. Cancelar detiene expansión y cancela obligaciones futuras sin conciliaciones; conserva historial.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string"
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "in",
+                      "out"
+                    ]
+                  },
+                  "amount": {
+                    "type": "string",
+                    "description": "Decimal positivo exacto COP."
+                  },
+                  "day": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 31
+                  },
+                  "start_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "end_date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "request_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "request_id",
+                  "description",
+                  "amount",
+                  "day"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{company_id}/monthly-schedules/{schedule_id}/cancel/": {
+      "post": {
+        "operationId": "cancel_monthly_post",
+        "summary": "cancel_monthly",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Error de validación, permiso, disponibilidad u otro fallo; ver contrato del endpoint."
+          },
+          "200": {
+            "description": "Resultado; creación idempotente por UUID/empresa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "direction": {
+                      "type": "string",
+                      "enum": [
+                        "in",
+                        "out"
+                      ]
+                    },
+                    "amount": {
+                      "type": "string",
+                      "description": "Decimal positivo exacto COP."
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    },
+                    "start_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "end_date": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "active": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "description",
+                    "direction",
+                    "amount",
+                    "day",
+                    "start_date",
+                    "end_date",
+                    "active"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos inválidos o rango de fechas invertido."
+          },
+          "403": {
+            "description": "Sesión, CSRF o rol rechazados."
+          },
+          "404": {
+            "description": "Empresa/membresía/programación propia no encontrada."
+          }
+        },
+        "x-contract-status": "monthly-schedules-fields-documented",
+        "description": "Programaciones mensuales manuales. Lectura para miembros; creación/cancelación para propietario/contador con CSRF. Cada vencimiento genera una obligación única, disponible en calendario, resumen y pronóstico; no realiza transferencias. Días ausentes usan el último día del mes. Se mantiene una ventana móvil de vencimientos futuros. Cancelar detiene expansión y cancela obligaciones futuras sin conciliaciones; conserva historial."
       }
     },
     "/api/companies/{company_id}/movements/": {

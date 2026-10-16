@@ -70,3 +70,12 @@ Aplicar `python backend/manage.py migrate` antes de iniciar esta rama. `banking.
 `manual_average` calcula con Decimal el promedio del residual de todo el historial registrado hasta el corte, confirmado completo y con mínimo siete días, redondeado a centavos, y lo repite 30/60/90 días. Suma compromisos futuros desde el saldo declarado; no vuelve a sumar el historial. No se presenta como modelo validado. Las reglas de los métodos anteriores se conservan.
 
 El frontend conserva el UUID y los datos del envío ante respuesta incierta mientras el formulario permanece montado. Tras confirmación crea una solicitud nueva. Una recarga descarta ese recibo local: comprobar historial antes de volver a capturar si la respuesta se perdió. Secciones del dashboard usan claves React distintas por componente/empresa para impedir duplicados al refrescar.
+
+
+## Cola automática de desarrollo y compromisos mensuales
+
+`manage.py runserver` usa `BACKGROUND_MODE=database` si no se especificó otro modo. El comando local de accounts levanta un subprocess `run_background` solo con DEBUG y cola de BD; no ejecuta importaciones dentro de HTTP. La autorecarga inicia el worker dentro del proceso servidor y lo detiene al cerrar. `DJANGO_LOCAL_WORKER=0` permite gestionar el worker por separado. El alojamiento conserva su supervisor independiente.
+
+Aplicar migración forecast 0007. `MonthlySchedule` persiste la regla y `MonthlyOccurrence` vincula fecha/obligación única. Consultas financieras amplían vencimientos con bloqueo por empresa; no recrean obligaciones canceladas o conciliadas. Meses sin día 29–31 usan el último día. Se generan hasta doce meses al crear y se mantiene una ventana futura acotada al consultar; la regla sin fecha final continúa activa. No ejecuta pagos.
+
+El Resumen ahora estima flujo variable desde todo el historial disponible, descontando importes conciliados; mínimo siete días en el denominador. No requiere declaración de completitud y muestra el supuesto de días vacíos, a diferencia del pronóstico avanzado que mantiene su cobertura explícita. Saldos declarados incluyen historial hasta el corte; solo el flujo posterior incrementa/reduce caja disponible. Las alertas guardadas congelan esta trayectoria como summary_v2.
