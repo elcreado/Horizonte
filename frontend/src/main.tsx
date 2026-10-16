@@ -1,3 +1,4 @@
+import { ManualMovement } from './ManualMovement';
 import React, { FormEvent, useEffect, useLayoutEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
@@ -164,17 +165,18 @@ function App() {
     </form></main>;
   if (route === '#/account') return <Profile />;
   if (route === '#/platform') return <><header><a href="#/dashboard">Volver al dashboard</a><button onClick={signOut}>Cerrar sesión</button></header><PlatformUsers key={user} /></>;
-  if (route === '#/team') return <><header><a className="brand" href="#/">◈ HORIZONTE</a><a href="#/dashboard">Volver al dashboard</a><button className="secondary" onClick={signOut}>Cerrar sesión</button></header><main><h1>Empresa y equipo</h1><CreateCompany onCreated={created => { setCompanies(items => [...items, created]); setCompany(String(created.id)); }} /><label>Empresa<select value={company} onChange={e => setCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>{company ? <Team key={company} company={company} companyName={companies.find(c => String(c.id) === company)?.name || ''} /> : <p>No tienes empresas disponibles.</p>}</main></>;
+  if (route === '#/team') return <><header><a className="brand" href="#/">◈ HORIZONTE</a><a href="#/dashboard">Volver al dashboard</a><button className="secondary" onClick={signOut}>Cerrar sesión</button></header><main><h1>Empresa y equipo</h1><CreateCompany onCreated={created => { setCompanies(items => [...items, created]); setCompany(String(created.id)); }} /><label>Empresa<select value={company} onChange={e => setCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>{company ? <Team key={`Team-${company}`} company={company} companyName={companies.find(c => String(c.id) === company)?.name || ''} /> : <p>No tienes empresas disponibles.</p>}</main></>;
   return <><header><a className="brand" href="#/">◈ HORIZONTE</a><a href="#/">Inicio</a><a href="#/team">Empresa y equipo</a><a href="#/account">Mi cuenta</a>{platformAdmin && <a href="#/platform">Administración</a>}<span>Inteligencia de liquidez</span><button className="secondary" onClick={signOut}>Cerrar sesión</button></header>
     <main><div className="toolbar"><div><p className="eyebrow">PANORAMA FINANCIERO</p><h1>Anticipa lo que viene.</h1></div>
       <label>Empresa<select value={company} onChange={e => setCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div>
       {error && <p role="alert" className="error">{error}</p>}
       {!company && !error && <p role="status">No tienes empresas disponibles. <a href="#/team">Crea tu empresa</a> o solicita acceso a su propietario.</p>}
       {company && !data && !error && <p role="status">Cargando panorama…</p>}
-      {company && <AccountBalances key={company} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      {company && <BankConnections key={company} company={company} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      {company && <ImportPanel key={company} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      {data && <><LiquidityAlert key={company} company={company} alert={data.liquidity_alert} onChanged={() => setFinancialRevision(n => n + 1)} /><Coverage data={data.coverage} /><div className="notice"><strong>ESCENARIO DE OBLIGACIONES</strong> {data.notice} Corte: {dateLabel(data.as_of)}.</div>
+      {company && <AccountBalances key={`AccountBalances-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
+      {company && <BankConnections key={`BankConnections-${company}`} company={company} onChanged={() => setFinancialRevision(n => n + 1)} />}
+      {company && <ManualMovement key={`ManualMovement-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
+      {company && <ImportPanel key={`ImportPanel-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
+      {data && <><LiquidityAlert key={`LiquidityAlert-${company}`} company={company} alert={data.liquidity_alert} onChanged={() => setFinancialRevision(n => n + 1)} /><Coverage data={data.coverage} /><div className="notice"><strong>ESCENARIO DE OBLIGACIONES</strong> {data.notice} Corte: {dateLabel(data.as_of)}.</div>
         <section className="cards" aria-label="Resumen financiero">
           {[['Saldo disponible', data.balance], [`Por cobrar · ${horizon} días`, data.receivable], [`Por pagar · ${horizon} días`, data.payable]].map(([label, value]) => <article key={label}><p>{label}</p><strong>{money(value)}</strong><small>COP · pesos colombianos</small></article>)}
           <article className={data.first_deficit ? 'risk' : ''}><p>Escenario de liquidez</p><strong>{data.first_deficit ? `Déficit: ${dateLabel(data.first_deficit)}` : 'Sin déficit previsto'}</strong><small>Según las obligaciones registradas</small></article>
@@ -194,16 +196,16 @@ function App() {
         <div className="columns"><section className="panel"><h2>Próximos compromisos</h2><p>Fechas y valores pendientes del período</p><div className="table-wrap"><table><thead><tr><th>Concepto</th><th>Fecha</th><th>Valor</th></tr></thead><tbody>{data.obligations.map(o => <tr key={o.id}><td>{o.description}<small>{o.direction === 'in' ? 'Por cobrar' : 'Por pagar'}</small></td><td>{dateLabel(o.due_date)}</td><td className={o.direction === 'in' ? 'positive' : ''}>{o.direction === 'in' ? '+' : '−'}{money(o.amount)}</td></tr>)}</tbody></table>{!data.obligations.length && <p>No hay obligaciones en este período.</p>}</div></section>
 </div>
       </>}
-      {company && <AlertHistory key={company} company={company} horizon={horizon} />}
-      {company && <ForecastPreview key={company} company={company} horizon={horizon} revision={financialRevision} />}
-      {company && <History key={company} company={company} refresh={financialRevision} />}
-      {company && <Invoices key={company} company={company} onChange={() => setFinancialRevision(n => n + 1)} />}
-      {company && <Obligations key={company} company={company} refresh={financialRevision} onChange={() => setFinancialRevision(n => n + 1)} />}
-      {company && <ObligationCalendar key={company} company={company} refresh={financialRevision} />}
-      {company && <Movements key={company} company={company} refresh={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      {company && <Merchants key={company} company={company} />}
-      {company && <ClassificationRules key={company} company={company} />}
-      {company && <Recurrences key={company} company={company} horizon={horizon} onChanged={() => setFinancialRevision(n => n + 1)} />}
+      {company && <AlertHistory key={`AlertHistory-${company}`} company={company} horizon={horizon} />}
+      {company && <ForecastPreview key={`ForecastPreview-${company}`} company={company} horizon={horizon} revision={financialRevision} />}
+      {company && <History key={`History-${company}`} company={company} refresh={financialRevision} />}
+      {company && <Invoices key={`Invoices-${company}`} company={company} onChange={() => setFinancialRevision(n => n + 1)} />}
+      {company && <Obligations key={`Obligations-${company}`} company={company} refresh={financialRevision} onChange={() => setFinancialRevision(n => n + 1)} />}
+      {company && <ObligationCalendar key={`ObligationCalendar-${company}`} company={company} refresh={financialRevision} />}
+      {company && <Movements key={`Movements-${company}`} company={company} refresh={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
+      {company && <Merchants key={`Merchants-${company}`} company={company} />}
+      {company && <ClassificationRules key={`ClassificationRules-${company}`} company={company} />}
+      {company && <Recurrences key={`Recurrences-${company}`} company={company} horizon={horizon} onChanged={() => setFinancialRevision(n => n + 1)} />}
       <footer>Horizonte · Prototipo académico v0.1 · Los pronósticos requieren revisión</footer>
     </main></>;
 }

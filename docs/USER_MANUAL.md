@@ -1,10 +1,24 @@
 # Manual de uso y pruebas de Horizonte
 
-Revisión documental: 15 de octubre de 2026. Describe la versión funcional de pruebas;
+Revisión documental: 16 de octubre de 2026. Describe la versión funcional de pruebas;
 no certifica el cierre académico ni disponibilidad remota actual. [Estado y pendientes](ESTADO_Y_PENDIENTES.md).
 Utilizar empresas, archivos y correos de prueba. No cargar información bancaria real.
 
-## Instalar y conectar el escritorio
+## Primera versión web: movimientos y predicciones
+
+1. Entrar desde el navegador y crear usuario/empresa con cuenta manual, saldo COP y corte.
+2. En Registrar movimiento elegir cuenta, fecha hasta el corte, ingreso/egreso, importe positivo y descripción. La categoría es opcional; vacía usa reglas automáticas.
+3. Guardar y revisar el historial. El saldo declarado ya incluye el historial y no cambia por el alta. Ajustarlo explícitamente si es necesario.
+4. Si falla la conexión, usar Reintentar guardado con los mismos datos; no recargar la página antes de confirmar el resultado. La clave de reintento se conserva mientras el formulario siga abierto.
+5. Registrar toda la actividad de al menos siete días hasta el corte. Abrir Confirmar historial completo en Saldos de cuentas y elegir la fecha inicial, como mínimo seis días antes del corte. Días sin movimientos se consideran cero solo bajo esa confirmación.
+6. En Predicciones con tus datos consultar la estimación inicial y cambiar 30/60/90 días. Registrar compromisos futuros en Obligaciones para incorporarlos con sus fechas.
+7. Guardar el pronóstico para conservarlo. Un movimiento nuevo dentro del periodo retira la confirmación: revisar y confirmar de nuevo. Los métodos más amplios requieren 90 días completos; la estimación inicial no ofrece cuantiles ni probabilidades.
+
+El lector consulta; propietario y contador registran. Una cuenta conectada se actualiza desde su fuente y no acepta captura manual. [Guion con cifras esperadas](PLAN_DEMO_FUNCIONAL.md).
+
+## Referencia de escritorio (entrega anterior)
+
+### Instalar y conectar el escritorio
 
 Huella y alcance de verificación del binario: [DESKTOP_RELEASE.md](desktop/DESKTOP_RELEASE.md).
 

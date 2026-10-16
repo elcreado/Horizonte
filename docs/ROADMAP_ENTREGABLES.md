@@ -1,3 +1,5 @@
+> Actualización 16 de octubre de 2026: la prioridad vigente es la V1 web manual, implementada localmente en `codex/v1-manual-transactions`. Escritorio y móvil están aplazados. Consultar [estado actual](IMPLEMENTATION_STATUS.md) y [recorrido](PLAN_DEMO_FUNCIONAL.md); los entregables académicos inferiores mantienen sus límites.
+
 # Hoja de ruta vigente
 
 Revisión: **16 de octubre de 2026**. La prioridad actual es la aplicación web útil y

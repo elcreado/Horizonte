@@ -3779,7 +3779,8 @@
                 "naive",
                 "seasonal_naive",
                 "ses",
-                "hybrid_weekly"
+                "hybrid_weekly",
+                "manual_average"
               ],
               "default": "seasonal_naive"
             }
@@ -3808,7 +3809,8 @@
                         "naive",
                         "seasonal_naive",
                         "ses",
-                        "hybrid_weekly"
+                        "hybrid_weekly",
+                        "manual_average"
                       ]
                     },
                     "horizon": {
@@ -4127,7 +4129,7 @@
           }
         },
         "x-contract-status": "experimental-forecast-fields-documented",
-        "description": "Todos los miembros. Calcula desde el corte común de saldos COP y cobertura declarada, sin guardar ejecución ni modificar saldos. Métodos de referencia experimentales; hybrid_weekly incorpora recurrencias confirmadas vigentes y obligaciones sin duplicarlas. No ofrece probabilidad de déficit ni cuantiles calibrados. Una declaración de cobertura no verifica que el extracto sea completo. Para congelar el resultado usar forecast-runs."
+        "description": "Todos los miembros. Calcula desde el corte común de saldos COP y cobertura declarada, manual_average usa siete días completos; los otros métodos requieren 90. sin guardar ejecución ni modificar saldos. Métodos de referencia experimentales; hybrid_weekly incorpora recurrencias confirmadas vigentes y obligaciones sin duplicarlas. No ofrece probabilidad de déficit ni cuantiles calibrados. Una declaración de cobertura no verifica que el extracto sea completo. Para congelar el resultado usar forecast-runs."
       }
     },
     "/api/companies/{company_id}/forecast-runs/": {
@@ -4494,7 +4496,8 @@
                                   "naive",
                                   "seasonal_naive",
                                   "ses",
-                                  "hybrid_weekly"
+                                  "hybrid_weekly",
+                                  "manual_average"
                                 ]
                               },
                               "horizon": {
@@ -5129,7 +5132,8 @@
                             "naive",
                             "seasonal_naive",
                             "ses",
-                            "hybrid_weekly"
+                            "hybrid_weekly",
+                            "manual_average"
                           ]
                         },
                         "horizon": {
@@ -5678,7 +5682,8 @@
                             "naive",
                             "seasonal_naive",
                             "ses",
-                            "hybrid_weekly"
+                            "hybrid_weekly",
+                            "manual_average"
                           ]
                         },
                         "horizon": {
@@ -6024,7 +6029,8 @@
                       "naive",
                       "seasonal_naive",
                       "ses",
-                      "hybrid_weekly"
+                      "hybrid_weekly",
+                      "manual_average"
                     ],
                     "default": "seasonal_naive"
                   }
@@ -8021,6 +8027,16 @@
                           "id": {
                             "type": "integer"
                           },
+                          "account_name": {
+                            "type": "string"
+                          },
+                          "entry_source": {
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "imported"
+                            ]
+                          },
                           "date": {
                             "type": "string",
                             "format": "date"
@@ -8061,6 +8077,8 @@
                         },
                         "required": [
                           "id",
+                          "account_name",
+                          "entry_source",
                           "date",
                           "description",
                           "normalized_description",
@@ -8095,6 +8113,147 @@
         },
         "x-contract-status": "movement-fields-documented",
         "description": "Movimientos de la empresa por fecha e ID descendentes; veinte por página. Requiere membresía. categories contiene opciones válidas según el signo. Sin filtros adicionales implementados."
+      },
+      "post": {
+        "operationId": "movements_post",
+        "summary": "movements",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-CSRFToken",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token obtenido de /api/auth/csrf/; requiere cookie CSRF y Origin válido."
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Movimiento creado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "created": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "created"
+                  ]
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Solicitud ya aceptada; mismo ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "created": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "created"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos inválidos o fecha/categoría incompatibles."
+          },
+          "403": {
+            "description": "Sesión, CSRF o rol rechazados."
+          },
+          "404": {
+            "description": "Membresía o cuenta propia no encontrada."
+          },
+          "409": {
+            "description": "Cuenta conectada o clave usada con otro contenido."
+          }
+        },
+        "x-contract-status": "manual-entry-fields-documented",
+        "description": "Alta manual owner/accountant con sesión y CSRF. Saldo al corte no cambia. Clave UUID por empresa: reintento idéntico 200, contenido distinto 409. Fecha hasta hoy y corte; cuenta manual propia. Retira cobertura si modifica el periodo confirmado. Auditoría y recibo inmutable atómicos.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "request_id",
+                  "account_id",
+                  "date",
+                  "direction",
+                  "amount",
+                  "description"
+                ],
+                "properties": {
+                  "request_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "account_id": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "in",
+                      "out"
+                    ]
+                  },
+                  "amount": {
+                    "type": "string",
+                    "description": "Decimal positivo, hasta 16 enteros y dos decimales; mínimo 0.01 COP."
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 250
+                  },
+                  "category": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "description": "Opcional; compatible con sentido. Vacío aplica reglas."
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/companies/{company_id}/movements/{transaction_id}/category-suggestion/": {

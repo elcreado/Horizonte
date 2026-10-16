@@ -1,34 +1,28 @@
-# Estado de implementación vigente
+# Estado de implementación
 
-Revisión: **15 de octubre de 2026**. La versión de escritorio funcional para pruebas está
-entregada; el alcance académico completo sigue parcial. Matriz de objetivos/RF/RNF y plan:
-[ESTADO_Y_PENDIENTES.md](ESTADO_Y_PENDIENTES.md).
+Revisión: **16 de octubre de 2026**. Entrega web en `codex/v1-manual-transactions`.
 
-## Evidencia local de esta revisión
+## Implementado en esta rama
 
-- Frontend: TypeScript + Vite aprobados.
-- Escritorio: tres pruebas Node de configuración aprobadas; no sustituyen instalar Electron.
-- Backend: 215 pruebas ejecutadas, 210 aprobadas y 5 omitidas con SQLite. Primera ejecución
-  restringida falló por permisos al limpiar temporales; repetición autorizada fuera del
-  sandbox aprobada. No se modificó el código para ocultar esos fallos.
-- Migraciones: `makemigrations --check --dry-run` no detecta cambios.
-- Servicio remoto y recorrido visual: no revalidados en esta revisión documental.
+- Alta manual de transacciones con cuenta propia manual, ingreso/egreso, fecha, importe y categoría opcional.
+- Recibo inmutable `ManualEntry`, UUID único por empresa, restricción de BD y bloqueo transaccional. El mismo envío devuelve el ID original; contenido distinto con la misma clave devuelve 409. La categoría puede corregirse sin romper el reintento.
+- Validaciones Decimal, fecha hasta hoy/corte, roles propietario/contador, sesión/CSRF y auditoría de autor/fecha. Captura manual diferenciada de clasificación manual.
+- Saldo declarado sin modificación; retirada de cobertura cuando cambia historial confirmado.
+- Refresco de vistas financieras. Claves React distintas por sección para evitar duplicados al actualizar.
+- Estimación inicial de promedio neto diario de siete días completos, 30/60/90 días, gráfica y ejecuciones guardadas. Conserva los modelos experimentales previos y el escenario contractual.
+- Contratos OpenAPI actualizados y migración `banking.0011_manualentry`.
 
-## Base implementada
+## Verificación local
 
-- Inicio público, sesión/CSRF, empresas y roles; consulta administrativa restringida.
-- CSV/XLSX/XML y Mock Bank asíncronos; clasificación, correcciones y recurrencias.
-- Obligaciones/conciliación reversible, dashboard 30/60/90, calendario e historiales.
-- Pronóstico y cuantiles experimentales separados del escenario contractual.
-- Cliente Windows Electron/NSIS, backend alojado y BD persistente; consumo sin Docker local.
+- Suite backend: 222 pruebas, 217 aprobadas y cinco omitidas por requerir PostgreSQL. La repetición fuera del sandbox pasó; la ejecución restringida falló al limpiar temporales. Inventario API regenerado antes de la repetición.
+- Ruff lint y formato aprobados; sin migraciones pendientes de generar.
+- TypeScript y build Vite aprobados.
+- La migración se aplicó a SQLite local. Ninguna BD remota se migró.
+- Pruebas de API nuevas: ingreso/egreso, categorías, saldo, auditoría, persistencia, reintentos, importes/fechas inválidos, roles, cuenta ajena, CSRF, cobertura y pronósticos guardados 30/60/90.
+- QA de navegador y sus resultados: [pruebas](TESTING.md).
 
-## Pendientes principales
+## Límites pendientes
 
-- Correo de recuperación real y aceptación completa en Windows limpio.
-- Administración ampliada y saldo histórico real/gráficos pendientes del alcance original.
-- Validación de clasificación/recurrencias, híbrido, cuantiles y confianza predictiva.
-- OpenAPI completo, accesibilidad y ensayos representativos de rendimiento/operación/seguridad.
-- Consolidación de tesis y experimentos; móvil en V2. Respaldo diario excluido.
+No se acredita concurrencia nueva en PostgreSQL, precisión predictiva con empresas reales, cuantiles calibrados, disponibilidad o accesibilidad completa. Correo real, aceptación de instalador, banca externa y móvil siguen pendientes. Esta rama no está desplegada; las verificaciones locales no certifican el servidor remoto. Se mantiene respaldo manual únicamente.
 
-El detalle de cortes antiguos se conservó en
-[estado histórico](archive/2026-10-05/IMPLEMENTATION_STATUS.md); no es esta matriz vigente.
+La matriz académica detallada permanece en [estado y pendientes](ESTADO_Y_PENDIENTES.md); los cortes previos permanecen en `archive/`.

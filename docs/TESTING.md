@@ -66,3 +66,32 @@ solo usa Node: no instala ni prueba visualmente la aplicación.
 - [Investigación](research/README.md): reproducir reportes sin mezclar datos de producción.
 
 Los cortes y comandos anteriores están en [pruebas históricas](archive/2026-10-05/TESTING.md).
+
+
+## Verificación V1 manual — 16 de octubre de 2026
+
+Rama `codex/v1-manual-transactions`. Ejecutado:
+
+- `python backend/manage.py test backend/tests --noinput`: 222 pruebas, 217 aprobadas, cinco omitidas por requerir PostgreSQL. Ejecución final fuera del sandbox para permitir limpieza de temporales.
+- `ruff check backend`, `ruff format --check backend`: aprobados.
+- `python backend/manage.py makemigrations --check --dry-run`: sin cambios.
+- `npm run build` en frontend: TypeScript y Vite aprobados.
+- Inventario API regenerado con `python backend/manage.py export_api_inventory`.
+
+QA de navegador local con empresa sintética separada, corte 2026-10-16 y saldo 500.000 COP:
+
+| Caso | Resultado observado |
+|---|---|
+| Inicio público y login | Acceso correcto; datos privados disponibles después de iniciar sesión. |
+| Ingreso manual 70.000 y egreso 140.000 | Ambos guardados, clasificación automática Ventas/Proveedores, cuenta y origen manual visibles. |
+| Actualización | Historial y desglose de categorías actualizados. Se corrigió duplicación de secciones por claves React repetidas. |
+| Saldo declarado | Se mantiene en 500.000 COP. |
+| Sin confirmación | La predicción solicita siete días completos; no interpreta datos faltantes como cero silenciosamente. |
+| Confirmar 2026-10-10 a 2026-10-16 | Entrenamiento siete días y dos movimientos; promedio −10.000 diarios. |
+| Horizonte 30/60/90 | Mínimos 200.000 /−100.000 /−400.000 COP. Primer déficit en 60/90: 2026-12-06. |
+| Guardar pronóstico | Guardado desde la interfaz. |
+| Logout y reingreso | Vuelve a Inicio sin datos financieros; al reingresar persisten ambos movimientos, cobertura y pronóstico guardado. |
+
+Pruebas API complementarias verifican persistencia tras reautenticar, permisos de lector/contador, cuenta ajena/conectada, CSRF, validaciones, reintentos, conflicto de clave, cobertura y obligaciones contadas una sola vez. No se simuló pérdida de respuesta ni corte de red en navegador; la idempotencia sí se comprobó por API. No se ejecutó concurrencia en PostgreSQL ni aceptación en servidor remoto. No equivale a aceptación de instalador o auditoría completa de accesibilidad.
+
+Preparar una empresa nueva por ensayo con [guion reproducible](PLAN_DEMO_FUNCIONAL.md). Para arrancar: migrar backend, construir frontend y ejecutar `python backend/manage.py runserver 127.0.0.1:8000`. Abrir el origen local; no cargar `.env.hosted` para pruebas locales.

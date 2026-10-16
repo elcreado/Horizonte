@@ -25,7 +25,7 @@ export function Home({ authenticated }: HomeProps) {
       <section className="home-features" aria-labelledby="features-title"><p className="eyebrow">MENOS INCERTIDUMBRE, MÁS CONTEXTO</p><h2 id="features-title">Tres preguntas. Un panorama.</h2>
         <div className="feature-grid"><article><span>01 / DISPONIBILIDAD</span><h3>¿Con cuánto cuento?</h3><p>Consulta el saldo disponible y su fecha de corte para entender desde dónde parte tu escenario.</p></article><article><span>02 / COMPROMISOS</span><h3>¿Qué viene después?</h3><p>Revisa las cuentas por cobrar y pagar junto con sus fechas y valores pendientes.</p></article><article><span>03 / ANTICIPACIÓN</span><h3>¿Cuándo debo prestar atención?</h3><p>Explora escenarios a 30, 60 y 90 días e identifica cuándo el saldo podría quedar por debajo de cero.</p></article></div>
       </section>
-      <section className="home-scope"><div><p className="eyebrow">UN PROYECTO EN CONSTRUCCIÓN</p><h2>Conoce la primera versión.</h2></div><p>Esta versión académica utiliza datos sintéticos y escenarios basados en obligaciones. Todavía no conecta bancos reales ni genera predicciones estadísticas. Horizonte no realiza pagos ni transferencias.</p></section>
+      <section className="home-scope"><div><p className="eyebrow">UN PROYECTO EN CONSTRUCCIÓN</p><h2>Conoce la primera versión.</h2></div><p>Esta versión académica permite registrar movimientos manuales, proyectar obligaciones y consultar estimaciones experimentales a partir de tu historial confirmado. Para las pruebas utiliza datos sintéticos. Todavía no conecta bancos reales. Horizonte no realiza pagos ni transferencias.</p></section>
       <footer>Horizonte · Inteligencia de liquidez para microempresas · Prototipo académico</footer>
     </main>
   </>;

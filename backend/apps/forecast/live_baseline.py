@@ -38,7 +38,7 @@ def validate_forecast_parameters(params) -> tuple[int, str]:
     except (TypeError, ValueError, OverflowError):
         raise ForecastUnavailable("El horizonte debe ser 30, 60 o 90.") from None
     method = params.get("method", "seasonal_naive")
-    if method not in ("naive", "seasonal_naive", "ses", "hybrid_weekly"):
+    if method not in ("naive", "seasonal_naive", "ses", "hybrid_weekly", "manual_average"):
         raise ForecastUnavailable("Método de referencia inválido.")
     return horizon, method
 
@@ -49,7 +49,7 @@ def build_forecast(
     """Recoge entradas y resultado de una única lectura lógica del estado actual.
 
     Para guardar, el llamador usa una transacción y bloquea cuentas/obligaciones.
-    La serie de 90 días y los flujos conocidos hacen reproducible el cálculo.
+    La serie confirmada (siete o 90 días) y los flujos conocidos hacen reproducible el cálculo.
     """
     company_id = member.company_id
     if lock:
@@ -62,7 +62,8 @@ def build_forecast(
     if len(cuts) != 1 or any(account.currency != "COP" for account in accounts):
         raise ForecastUnavailable("Se requieren cuentas COP con el mismo corte.")
     cutoff = cuts.pop()
-    start = cutoff - timedelta(days=89)
+    training_days = 7 if method == "manual_average" else 90
+    start = cutoff - timedelta(days=training_days - 1)
     missing = [
         account.name
         for account in accounts
@@ -72,7 +73,8 @@ def build_forecast(
     ]
     if missing:
         raise ForecastUnavailable(
-            "Confirma al menos 90 días completos hasta el corte para cada cuenta.", accounts=missing
+            f"Confirma al menos {training_days} días completos hasta el corte para cada cuenta en Saldos de cuentas.",
+            accounts=missing,
         )
     rows = list(
         Transaction.objects.filter(
@@ -80,7 +82,7 @@ def build_forecast(
         ).order_by("date", "pk")
     )
     if not rows:
-        raise ForecastUnavailable("No hay movimientos importados en el periodo confirmado.")
+        raise ForecastUnavailable("No hay movimientos registrados en el periodo confirmado.")
     settled = dict(
         Settlement.objects.filter(
             transaction_id__in=[row.pk for row in rows], reversed_at__isnull=True
@@ -142,8 +144,10 @@ def build_forecast(
         residual = daily_residual(
             rows, start, cutoff, settled, recurring_ids, coverage_confirmed=True
         )
-        if sum(value != 0 for value in residual) < 4 and not (
-            method == "hybrid_weekly" and active_candidates and not any(residual)
+        if (
+            method != "manual_average"
+            and sum(value != 0 for value in residual) < 4
+            and not (method == "hybrid_weekly" and active_candidates and not any(residual))
         ):
             raise ForecastUnavailable(
                 "Hay menos de cuatro días con flujo variable; la referencia estadística no es útil todavía."
@@ -258,7 +262,11 @@ def build_forecast(
             "Híbrido experimental: suma obligaciones pendientes, flujo variable y fechas estimadas de recurrencias confirmadas vigentes. "
             "Una fecha ya vinculada, cancelada o saldada no se estima otra vez. No crea obligaciones ni modifica saldos. "
             if method == "hybrid_weekly"
-            else "Referencia experimental de flujo variable diario. "
+            else (
+                "Estimación inicial: repite el flujo neto diario promedio de los últimos siete días completos, incluidos días sin actividad. No modela estacionalidad ni recurrencias; puede repetir flujos excepcionales. "
+                if method == "manual_average"
+                else "Referencia experimental de flujo variable diario. "
+            )
         )
         + "No está validado con datos reales. Los cuantiles, si están disponibles, son experimentales no calibrados; no ofrece probabilidad de déficit. Los datos actuales sirven para estimar desde este corte, no para evaluar cortes históricos.",
     }

@@ -63,7 +63,13 @@ def apply_forecast_runs_contract(path, method, operation):
                             "horizon": {"type": "integer", "enum": [30, 60, 90], "default": 30},
                             "method": {
                                 "type": "string",
-                                "enum": ["naive", "seasonal_naive", "ses", "hybrid_weekly"],
+                                "enum": [
+                                    "naive",
+                                    "seasonal_naive",
+                                    "ses",
+                                    "hybrid_weekly",
+                                    "manual_average",
+                                ],
                                 "default": "seasonal_naive",
                             },
                         },

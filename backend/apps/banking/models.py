@@ -121,3 +121,19 @@ class ImportJob(models.Model):
     error = models.CharField(max_length=300, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     finished_at = models.DateTimeField(null=True)
+
+
+class ManualEntry(models.Model):
+    """Immutable request receipt, independent of later category corrections."""
+
+    company = models.ForeignKey(Company, on_delete=models.PROTECT)
+    request_id = models.UUIDField()
+    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT)
+    payload = models.JSONField()
+    user = models.ForeignKey("auth.User", on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["company", "request_id"], name="unique_manual_request")
+        ]

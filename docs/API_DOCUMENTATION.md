@@ -136,3 +136,20 @@ ejecución. Crear una conexión devuelve `{connection, job}`, no un ID en la ra�
 El contrato no acredita integración con un banco externo; los cuerpos detallados de error
 y contratos restantes del inventario siguen pendientes. Exportación y siete pruebas de
 inventario aprobadas después del cambio.
+
+
+## Alta manual de movimientos (V1 web, 16 de octubre de 2026)
+
+`POST /api/companies/{company_id}/movements/`, sesión y CSRF, propietario/contador.
+
+```json
+{"request_id":"bc56781f-7e51-47cd-9322-225d7dab02f1","account_id":1,"date":"2026-10-16","direction":"out","amount":"140000.00","description":"Insumos","category":"Proveedores"}
+```
+
+`amount` es positivo, el servidor aplica el signo según `in|out`. Fecha hasta hoy y corte. Solo cuenta manual de esa empresa. Categoría omitida/vacía usa reglas. Saldo declarado sin cambios.
+
+201: `{"id":123,"created":true}`; reintento idéntico 200 con mismo ID y `created:false`. UUID generado por cliente, único por empresa. Reutilizar con otro contenido devuelve 409. Campos inválidos 400; sesión/CSRF/rol 403; membresía/cuenta ajena 404; cuenta conectada 409. Auditoría y recibo inmutable se guardan junto al movimiento; la confirmación de cobertura se retira si el registro cae en ese periodo. Correcciones posteriores de categoría no alteran el recibo.
+
+`GET .../movements/` añade `account_name` y `entry_source` (`manual|imported`). `source` conserva el origen de clasificación.
+
+El pronóstico experimental y las ejecuciones guardadas admiten `method=manual_average`: siete días completos confirmados hasta el corte común; promedio diario neto residual, obligaciones futuras y horizontes 30/60/90. No genera cuantiles. Los otros métodos mantienen 90 días. El contrato generado está en `openapi-inventory.json`.

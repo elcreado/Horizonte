@@ -1,6 +1,8 @@
 # Plataforma de Inteligencia de Liquidez para Microempresas
 
-> **Revisión del 15 de octubre de 2026:** [resumen de objetivos y pendientes](docs/ESTADO_Y_PENDIENTES.md), [índice de documentación](docs/README.md) y [verificaciones](docs/IMPLEMENTATION_STATUS.md). La primera versión de escritorio funcional está entregada para pruebas; el alcance académico completo sigue parcial. [Hoja de ruta y V2 móvil](docs/ROADMAP_ENTREGABLES.md).
+> **V1 web manual · 16 de octubre de 2026:** captura de ingresos/egresos y estimación inicial 30/60/90 desde siete días completos confirmados, en la rama `codex/v1-manual-transactions`. [Recorrido y cifras esperadas](docs/PLAN_DEMO_FUNCIONAL.md). Implementación local; no publicada.
+
+> **Alcance académico anterior, 15 de octubre de 2026:** [resumen de objetivos y pendientes](docs/ESTADO_Y_PENDIENTES.md), [índice de documentación](docs/README.md) y [verificaciones](docs/IMPLEMENTATION_STATUS.md). La primera versión de escritorio funcional está entregada para pruebas; el alcance académico completo sigue parcial. [Hoja de ruta y V2 móvil](docs/ROADMAP_ENTREGABLES.md).
 
 > **Prueba vigente sin Docker:** servidor Render Free con PostgreSQL en Supabase y cliente Windows Electron/NSIS. Inicio es público. Importaciones CSV/XLSX/XML, Mock Bank, obligaciones, conciliaciones y escenarios de caja están implementados; los modelos estadísticos siguen experimentales. [Manual de uso](docs/USER_MANUAL.md), [instalador y huella](docs/desktop/DESKTOP_RELEASE.md) y [aceptación pendiente](docs/acceptance/V1_ACCEPTANCE.md). El objetivo completo todavía no está cerrado.
 >

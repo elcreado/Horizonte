@@ -36,7 +36,7 @@ def forecast_result_schema():
             "status": {"type": "string", "enum": ["experimental"]},
             "method": {
                 "type": "string",
-                "enum": ["naive", "seasonal_naive", "ses", "hybrid_weekly"],
+                "enum": ["naive", "seasonal_naive", "ses", "hybrid_weekly", "manual_average"],
             },
             "horizon": {"type": "integer", "enum": [30, 60, 90]},
             "as_of": date,

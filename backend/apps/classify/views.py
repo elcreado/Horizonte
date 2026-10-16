@@ -25,12 +25,16 @@ def category_suggestion(request, company_id, transaction_id):
         return Response({"status": "unavailable", "detail": str(error)}, status=409)
 
 
-@api_view(["GET"])
+@api_view(["GET", "POST"])
 def movements(request, company_id):
     member = get_object_or_404(CompanyMember, company_id=company_id, user=request.user)
+    if request.method == "POST":
+        from apps.banking.manual import create_manual_entry
+
+        return create_manual_entry(request, company_id)
     queryset = (
         Transaction.objects.filter(account__company_id=company_id)
-        .select_related("merchant")
+        .select_related("merchant", "account", "manualentry")
         .order_by("-date", "-id")
     )
     pagination = PageNumberPagination()
@@ -40,6 +44,8 @@ def movements(request, company_id):
         [
             {
                 "id": row.id,
+                "account_name": row.account.name,
+                "entry_source": "manual" if hasattr(row, "manualentry") else "imported",
                 "date": row.date,
                 "description": row.description,
                 "normalized_description": row.normalized_description,

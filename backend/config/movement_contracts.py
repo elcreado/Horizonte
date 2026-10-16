@@ -4,6 +4,9 @@ from .auth_contracts import object_response
 
 
 def apply_movement_contract(path, method, operation):
+    if path == "/api/companies/{company_id}/movements/" and method == "post":
+        apply_manual_contract(operation)
+        return
     if (path, method) in {
         ("/api/companies/{company_id}/classification-rules/", "get"),
         ("/api/companies/{company_id}/classification-rules/{rule_id}/", "delete"),
@@ -33,6 +36,8 @@ def apply_movement_contract(path, method, operation):
         item = object_response(
             {
                 "id": {"type": "integer"},
+                "account_name": text,
+                "entry_source": {"type": "string", "enum": ["manual", "imported"]},
                 "date": {"type": "string", "format": "date"},
                 "description": text,
                 "normalized_description": text,
@@ -140,3 +145,60 @@ def apply_rule_contract(method, operation):
     operation["responses"]["404"] = {
         "description": "Membresía, regla de la empresa o página no encontrada."
     }
+
+
+def apply_manual_contract(operation):
+    operation["x-contract-status"] = "manual-entry-fields-documented"
+    operation.pop("x-request-schema-pending", None)
+    operation["description"] = (
+        "Alta manual owner/accountant con sesión y CSRF. Saldo al corte no cambia. Clave UUID por empresa: reintento idéntico 200, contenido distinto 409. Fecha hasta hoy y corte; cuenta manual propia. Retira cobertura si modifica el periodo confirmado. Auditoría y recibo inmutable atómicos."
+    )
+    operation["requestBody"] = {
+        "required": True,
+        "content": {
+            "application/json": {
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "request_id",
+                        "account_id",
+                        "date",
+                        "direction",
+                        "amount",
+                        "description",
+                    ],
+                    "properties": {
+                        "request_id": {"type": "string", "format": "uuid"},
+                        "account_id": {"type": "integer", "minimum": 1},
+                        "date": {"type": "string", "format": "date"},
+                        "direction": {"type": "string", "enum": ["in", "out"]},
+                        "amount": {
+                            "type": "string",
+                            "description": "Decimal positivo, hasta 16 enteros y dos decimales; mínimo 0.01 COP.",
+                        },
+                        "description": {"type": "string", "minLength": 1, "maxLength": 250},
+                        "category": {
+                            "type": "string",
+                            "maxLength": 80,
+                            "description": "Opcional; compatible con sentido. Vacío aplica reglas.",
+                        },
+                    },
+                }
+            }
+        },
+    }
+    schema = object_response({"id": {"type": "integer"}, "created": {"type": "boolean"}})
+    operation["responses"] = {
+        code: {"description": description, "content": {"application/json": {"schema": schema}}}
+        for code, description in {
+            "201": "Movimiento creado.",
+            "200": "Solicitud ya aceptada; mismo ID.",
+        }.items()
+    }
+    for code, description in {
+        "400": "Campos inválidos o fecha/categoría incompatibles.",
+        "403": "Sesión, CSRF o rol rechazados.",
+        "404": "Membresía o cuenta propia no encontrada.",
+        "409": "Cuenta conectada o clave usada con otro contenido.",
+    }.items():
+        operation["responses"][code] = {"description": description}

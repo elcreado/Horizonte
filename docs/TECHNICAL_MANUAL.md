@@ -61,3 +61,12 @@ histórico del 5 de octubre, sin recertificar disponibilidad hoy. [Brechas](ESTA
   [investigación](research/README.md). Reportes nuevos se guardan en `docs/research/`.
 - El manual anterior, con pasos de preparación ya superados, queda en
   [archivo](archive/2026-10-05/TECHNICAL_MANUAL.md).
+
+
+## V1 manual: migración y cálculo inicial
+
+Aplicar `python backend/manage.py migrate` antes de iniciar esta rama. `banking.0011_manualentry` crea recibos de solicitud con UUID único por empresa y vínculo uno a uno al movimiento. No altera los datos históricos ni el saldo. El servicio bloquea membresía, empresa y cuenta; creación, recibo, auditoría y retirada de cobertura ocurren dentro de una transacción.
+
+`manual_average` calcula con Decimal el promedio del residual de siete días completos confirmados, redondeado a centavos, y lo repite 30/60/90 días. Suma compromisos futuros desde el saldo declarado; no vuelve a sumar el historial. No se presenta como modelo validado. Las reglas de los métodos anteriores se conservan.
+
+El frontend conserva el UUID y los datos del envío ante respuesta incierta mientras el formulario permanece montado. Tras confirmación crea una solicitud nueva. Una recarga descarta ese recibo local: comprobar historial antes de volver a capturar si la respuesta se perdió. Secciones del dashboard usan claves React distintas por componente/empresa para impedir duplicados al refrescar.

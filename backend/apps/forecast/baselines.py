@@ -61,6 +61,11 @@ def predict_baseline(history: list[Decimal], horizon: int, method: str) -> list[
         raise ValueError("Horizonte requerido: 30, 60 o 90.")
     if not history or any(not value.is_finite() for value in history):
         raise ValueError("Historial vacío o no finito.")
+    if method == "manual_average":
+        average = (sum(history, Decimal("0")) / len(history)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+        return [average] * horizon
     if method == "naive":
         return [history[-1]] * horizon
     if method == "seasonal_naive":
