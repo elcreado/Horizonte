@@ -10,7 +10,7 @@ def apply_experimental_forecast_contract(path, method, operation):
     operation["x-contract-status"] = "experimental-forecast-fields-documented"
     operation["description"] = (
         "Todos los miembros. Calcula desde el corte común de saldos COP y cobertura declarada, "
-        "manual_average usa siete días completos; los otros métodos requieren 90. "
+        "manual_average usa todo el historial registrado hasta el corte, con cobertura completa y mínimo siete días; los otros métodos requieren 90. "
         "sin guardar ejecución ni modificar saldos. Métodos de referencia experimentales; "
         "hybrid_weekly incorpora recurrencias confirmadas vigentes y obligaciones sin duplicarlas. "
         "No ofrece probabilidad de déficit ni cuantiles calibrados. Una declaración de cobertura "

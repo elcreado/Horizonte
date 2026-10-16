@@ -8,7 +8,7 @@ Revisión: **16 de octubre de 2026**. Rama: `codex/v1-manual-transactions`.
 - Captura de ingresos y egresos con categoría opcional, normalización y clasificación.
 - Permisos por empresa, validación Decimal y fechas, sesión/CSRF, auditoría y reintentos idempotentes.
 - Actualización del historial, categorías, cobertura, escenario y pronóstico tras guardar.
-- Estimación inicial 30/60/90 basada en el promedio neto de siete días completos confirmados.
+- Estimación inicial 30/60/90 basada en el promedio neto de todo el historial hasta el corte, con mínimo siete días completos confirmados.
 - Métodos previos y guardado de ejecuciones siguen disponibles; sus límites se conservan.
 
 ## Recorrido y cifras esperadas
@@ -25,8 +25,8 @@ Usar empresas de prueba separadas por presentación permite repetir el caso sin 
 
 ## Reglas y límites
 
-El movimiento representa dinero ocurrido hasta hoy y hasta el corte de su cuenta. Los compromisos futuros se registran en Obligaciones. El alta no recalcula el saldo declarado ni ejecuta pagos.
+El movimiento representa dinero ocurrido hasta hoy, con fecha inicial de hoy; también se pueden capturar operaciones posteriores al corte. Para incluirlas en la predicción hay que actualizar el corte y su saldo. Los compromisos futuros se registran en Obligaciones. El alta no recalcula el saldo declarado ni ejecuta pagos.
 
-La estimación inicial repite un promedio de siete días; no es un modelo calibrado ni una garantía. Excluye importes conciliados del flujo residual. No estima recurrencias por separado y puede repetir movimientos excepcionales. Los otros modelos conservan el requisito de 90 días completos; cuantiles del híbrido requieren más historial.
+La estimación inicial repite el promedio de todo el historial hasta el corte, con mínimo siete días; no es un modelo calibrado ni una garantía. Excluye importes conciliados del flujo residual. No estima recurrencias por separado y puede repetir movimientos excepcionales. Los otros modelos conservan el requisito de 90 días completos; cuantiles del híbrido requieren más historial.
 
 Para iniciar localmente y consultar evidencia: [pruebas](TESTING.md), [manual](USER_MANUAL.md), [estado](IMPLEMENTATION_STATUS.md). Escritorio, móvil, banca externa, correo real y validación científica siguen fuera de esta entrega. No se ha publicado esta rama en el alojamiento.

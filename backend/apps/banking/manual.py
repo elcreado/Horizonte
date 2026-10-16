@@ -18,7 +18,7 @@ from .normalization import normalize_movement
 class ManualEntryInput(serializers.Serializer):
     request_id = serializers.UUIDField()
     account_id = serializers.IntegerField(min_value=1)
-    date = serializers.DateField()
+    date = serializers.DateField(default=timezone.localdate)
     direction = serializers.ChoiceField(choices=["in", "out"])
     amount = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=Decimal("0.01"))
     description = serializers.CharField(max_length=250)
@@ -51,10 +51,10 @@ def create_manual_entry(request, company_id: int) -> Response:
         )
         if account.connection_id:
             return Response({"detail": "Selecciona una cuenta manual."}, status=409)
-        if values["date"] > min(account.balance_date, timezone.localdate()):
+        if values["date"] > timezone.localdate():
             return Response(
                 {
-                    "detail": "La fecha no puede superar hoy ni el corte de la cuenta. Registra compromisos futuros en Obligaciones."
+                    "detail": "La fecha no puede superar hoy. Registra compromisos futuros en Cobros y pagos."
                 },
                 status=400,
             )

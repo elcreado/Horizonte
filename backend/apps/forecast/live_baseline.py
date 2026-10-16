@@ -5,7 +5,7 @@ import json
 from datetime import timedelta
 from decimal import Decimal
 
-from django.db.models import Sum
+from django.db.models import Min, Sum
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -49,7 +49,7 @@ def build_forecast(
     """Recoge entradas y resultado de una única lectura lógica del estado actual.
 
     Para guardar, el llamador usa una transacción y bloquea cuentas/obligaciones.
-    La serie confirmada (siete o 90 días) y los flujos conocidos hacen reproducible el cálculo.
+    La serie confirmada y los flujos conocidos hacen reproducible el cálculo.
     """
     company_id = member.company_id
     if lock:
@@ -64,6 +64,12 @@ def build_forecast(
     cutoff = cuts.pop()
     training_days = 7 if method == "manual_average" else 90
     start = cutoff - timedelta(days=training_days - 1)
+    if method == "manual_average":
+        first_movement = Transaction.objects.filter(
+            account__company_id=company_id, date__lte=cutoff
+        ).aggregate(first=Min("date"))["first"]
+        if first_movement:
+            start = min(start, first_movement)
     missing = [
         account.name
         for account in accounts
@@ -73,7 +79,7 @@ def build_forecast(
     ]
     if missing:
         raise ForecastUnavailable(
-            f"Confirma al menos {training_days} días completos hasta el corte para cada cuenta en Saldos de cuentas.",
+            f"Confirma el historial completo desde {start.isoformat()} hasta el corte en Cuentas y saldos (mínimo {training_days} días).",
             accounts=missing,
         )
     rows = list(
@@ -263,7 +269,7 @@ def build_forecast(
             "Una fecha ya vinculada, cancelada o saldada no se estima otra vez. No crea obligaciones ni modifica saldos. "
             if method == "hybrid_weekly"
             else (
-                "Estimación inicial: repite el flujo neto diario promedio de los últimos siete días completos, incluidos días sin actividad. No modela estacionalidad ni recurrencias; puede repetir flujos excepcionales. "
+                "Estimación inicial: repite el flujo neto diario promedio de todo el historial registrado hasta el corte, con al menos siete días completos e incluidos los días sin actividad. No modela estacionalidad ni recurrencias; puede repetir flujos excepcionales. "
                 if method == "manual_average"
                 else "Referencia experimental de flujo variable diario. "
             )

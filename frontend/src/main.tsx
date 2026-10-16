@@ -63,6 +63,19 @@ async function api<T>(path: string, body?: object, signal?: AbortSignal): Promis
   return response.status === 204 ? undefined as T : response.json();
 }
 
+const dashboardSections = [
+  { group: 'Operación', id: 'overview', label: 'Resumen', description: 'Saldo, próximos compromisos y escenario de caja.' },
+  { group: 'Operación', id: 'movements', label: 'Movimientos', description: 'Registra ingresos y egresos manualmente y consulta tus transacciones.' },
+  { group: 'Operación', id: 'obligations', label: 'Cobros y pagos', description: 'Compromisos pendientes y calendario de vencimientos.' },
+  { group: 'Operación', id: 'invoices', label: 'Facturas', description: 'Importación y revisión de documentos de facturación.' },
+  { group: 'Análisis', id: 'forecasts', label: 'Predicciones', description: 'Estimaciones con tu historial, recurrencias y ejecuciones guardadas.' },
+  { group: 'Análisis', id: 'history', label: 'Historial y categorías', description: 'Compara ingresos, egresos y su distribución.' },
+  { group: 'Análisis', id: 'alerts', label: 'Alertas de liquidez', description: 'Umbral de caja y evaluaciones guardadas.' },
+  { group: 'Configuración', id: 'accounts', label: 'Cuentas y saldos', description: 'Saldo declarado, fecha de corte e historial completo.' },
+  { group: 'Configuración', id: 'sources', label: 'Fuentes de datos', description: 'Importa archivos o conecta una fuente bancaria de prueba, si lo deseas.' },
+  { group: 'Configuración', id: 'rules', label: 'Reglas y comercios', description: 'Organiza la clasificación y las etiquetas de tus movimientos.' },
+];
+
 function App() {
   const [route, setRoute] = useState(window.location.hash || '#/');
   useEffect(() => {
@@ -149,7 +162,9 @@ function App() {
   }
   if (route === '#/recover-password' || route.startsWith('#/reset-password?')) return <PasswordRecovery key={route} route={route} />;
   if (route === '#/register' && !user) return <Register onRegistered={username => { setUser(username); window.location.hash = '/dashboard'; }} />;
-  if (route === '#/' || !['#/login', '#/dashboard', '#/register', '#/team', '#/account', '#/platform'].includes(route)) return <Home authenticated={Boolean(user)} />;
+  const sectionId = ['#/dashboard', '#/login', '#/register'].includes(route) ? 'overview' : route.replace('#/dashboard/', '');
+  const section = dashboardSections.find(item => item.id === sectionId);
+  if (route === '#/' || (!section && !['#/login', '#/dashboard', '#/register', '#/team', '#/account', '#/platform'].includes(route))) return <Home authenticated={Boolean(user)} />;
   if (checking) return <main><p role="status">Cargando sesión…</p></main>;
   if (sessionError) return <main className="login"><a href="#/">Volver al inicio</a><h1>No se pudo comprobar tu sesión</h1><p role="alert">{sessionError}</p><button onClick={() => setSessionRevision(value => value + 1)}>Reintentar conexión</button></main>;
   if (!user) return <main className="login"><a className="brand" href="#/">◈ HORIZONTE</a><p className="back-home"><a href="#/">← Volver al inicio</a></p>
@@ -167,16 +182,15 @@ function App() {
   if (route === '#/platform') return <><header><a href="#/dashboard">Volver al dashboard</a><button onClick={signOut}>Cerrar sesión</button></header><PlatformUsers key={user} /></>;
   if (route === '#/team') return <><header><a className="brand" href="#/">◈ HORIZONTE</a><a href="#/dashboard">Volver al dashboard</a><button className="secondary" onClick={signOut}>Cerrar sesión</button></header><main><h1>Empresa y equipo</h1><CreateCompany onCreated={created => { setCompanies(items => [...items, created]); setCompany(String(created.id)); }} /><label>Empresa<select value={company} onChange={e => setCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>{company ? <Team key={`Team-${company}`} company={company} companyName={companies.find(c => String(c.id) === company)?.name || ''} /> : <p>No tienes empresas disponibles.</p>}</main></>;
   return <><header><a className="brand" href="#/">◈ HORIZONTE</a><a href="#/">Inicio</a><a href="#/team">Empresa y equipo</a><a href="#/account">Mi cuenta</a>{platformAdmin && <a href="#/platform">Administración</a>}<span>Inteligencia de liquidez</span><button className="secondary" onClick={signOut}>Cerrar sesión</button></header>
-    <main><div className="toolbar"><div><p className="eyebrow">PANORAMA FINANCIERO</p><h1>Anticipa lo que viene.</h1></div>
+    <div className="dashboard-layout"><aside className="dashboard-sidebar"><nav aria-label="Secciones del dashboard">{['Operación', 'Análisis', 'Configuración'].map(group => <div className="sidebar-group" key={group}><p>{group}</p>{dashboardSections.filter(item => item.group === group).map(item => <a key={item.id} href={item.id === 'overview' ? '#/dashboard' : `#/dashboard/${item.id}`} aria-current={sectionId === item.id ? 'page' : undefined}>{item.label}</a>)}</div>)}</nav><p className="sidebar-help">Puedes gestionar tus movimientos manualmente sin conectar una cuenta bancaria.</p></aside>
+    <main className="dashboard-content"><div className="toolbar"><div><p className="eyebrow">{section?.group || 'PANORAMA FINANCIERO'}</p><h1>{section?.label || 'Resumen'}</h1><p>{section?.description}</p></div>
       <label>Empresa<select value={company} onChange={e => setCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div>
       {error && <p role="alert" className="error">{error}</p>}
       {!company && !error && <p role="status">No tienes empresas disponibles. <a href="#/team">Crea tu empresa</a> o solicita acceso a su propietario.</p>}
       {company && !data && !error && <p role="status">Cargando panorama…</p>}
-      {company && <AccountBalances key={`AccountBalances-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      {company && <BankConnections key={`BankConnections-${company}`} company={company} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      {company && <ManualMovement key={`ManualMovement-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      {company && <ImportPanel key={`ImportPanel-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      {data && <><LiquidityAlert key={`LiquidityAlert-${company}`} company={company} alert={data.liquidity_alert} onChanged={() => setFinancialRevision(n => n + 1)} /><Coverage data={data.coverage} /><div className="notice"><strong>ESCENARIO DE OBLIGACIONES</strong> {data.notice} Corte: {dateLabel(data.as_of)}.</div>
+      {company && <React.Suspense fallback={<p role="status">Cargando sección…</p>}>
+      {sectionId === 'overview' && <>
+      {data && <><div className="notice"><strong>ESCENARIO DE OBLIGACIONES</strong> {data.notice} Corte: {dateLabel(data.as_of)}.</div>
         <section className="cards" aria-label="Resumen financiero">
           {[['Saldo disponible', data.balance], [`Por cobrar · ${horizon} días`, data.receivable], [`Por pagar · ${horizon} días`, data.payable]].map(([label, value]) => <article key={label}><p>{label}</p><strong>{money(value)}</strong><small>COP · pesos colombianos</small></article>)}
           <article className={data.first_deficit ? 'risk' : ''}><p>Escenario de liquidez</p><strong>{data.first_deficit ? `Déficit: ${dateLabel(data.first_deficit)}` : 'Sin déficit previsto'}</strong><small>Según las obligaciones registradas</small></article>
@@ -196,18 +210,19 @@ function App() {
         <div className="columns"><section className="panel"><h2>Próximos compromisos</h2><p>Fechas y valores pendientes del período</p><div className="table-wrap"><table><thead><tr><th>Concepto</th><th>Fecha</th><th>Valor</th></tr></thead><tbody>{data.obligations.map(o => <tr key={o.id}><td>{o.description}<small>{o.direction === 'in' ? 'Por cobrar' : 'Por pagar'}</small></td><td>{dateLabel(o.due_date)}</td><td className={o.direction === 'in' ? 'positive' : ''}>{o.direction === 'in' ? '+' : '−'}{money(o.amount)}</td></tr>)}</tbody></table>{!data.obligations.length && <p>No hay obligaciones en este período.</p>}</div></section>
 </div>
       </>}
-      {company && <AlertHistory key={`AlertHistory-${company}`} company={company} horizon={horizon} />}
-      {company && <ForecastPreview key={`ForecastPreview-${company}`} company={company} horizon={horizon} revision={financialRevision} />}
-      {company && <History key={`History-${company}`} company={company} refresh={financialRevision} />}
-      {company && <Invoices key={`Invoices-${company}`} company={company} onChange={() => setFinancialRevision(n => n + 1)} />}
-      {company && <Obligations key={`Obligations-${company}`} company={company} refresh={financialRevision} onChange={() => setFinancialRevision(n => n + 1)} />}
-      {company && <ObligationCalendar key={`ObligationCalendar-${company}`} company={company} refresh={financialRevision} />}
-      {company && <Movements key={`Movements-${company}`} company={company} refresh={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      {company && <Merchants key={`Merchants-${company}`} company={company} />}
-      {company && <ClassificationRules key={`ClassificationRules-${company}`} company={company} />}
-      {company && <Recurrences key={`Recurrences-${company}`} company={company} horizon={horizon} onChanged={() => setFinancialRevision(n => n + 1)} />}
+      </>}
+      {sectionId === 'movements' && <><ManualMovement key={`ManualMovement-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /><Movements key={`Movements-${company}`} company={company} refresh={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /></>}
+      {sectionId === 'obligations' && <><Obligations key={`Obligations-${company}`} company={company} refresh={financialRevision} onChange={() => setFinancialRevision(n => n + 1)} /><ObligationCalendar key={`ObligationCalendar-${company}`} company={company} refresh={financialRevision} /></>}
+      {sectionId === 'invoices' && <Invoices key={`Invoices-${company}`} company={company} onChange={() => setFinancialRevision(n => n + 1)} />}
+      {sectionId === 'forecasts' && <><div className="toolbar"><label>Horizonte de predicción<select value={horizon} onChange={event => setHorizon(Number(event.target.value))}>{[30, 60, 90].map(days => <option key={days} value={days}>{days} días</option>)}</select></label><a href="#/dashboard/accounts">Revisar saldo, corte y cobertura</a></div><ForecastPreview key={`ForecastPreview-${company}`} company={company} horizon={horizon} revision={financialRevision} /><Recurrences key={`Recurrences-${company}`} company={company} horizon={horizon} onChanged={() => setFinancialRevision(n => n + 1)} /></>}
+      {sectionId === 'history' && <History key={`History-${company}`} company={company} refresh={financialRevision} />}
+      {sectionId === 'alerts' && <>{data && <LiquidityAlert key={`LiquidityAlert-${company}`} company={company} alert={data.liquidity_alert} onChanged={() => setFinancialRevision(n => n + 1)} />}<AlertHistory key={`AlertHistory-${company}`} company={company} horizon={horizon} /></>}
+      {sectionId === 'accounts' && <><AccountBalances key={`AccountBalances-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />{data && <Coverage data={data.coverage} />}</>}
+      {sectionId === 'sources' && <><div className="notice">La conexión bancaria es opcional. Para registrar operaciones una a una, usa <a href="#/dashboard/movements">Movimientos</a>.</div><ImportPanel key={`ImportPanel-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /><BankConnections key={`BankConnections-${company}`} company={company} onChanged={() => setFinancialRevision(n => n + 1)} /></>}
+      {sectionId === 'rules' && <><ClassificationRules key={`ClassificationRules-${company}`} company={company} /><Merchants key={`Merchants-${company}`} company={company} /></>}
+      </React.Suspense>}
       <footer>Horizonte · Prototipo académico v0.1 · Los pronósticos requieren revisión</footer>
-    </main></>;
+    </main></div></>;
 }
 
 function focusMainContent() {

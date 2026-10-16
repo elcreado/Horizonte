@@ -95,3 +95,14 @@ QA de navegador local con empresa sintética separada, corte 2026-10-16 y saldo 
 Pruebas API complementarias verifican persistencia tras reautenticar, permisos de lector/contador, cuenta ajena/conectada, CSRF, validaciones, reintentos, conflicto de clave, cobertura y obligaciones contadas una sola vez. No se simuló pérdida de respuesta ni corte de red en navegador; la idempotencia sí se comprobó por API. No se ejecutó concurrencia en PostgreSQL ni aceptación en servidor remoto. No equivale a aceptación de instalador o auditoría completa de accesibilidad.
 
 Preparar una empresa nueva por ensayo con [guion reproducible](PLAN_DEMO_FUNCIONAL.md). Para arrancar: migrar backend, construir frontend y ejecutar `python backend/manage.py runserver 127.0.0.1:8000`. Abrir el origen local; no cargar `.env.hosted` para pruebas locales.
+
+
+## Actualización: secciones y captura diaria
+
+- Backend: 224 pruebas, 219 aprobadas y cinco omitidas en SQLite por requerir PostgreSQL. Ruff y build TypeScript/Vite aprobados.
+- Navegador: navegación por las diez secciones de la barra lateral con título y contenido independientes. Movimientos no muestra Facturas ni otras herramientas ajenas.
+- La fecha del formulario se observa como 2026-10-16 (hoy en Colombia). Se guardó también una operación del 2026-10-15 y la fecha volvió a hoy tras confirmar el guardado.
+- Se guardaron dos operaciones nuevas con igual fecha, descripción e importe; ambas aparecen como movimientos separados. No se duplicaron secciones al refrescar.
+- API: fecha omitida usa hoy; un corte anterior no bloquea el registro; el saldo declarado permanece igual. El futuro se rechaza.
+- API: un ingreso de 140 trece días antes del corte y un egreso de 70 al corte producen promedio diario de 5 en catorce días. Una operación posterior al corte queda fuera; confirmar solo siete días devuelve cobertura insuficiente.
+- Los enlaces de navegación usan hash y permiten acceso directo. No se certificó una revisión visual móvil completa.

@@ -3,6 +3,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.accounts.models import AuditLog
@@ -77,7 +78,7 @@ class ManualEntryTests(TestCase):
             {"request_id": "bad"},
             {"direction": "bad"},
             {"category": "Nómina"},
-            {"date": (self.account.balance_date + timedelta(days=1)).isoformat()},
+            {"date": (timezone.localdate() + timedelta(days=1)).isoformat()},
         ]:
             self.assertEqual(self.submit(**fields).status_code, 400)
         self.assertFalse(Transaction.objects.exists())
@@ -190,3 +191,47 @@ class ManualEntryTests(TestCase):
             self.assertEqual(
                 Decimal(result["points"][-1]["balance"]), Decimal(500 + horizon * 10 - 100)
             )
+
+    def test_today_default_and_multiple_identical_operations_on_the_same_day(self):
+        # A stale balance cut must not prevent daily manual bookkeeping.
+        payload = {
+            "request_id": str(uuid4()),
+            "account_id": self.account.pk,
+            "amount": "10",
+            "direction": "in",
+            "description": "Venta del día",
+        }
+        url = f"/api/companies/{self.company.pk}/movements/"
+        first = self.client.post(url, payload, format="json")
+        self.assertEqual(first.status_code, 201, first.data)
+        payload["request_id"] = str(uuid4())
+        self.assertEqual(self.client.post(url, payload, format="json").status_code, 201)
+        self.assertEqual(Transaction.objects.filter(date=timezone.localdate()).count(), 2)
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.balance, Decimal("500"))
+        self.assertEqual(self.account.balance_date.isoformat(), "2026-09-23")
+
+    def test_average_uses_older_history_and_excludes_after_cut(self):
+        cutoff = self.account.balance_date
+        self.submit(date=(cutoff - timedelta(days=13)).isoformat(), amount="140")
+        self.submit(amount="70", direction="out")
+        self.submit(date=timezone.localdate().isoformat(), amount="999999")
+        coverage = f"/api/companies/{self.company.pk}/accounts/{self.account.pk}/coverage/"
+        forecast = f"/api/companies/{self.company.pk}/experimental-forecast/?method=manual_average&horizon=30"
+        self.client.post(
+            coverage,
+            {"start": (cutoff - timedelta(days=6)).isoformat(), "confirmed": True},
+            format="json",
+        )
+        self.assertEqual(self.client.get(forecast).status_code, 409)
+        self.client.post(
+            coverage,
+            {"start": (cutoff - timedelta(days=13)).isoformat(), "confirmed": True},
+            format="json",
+        )
+        result = self.client.get(forecast)
+        self.assertEqual(result.status_code, 200, result.data)
+        self.assertEqual(result.data["training_days"], 14)
+        self.assertEqual(result.data["observed_movements"], 2)
+        self.assertEqual(result.data["points"][0]["estimated_flow"], "5.00")
+        self.assertEqual(result.data["points"][-1]["balance"], "650.00")

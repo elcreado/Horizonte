@@ -1,6 +1,6 @@
 # Plataforma de Inteligencia de Liquidez para Microempresas
 
-> **V1 web manual · 16 de octubre de 2026:** captura de ingresos/egresos y estimación inicial 30/60/90 desde siete días completos confirmados, en la rama `codex/v1-manual-transactions`. [Recorrido y cifras esperadas](docs/PLAN_DEMO_FUNCIONAL.md). Implementación local; no publicada.
+> **V1 web manual · 16 de octubre de 2026:** captura de ingresos/egresos y estimación inicial 30/60/90 desde todo el historial hasta el corte, confirmado completo y con mínimo siete días, en la rama `codex/v1-manual-transactions`. [Recorrido y cifras esperadas](docs/PLAN_DEMO_FUNCIONAL.md). Implementación local; no publicada.
 
 > **Alcance académico anterior, 15 de octubre de 2026:** [resumen de objetivos y pendientes](docs/ESTADO_Y_PENDIENTES.md), [índice de documentación](docs/README.md) y [verificaciones](docs/IMPLEMENTATION_STATUS.md). La primera versión de escritorio funcional está entregada para pruebas; el alcance académico completo sigue parcial. [Hoja de ruta y V2 móvil](docs/ROADMAP_ENTREGABLES.md).
 

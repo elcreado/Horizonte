@@ -88,3 +88,28 @@ a { color: #215f4e; }
 :where(a, button, input, select, textarea, summary):focus-visible { outline: 3px solid #215f4e; outline-offset: 3px; }
 main:focus { outline: none; }
 @media (max-width: 650px) { .obligation-form { grid-template-columns: 1fr; } }
+
+
+/* Navegación del espacio financiero */
+.dashboard-layout { display: grid; grid-template-columns: 248px minmax(0, 1fr); max-width: 1680px; margin: 0 auto; align-items: start; }
+.dashboard-sidebar { min-width: 0; position: sticky; top: 0; padding: 28px 18px; height: 100vh; overflow-y: auto; border-right: 1px solid #dce5dd; background: #edf2eb; }
+.sidebar-group { margin-bottom: 24px; }
+.sidebar-group p { font-size: 10px; text-transform: uppercase; letter-spacing: .13em; margin: 0 12px 8px; font-weight: 700; }
+.sidebar-group a { display: block; padding: 11px 12px; margin: 3px 0; border-radius: 8px; text-decoration: none; font-size: 14px; }
+.sidebar-group a:hover { background: #e0e9dc; }
+.sidebar-group a[aria-current="page"] { background: #215f4e; color: #fff; font-weight: 600; }
+.sidebar-help { padding: 12px; font-size: 12px; border-top: 1px solid #d5dfd2; }
+.dashboard-content { width: 100%; min-width: 0; padding: 32px; }
+.dashboard-content > .toolbar { align-items: flex-start; }
+.manual-movement-fields { border: 0; padding: 0; margin: 22px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 1000px) { .dashboard-layout { grid-template-columns: 210px minmax(0, 1fr); } .dashboard-content { padding: 24px 20px; } header { gap: 16px; flex-wrap: wrap; } }
+@media (max-width: 700px) {
+  .dashboard-layout { grid-template-columns: 1fr; }
+  .dashboard-sidebar { position: static; height: auto; padding: 12px 16px; border-right: 0; border-bottom: 1px solid #dce5dd; }
+  .dashboard-sidebar nav { display: flex; overflow-x: auto; gap: 20px; }
+  .sidebar-group { min-width: max-content; margin-bottom: 0; }
+  .sidebar-group a { display: inline-block; }
+  .sidebar-help { display: none; }
+  .dashboard-content { padding: 24px 16px; }
+  .manual-movement-fields { grid-template-columns: 1fr; }
+}

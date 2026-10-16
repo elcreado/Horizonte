@@ -4129,7 +4129,7 @@
           }
         },
         "x-contract-status": "experimental-forecast-fields-documented",
-        "description": "Todos los miembros. Calcula desde el corte común de saldos COP y cobertura declarada, manual_average usa siete días completos; los otros métodos requieren 90. sin guardar ejecución ni modificar saldos. Métodos de referencia experimentales; hybrid_weekly incorpora recurrencias confirmadas vigentes y obligaciones sin duplicarlas. No ofrece probabilidad de déficit ni cuantiles calibrados. Una declaración de cobertura no verifica que el extracto sea completo. Para congelar el resultado usar forecast-runs."
+        "description": "Todos los miembros. Calcula desde el corte común de saldos COP y cobertura declarada, manual_average usa todo el historial registrado hasta el corte, con cobertura completa y mínimo siete días; los otros métodos requieren 90. sin guardar ejecución ni modificar saldos. Métodos de referencia experimentales; hybrid_weekly incorpora recurrencias confirmadas vigentes y obligaciones sin duplicarlas. No ofrece probabilidad de déficit ni cuantiles calibrados. Una declaración de cobertura no verifica que el extracto sea completo. Para congelar el resultado usar forecast-runs."
       }
     },
     "/api/companies/{company_id}/forecast-runs/": {
@@ -8200,7 +8200,7 @@
           }
         },
         "x-contract-status": "manual-entry-fields-documented",
-        "description": "Alta manual owner/accountant con sesión y CSRF. Saldo al corte no cambia. Clave UUID por empresa: reintento idéntico 200, contenido distinto 409. Fecha hasta hoy y corte; cuenta manual propia. Retira cobertura si modifica el periodo confirmado. Auditoría y recibo inmutable atómicos.",
+        "description": "Alta manual owner/accountant con sesión y CSRF. Saldo al corte no cambia. Clave UUID por empresa: reintento idéntico 200, contenido distinto 409. Fecha hasta hoy, por defecto hoy en America/Bogota; admite fechas posteriores al corte para registrar actividad diaria. Solo operaciones hasta el corte alimentan la predicción. Cuenta manual propia. Retira cobertura si modifica el periodo confirmado. Auditoría y recibo inmutable atómicos.",
         "requestBody": {
           "required": true,
           "content": {
@@ -8210,7 +8210,6 @@
                 "required": [
                   "request_id",
                   "account_id",
-                  "date",
                   "direction",
                   "amount",
                   "description"
@@ -8226,7 +8225,8 @@
                   },
                   "date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "description": "Opcional: hoy en America/Bogota por defecto; nunca futura."
                   },
                   "direction": {
                     "type": "string",

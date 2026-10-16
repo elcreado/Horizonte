@@ -151,7 +151,7 @@ def apply_manual_contract(operation):
     operation["x-contract-status"] = "manual-entry-fields-documented"
     operation.pop("x-request-schema-pending", None)
     operation["description"] = (
-        "Alta manual owner/accountant con sesión y CSRF. Saldo al corte no cambia. Clave UUID por empresa: reintento idéntico 200, contenido distinto 409. Fecha hasta hoy y corte; cuenta manual propia. Retira cobertura si modifica el periodo confirmado. Auditoría y recibo inmutable atómicos."
+        "Alta manual owner/accountant con sesión y CSRF. Saldo al corte no cambia. Clave UUID por empresa: reintento idéntico 200, contenido distinto 409. Fecha hasta hoy, por defecto hoy en America/Bogota; admite fechas posteriores al corte para registrar actividad diaria. Solo operaciones hasta el corte alimentan la predicción. Cuenta manual propia. Retira cobertura si modifica el periodo confirmado. Auditoría y recibo inmutable atómicos."
     )
     operation["requestBody"] = {
         "required": True,
@@ -162,7 +162,6 @@ def apply_manual_contract(operation):
                     "required": [
                         "request_id",
                         "account_id",
-                        "date",
                         "direction",
                         "amount",
                         "description",
@@ -170,7 +169,11 @@ def apply_manual_contract(operation):
                     "properties": {
                         "request_id": {"type": "string", "format": "uuid"},
                         "account_id": {"type": "integer", "minimum": 1},
-                        "date": {"type": "string", "format": "date"},
+                        "date": {
+                            "type": "string",
+                            "format": "date",
+                            "description": "Opcional: hoy en America/Bogota por defecto; nunca futura.",
+                        },
                         "direction": {"type": "string", "enum": ["in", "out"]},
                         "amount": {
                             "type": "string",

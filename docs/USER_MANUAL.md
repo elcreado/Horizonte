@@ -4,14 +4,96 @@ Revisión documental: 16 de octubre de 2026. Describe la versión funcional de p
 no certifica el cierre académico ni disponibilidad remota actual. [Estado y pendientes](ESTADO_Y_PENDIENTES.md).
 Utilizar empresas, archivos y correos de prueba. No cargar información bancaria real.
 
+## Probar la web localmente desde CMD (Windows)
+
+Abre **dos ventanas de Símbolo del sistema (CMD)**: una para Django y otra para React/Vite. Necesitas Python 3.13 y Node.js con npm instalados. Esta modalidad usa SQLite local y no requiere Docker ni configurar el alojamiento.
+
+### 1. Preparación inicial (solo la primera vez)
+
+En CMD, entra a la raíz del proyecto y prepara las dependencias:
+
+```bat
+cd /d C:\Users\elcre\Desktop\Programas\Proyecto
+py -3.13 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+cd frontend
+npm ci
+```
+
+Si `.venv` y las dependencias ya están preparadas, puedes omitir este paso. Repite la instalación de dependencias cuando cambien sus archivos de requisitos. Si guardas el proyecto en otra carpeta, sustituye la ruta en los comandos.
+
+### 2. Ventana CMD 1: encender el backend
+
+```bat
+cd /d C:\Users\elcre\Desktop\Programas\Proyecto
+set DJANGO_DEBUG=1
+set POSTGRES_HOST=
+set BACKGROUND_MODE=database
+.venv\Scripts\python.exe backend\manage.py migrate
+.venv\Scripts\python.exe backend\manage.py runserver 127.0.0.1:8000
+```
+
+Espera a que aparezca `Starting development server at http://127.0.0.1:8000/` y deja esta ventana abierta. `migrate` prepara o actualiza la base SQLite en `backend\db.sqlite3`; los datos se conservan entre arranques. No cargues `.env.hosted` en esta sesión. Los comandos usan el Python del entorno virtual directamente, por lo que no necesitas activarlo.
+
+### 3. Ventana CMD 2: encender el frontend
+
+```bat
+cd /d C:\Users\elcre\Desktop\Programas\Proyecto\frontend
+npm run dev -- --port 5173 --strictPort
+```
+
+Deja también esta ventana abierta. Abre **[http://127.0.0.1:5173](http://127.0.0.1:5173)** en el navegador. Usa esta dirección para probar la interfaz: Vite envía automáticamente las solicitudes `/api` al backend en el puerto 8000. No hace falta ejecutar `npm run build` para este modo de desarrollo.
+
+### 4. Probar movimientos y predicciones
+
+Desde Inicio, elige crear cuenta y empresa; declara la cuenta manual, el saldo y su corte. Luego registra ingresos y egresos y sigue el apartado «Primera versión web» de este manual. Para ver la estimación inicial, registra toda la actividad de siete días y confirma ese periodo en Saldos de cuentas. Puedes reproducir las cifras del [guion de prueba](PLAN_DEMO_FUNCIONAL.md).
+
+### 5. Opcional: procesar archivos y Mock Bank
+
+La captura manual y las predicciones funcionan con las dos ventanas anteriores. Para probar importaciones CSV/XLSX/XML o sincronizar Mock Bank, abre una **tercera ventana CMD** y ejecuta el worker de la cola local:
+
+```bat
+cd /d C:\Users\elcre\Desktop\Programas\Proyecto
+set DJANGO_DEBUG=1
+set POSTGRES_HOST=
+set BACKGROUND_MODE=database
+.venv\Scripts\python.exe backend\manage.py run_background
+```
+
+Sin este proceso, esos trabajos permanecen en cola. Este modo tampoco necesita Redis.
+
+### Apagar y resolver problemas básicos
+
+- Para detener cada servidor o el worker, pulsa **Ctrl+C** en su ventana CMD. Para volver a encenderlos, repite los pasos 2 y 3 (y el 5 si lo necesitas).
+- Si CMD no reconoce `py`, `node` o `npm`, comprueba su instalación y abre una ventana CMD nueva.
+- Si aparece un error de módulo de Python o faltan paquetes de Vite, repite la preparación de dependencias.
+- Si el puerto 8000 o 5173 está ocupado, detén la instancia anterior con Ctrl+C y vuelve a iniciar. Conserva estos puertos para mantener el proxy y la configuración local de CSRF.
+- Si la interfaz abre pero no puede consultar datos, comprueba que el backend siga abierto en el puerto 8000 y que estés entrando por `http://127.0.0.1:5173`.
+
+## Secciones del dashboard
+
+La barra lateral separa las herramientas; cada opción abre su propia vista y conserva la empresa seleccionada. Los enlaces permiten volver atrás o recargar directamente una sección. En pantallas pequeñas la navegación se adapta a una franja horizontal.
+
+| Grupo | Secciones |
+|---|---|
+| Operación | Resumen; Movimientos; Cobros y pagos con calendario; Facturas |
+| Análisis | Predicciones y recurrencias; Historial y categorías; Alertas de liquidez |
+| Configuración | Cuentas y saldos; Fuentes de datos (archivos o Mock Bank); Reglas y comercios |
+
+La conexión bancaria es opcional. Para llevar el registro por tu cuenta, entra en **Movimientos**. La fecha comienza en **hoy, hora de Colombia**, y vuelve a hoy después de guardar. Cámbiala cuando registres una operación pasada. Puedes guardar varios ingresos y egresos el mismo día, incluso con la misma descripción e importe; cada guardado confirmado representa una operación nueva. Reintentar un envío sin confirmar conserva su identidad para evitar duplicados.
+
+Puedes registrar operaciones de hoy aunque el corte de la cuenta sea anterior. Esos movimientos se guardan en el historial, pero entran en la predicción cuando actualices el corte y su saldo en **Cuentas y saldos**. El saldo no cambia automáticamente: debe representar el dinero disponible al corte, incluidos los movimientos de ese día.
+
+La **estimación inicial** considera todos los movimientos registrados anteriores o iguales al corte, desde el primero, y no solo los últimos siete días. Confirma la cobertura completa de ese intervalo, con un mínimo de siete días. Los movimientos posteriores al corte se excluyen hasta actualizarlo. Las conciliaciones siguen evitando contar pagos dos veces; los métodos estadísticos avanzados conservan sus ventanas y requisitos de historial.
+
 ## Primera versión web: movimientos y predicciones
 
 1. Entrar desde el navegador y crear usuario/empresa con cuenta manual, saldo COP y corte.
-2. En Registrar movimiento elegir cuenta, fecha hasta el corte, ingreso/egreso, importe positivo y descripción. La categoría es opcional; vacía usa reglas automáticas.
+2. En Movimientos elegir cuenta, fecha (hoy por defecto o un día pasado), ingreso/egreso, importe positivo y descripción. La categoría es opcional; vacía usa reglas automáticas.
 3. Guardar y revisar el historial. El saldo declarado ya incluye el historial y no cambia por el alta. Ajustarlo explícitamente si es necesario.
 4. Si falla la conexión, usar Reintentar guardado con los mismos datos; no recargar la página antes de confirmar el resultado. La clave de reintento se conserva mientras el formulario siga abierto.
-5. Registrar toda la actividad de al menos siete días hasta el corte. Abrir Confirmar historial completo en Saldos de cuentas y elegir la fecha inicial, como mínimo seis días antes del corte. Días sin movimientos se consideran cero solo bajo esa confirmación.
-6. En Predicciones con tus datos consultar la estimación inicial y cambiar 30/60/90 días. Registrar compromisos futuros en Obligaciones para incorporarlos con sus fechas.
+5. Registrar toda la actividad hasta el corte. En Cuentas y saldos abrir Confirmar historial completo y elegir el inicio del historial registrado, como mínimo seis días antes del corte. Días sin movimientos se consideran cero solo bajo esa confirmación.
+6. En Predicciones consultar la estimación inicial y cambiar 30/60/90 días. Registrar compromisos futuros en Obligaciones para incorporarlos con sus fechas.
 7. Guardar el pronóstico para conservarlo. Un movimiento nuevo dentro del periodo retira la confirmación: revisar y confirmar de nuevo. Los métodos más amplios requieren 90 días completos; la estimación inicial no ofrece cuantiles ni probabilidades.
 
 El lector consulta; propietario y contador registran. Una cuenta conectada se actualiza desde su fuente y no acepta captura manual. [Guion con cifras esperadas](PLAN_DEMO_FUNCIONAL.md).
