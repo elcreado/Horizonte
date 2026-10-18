@@ -1,3 +1,4 @@
+import os
 from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import patch
@@ -71,7 +72,7 @@ class CashflowFixTests(TestCase):
             calendar = self.client.get(
                 f"/api/companies/{self.company.pk}/obligation-calendar/?month=2026-10"
             ).json()
-            self.assertEqual(calendar["days"][0]["payable"], "100")
+            self.assertEqual(Decimal(calendar["days"][0]["payable"]), Decimal("100"))
             dashboard = self.client.get(
                 f"/api/companies/{self.company.pk}/dashboard/?horizon=90"
             ).json()
@@ -198,6 +199,7 @@ class LocalWorkerTests(SimpleTestCase):
         from apps.accounts.management.commands.runserver import Command
 
         with (
+            patch.dict(os.environ, {"DJANGO_LOCAL_WORKER": "1"}),
             patch("apps.accounts.management.commands.runserver.subprocess.Popen") as process,
             patch("django.core.management.commands.runserver.Command.inner_run"),
         ):

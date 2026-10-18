@@ -18,11 +18,11 @@ La distribución por agentes inferior es histórica. El 18 de octubre se ejecuta
 | T02–T03 | Guion y textos actualizados con revisión de Codex sobre dos tareas acotadas de OpenCode. Resumen inmediato y Predicciones al corte se distinguen. |
 | T07–T08 | Pruebas API de errores, roles, idempotencia, caja y obligaciones. La suite verifica el caso −81.000 COP; no sustituye QA completo ni concurrencia PostgreSQL. |
 | T12 | Implementado `prepare_web_demo`: simulación y preparación de dos empresas nuevas para un usuario local existente, con fechas relativas al corte. Nunca borra datos ni cambia contraseñas. SQLite de desarrollo únicamente; pruebas de preservación y reversión atómica. |
-| T13 | Parcial. Nueva prueba de solicitudes simultáneas por propietario/contador para PostgreSQL; se omite con SQLite. Falta ejecutarla en PostgreSQL y registrar resultado; la configuración CI existente ya ejecuta la suite con ese motor. |
+| T13 | Prueba de concurrencia ejecutada y aprobada en PostgreSQL local con Docker el 18 de octubre. Suite completa: 235 pruebas, 233 aprobadas y 2 omitidas por ser del preparador SQLite. La aceptación de seguridad más amplia sigue abierta. |
 | T14–T15 | Parcial. Hay recorridos locales de captura, navegación, CSV y mensualidades; falta cerrar aceptación transversal (red, teclado y usuarios) con la versión final. |
 | T16 | Pendiente: no publicar hasta cerrar dependencias y QA. No se ha desplegado este corte. |
 
-Preparación desde CMD: `python backend\manage.py prepare_web_demo --username TU_USUARIO --dry-run`; después ejecutar sin `--dry-run`. Iniciar sesión con esa cuenta y elegir las empresas nuevas. Ver [manual](USER_MANUAL.md) y [guion](PLAN_DEMO_FUNCIONAL.md).
+Preparación opcional exclusiva de SQLite (no para el entorno Docker): `python backend\manage.py prepare_web_demo --username TU_USUARIO --dry-run`; después ejecutar sin `--dry-run`. Iniciar sesión con esa cuenta y elegir las empresas nuevas. Ver [manual](USER_MANUAL.md) y [guion](PLAN_DEMO_FUNCIONAL.md).
 
 Las tareas de investigación P01–P10, correo real, aceptación de escritorio y móvil mantienen sus límites y prioridades; no se declaran completadas por esta ejecución.
 

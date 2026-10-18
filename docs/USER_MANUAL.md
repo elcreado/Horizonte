@@ -1,76 +1,62 @@
 # Manual de uso y pruebas de Horizonte
 
-Revisión documental: 16 de octubre de 2026. Describe la versión funcional de pruebas;
+Revisión documental: 18 de octubre de 2026. Describe la versión funcional de pruebas;
 no certifica el cierre académico ni disponibilidad remota actual. [Estado y pendientes](ESTADO_Y_PENDIENTES.md).
 Utilizar empresas, archivos y correos de prueba. No cargar información bancaria real.
 
-## Probar la web localmente desde CMD (Windows)
+## Probar la web localmente con Docker Desktop (Windows)
 
-Abre **dos ventanas de Símbolo del sistema (CMD)**: una para Django y otra para React/Vite. Necesitas Python 3.13 y Node.js con npm instalados. Esta modalidad usa SQLite local y no requiere Docker ni configurar el alojamiento.
+Con Docker Desktop iniciado, abre **una ventana de Símbolo del sistema (CMD)** en la raíz del proyecto. Todos los servicios (PostgreSQL, Redis, migraciones, backend, worker Celery y frontend) se levantan en contenedores; **no necesitas instalar Python ni Node.js** en el equipo.
 
-### 1. Preparación inicial (solo la primera vez)
-
-En CMD, entra a la raíz del proyecto y prepara las dependencias:
+### 1. Levantar el entorno
 
 ```bat
 cd /d C:\Users\elcre\Desktop\Programas\Proyecto
-py -3.13 -m venv .venv
-.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
-cd frontend
-npm ci
+docker compose up --build -d --wait
 ```
 
-Si `.venv` y las dependencias ya están preparadas, puedes omitir este paso. Repite la instalación de dependencias cuando cambien sus archivos de requisitos. Si guardas el proyecto en otra carpeta, sustituye la ruta en los comandos.
+`up --build -d --wait` construye las imágenes, arranca los servicios en segundo plano y espera a que estén saludables antes de devolver el control. Repite este mismo comando después de cada edición para reconstruir y volver a arrancar.
 
-### 2. Ventana CMD 1: encender el backend
+### 2. Abrir la aplicación
+
+- Interfaz: **[http://127.0.0.1:5173](http://127.0.0.1:5173)**
+- Salud del backend: **[http://127.0.0.1:8000/api/health/](http://127.0.0.1:8000/api/health/)**
+
+En la interfaz crea o selecciona un usuario y una empresa de prueba. El worker Celery queda incluido en el entorno para procesar las importaciones.
+
+### 3. Revisar el estado y los registros
 
 ```bat
-cd /d C:\Users\elcre\Desktop\Programas\Proyecto
-set DJANGO_DEBUG=1
-set POSTGRES_HOST=
-set BACKGROUND_MODE=database
-.venv\Scripts\python.exe backend\manage.py migrate
-.venv\Scripts\python.exe backend\manage.py runserver 127.0.0.1:8000
+docker compose ps -a
+docker compose logs -f backend worker frontend
 ```
 
-Espera a que aparezca `Starting development server at http://127.0.0.1:8000/` y deja esta ventana abierta. `migrate` prepara o actualiza la base SQLite en `backend\db.sqlite3`; los datos se conservan entre arranques. No cargues `.env.hosted` en esta sesión. Los comandos usan el Python del entorno virtual directamente, por lo que no necesitas activarlo.
+`ps -a` muestra el estado de todos los servicios. Es normal que `migrate` aparezca como `Exited (0)`: terminó las migraciones correctamente. `logs -f` sigue los registros; **Ctrl+C detiene solo la salida de registros, no los servicios**, que siguen ejecutándose.
 
-### 3. Ventana CMD 2: encender el frontend
+### 4. Apagar sin perder datos
 
 ```bat
-cd /d C:\Users\elcre\Desktop\Programas\Proyecto\frontend
-npm run dev -- --port 5173 --strictPort
+docker compose stop
 ```
 
-Deja también esta ventana abierta. Abre **[http://127.0.0.1:5173](http://127.0.0.1:5173)** en el navegador. Usa esta dirección para probar la interfaz: Vite envía automáticamente las solicitudes `/api` al backend en el puerto 8000. No hace falta ejecutar `npm run build` para este modo de desarrollo.
+Detener el entorno con `docker compose stop` o `docker compose down` **conserva el volumen `postgres_data`** y, con él, los datos de PostgreSQL. **Nunca ejecutes `docker compose down -v`**, porque elimina el volumen y borra los datos.
 
-### 4. Probar movimientos y predicciones
+La base SQLite existente en `backend/db.sqlite3` permanece separada y no se transfiere de forma automática al entorno PostgreSQL. Para reutilizar esos datos habría que migrarlos manualmente, algo que este manual no cubre.
 
-Desde Inicio, elige crear cuenta y empresa; declara la cuenta manual, el saldo y su corte. Luego registra ingresos y egresos y sigue el apartado «Primera versión web» de este manual. Para ver la estimación inicial, registra toda la actividad de siete días y confirma ese periodo en Saldos de cuentas. Puedes reproducir las cifras del [guion de prueba](PLAN_DEMO_FUNCIONAL.md).
-
-### 5. Cola de importaciones y Mock Bank
-
-Con `BACKGROUND_MODE=database`, `runserver` inicia automáticamente el worker local: las dos ventanas anteriores bastan también para importar CSV/XLSX/XML y sincronizar Mock Bank. Reinicia el backend después de actualizar esta versión. La consola debe indicar «Cola local activa».
-
-Solo si decides operar el worker por separado, define `set DJANGO_LOCAL_WORKER=0` en la ventana del backend antes de iniciarlo y abre una tercera ventana CMD:
+### 5. Pruebas dentro de los contenedores
 
 ```bat
-cd /d C:\Users\elcre\Desktop\Programas\Proyecto
-set DJANGO_DEBUG=1
-set POSTGRES_HOST=
-set BACKGROUND_MODE=database
-.venv\Scripts\python.exe backend\manage.py run_background
+docker compose exec backend python backend/manage.py test backend/tests --noinput
+docker compose exec frontend npm run build
 ```
 
-No inicies ese worker adicional si `runserver` ya muestra «Cola local activa». La cola de BD no necesita Redis. Una importación ya en cola se procesa al arrancar el worker; consulta el resultado antes de volver a subirla.
+El primer comando crea y elimina la base aislada `test_liquidity` del PostgreSQL local y ejecuta las pruebas del backend; el segundo compila el frontend. Tras cualquier cambio, vuelve a ejecutar `docker compose up --build -d --wait` para reconstruir el entorno.
 
-### Apagar y resolver problemas básicos
+### Problemas de arranque
 
-- Para detener cada servidor o el worker, pulsa **Ctrl+C** en su ventana CMD. Para volver a encenderlos, repite los pasos 2 y 3 (y el 5 si lo necesitas).
-- Si CMD no reconoce `py`, `node` o `npm`, comprueba su instalación y abre una ventana CMD nueva.
-- Si aparece un error de módulo de Python o faltan paquetes de Vite, repite la preparación de dependencias.
-- Si el puerto 8000 o 5173 está ocupado, detén la instancia anterior con Ctrl+C y vuelve a iniciar. Conserva estos puertos para mantener el proxy y la configuración local de CSRF.
-- Si la interfaz abre pero no puede consultar datos, comprueba que el backend siga abierto en el puerto 8000 y que estés entrando por `http://127.0.0.1:5173`.
+- Si Docker no responde, abre Docker Desktop y espera a que el motor Linux esté listo.
+- Si un puerto está ocupado (5173, 8000, 5432 o 6379), detén la instancia anterior que lo utiliza y repite el arranque. Los scripts no cierran procesos ajenos.
+- Si falla un servicio, consulta `docker compose logs migrate backend worker frontend`; para una importación pendiente revisa especialmente `worker`.
 
 ## Secciones del dashboard
 

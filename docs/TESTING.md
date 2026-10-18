@@ -1,6 +1,20 @@
 # Pruebas y arranque vigentes
 
-Revisión: **15 de octubre de 2026**. Para el estado de requisitos consultar
+## Verificación Docker local — 18 de octubre de 2026
+
+Flujo principal: `docker compose up --build -d --wait`. PostgreSQL, Redis, backend,
+worker Celery y frontend activos; migraciones finalizadas con código 0. API directa
+y vía Vite responden; Celery responde a `inspect ping`. Se conserva `postgres_data`.
+
+Suite PostgreSQL ejecutada: **235 pruebas, 233 aprobadas y 2 omitidas** (preparación
+de demo exclusiva de SQLite). Incluye concurrencia de solicitudes con el mismo UUID.
+Ruff check y formato: 208 archivos; migraciones sin cambios; frontend compilado.
+La primera pasada detectó fixtures/configuración ausentes en el contenedor y dos
+supuestos de entorno en pruebas; se corrigieron y se repitió la suite completa.
+No se ha desplegado este corte ni se certifica aceptación visual completa.
+
+
+Revisión: **18 de octubre de 2026**. Para el estado de requisitos consultar
 [resumen](ESTADO_Y_PENDIENTES.md); resultados actuales en [matriz](IMPLEMENTATION_STATUS.md).
 
 ## Usuario final: escritorio sin Docker
@@ -34,14 +48,41 @@ y ejecutar en un entorno local autorizado; no confundirlo con una prueba aprobad
 CI contiene backend, backend-postgres con BD efímera, frontend y desktop. El job desktop
 solo usa Node: no instala ni prueba visualmente la aplicación.
 
-## Desarrollo local opcional
+## Pruebas locales con Docker (flujo principal)
 
-- Requiere Python/Node, dependencias y Docker Desktop para el flujo de scripts existente.
-- `scripts/start-dev.ps1` inicia dependencias, backend, worker y frontend; abrir
-  `http://127.0.0.1:5173/`. Compose solo levanta PostgreSQL/Redis.
-- Scripts separados: `start-backend.ps1` y `start-worker.ps1`. No dejar el frontend activo
-  esperando que el usuario arranque un backend que no se ha iniciado.
-- `npm --prefix desktop start` permite HTTP local solo en desarrollo; el instalador exige HTTPS.
+Requiere Docker Desktop iniciado con contenedores Linux y Docker Compose. Desde CMD,
+en la raíz del proyecto:
+
+```bat
+docker compose config --quiet
+docker compose up --build -d --wait
+docker compose ps -a
+```
+
+Abrir http://127.0.0.1:5173. Compose inicia PostgreSQL, Redis, migraciones,
+Django, el worker Celery de importaciones y Vite. `migrate` termina con código 0;
+los demás servicios permanecen activos. No requiere Python/Node en el host.
+
+```bat
+docker compose logs -f backend worker frontend
+docker compose exec backend python backend/manage.py check
+docker compose exec backend python backend/manage.py makemigrations --check --dry-run
+docker compose exec backend ruff check backend
+docker compose exec backend ruff format --check backend
+docker compose exec backend python backend/manage.py test backend/tests --noinput
+docker compose exec frontend npm run build
+```
+
+La suite crea y elimina exclusivamente `test_liquidity` en el PostgreSQL local.
+No cambiar las variables para apuntar a servicios alojados. Los datos de la app
+permanecen en `postgres_data`; `docker compose stop` los conserva y
+`docker compose down` también conserva el volumen. No usar `down -v`.
+La base previa `backend/db.sqlite3` se conserva separada: no se importa automáticamente.
+Usar un usuario/empresa de pruebas de esta base PostgreSQL desde la interfaz.
+
+Repetir `docker compose up --build -d --wait` después de modificar código o dependencias.
+Los scripts `start-dev.ps1`, `start-backend.ps1` y `start-worker.ps1` usan Compose;
+no abren procesos Python/Node del host. El instalador remoto sigue siendo otro entorno.
 
 ## Datos y límites de prueba
 

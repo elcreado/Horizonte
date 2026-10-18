@@ -1,6 +1,20 @@
 # Estado de implementación
 
-Revisión de documentación: **18 de octubre de 2026**. Entrega web en `codex/v1-manual-transactions`. La verificación histórica conserva las cifras del 16 de octubre; el nuevo corte del 18 de octubre figura al final.
+## Verificación Docker local — 18 de octubre de 2026
+
+Flujo principal: `docker compose up --build -d --wait`. PostgreSQL, Redis, backend,
+worker Celery y frontend activos; migraciones finalizadas con código 0. API directa
+y vía Vite responden; Celery responde a `inspect ping`. Se conserva `postgres_data`.
+
+Suite PostgreSQL ejecutada: **235 pruebas, 233 aprobadas y 2 omitidas** (preparación
+de demo exclusiva de SQLite). Incluye concurrencia de solicitudes con el mismo UUID.
+Ruff check y formato: 208 archivos; migraciones sin cambios; frontend compilado.
+La primera pasada detectó fixtures/configuración ausentes en el contenedor y dos
+supuestos de entorno en pruebas; se corrigieron y se repitió la suite completa.
+No se ha desplegado este corte ni se certifica aceptación visual completa.
+
+
+Revisión de documentación: **18 de octubre de 2026**. Entrega web en `codex/v1-manual-transactions`. La verificación histórica conserva las cifras del 16 de octubre; los cortes de ejecución anteriores se conservan abajo y la verificación Docker vigente encabeza este documento.
 
 ## Implementado en esta rama
 
@@ -44,7 +58,7 @@ La matriz académica detallada permanece en [estado y pendientes](ESTADO_Y_PENDI
 
 - Dos tareas documentales ejecutadas por OpenCode en worktrees aislados, después de simulación y autorización del envío limitado. Codex inspeccionó reportes, archivos, diffs y corrigió una imprecisión financiera antes de integrar. La carpeta original `.agents/` se conservó por SHA-256.
 - T12: comando `prepare_web_demo --username TU_USUARIO --dry-run` y ejecución sin esa opción. Crea dos empresas sintéticas nuevas en SQLite local; no borra datos ni modifica contraseñas. Pruebas de simulación sin escrituras, repetición con lotes nuevos, cifras financieras y rollback de toda la preparación ante fallos.
-- T13: prueba PostgreSQL de un mismo UUID enviado simultáneamente por propietario y contador; espera una sola transacción, un recibo y una auditoría, con respuestas 201/200. Incluida en la suite CI existente, pero no ejecutada aquí por usar SQLite.
+- T13: prueba PostgreSQL de un mismo UUID enviado simultáneamente por propietario y contador; espera una sola transacción, un recibo y una auditoría, con respuestas 201/200. Incluida en la suite CI existente; posteriormente ejecutada y aprobada en Docker/PostgreSQL, según la verificación superior.
 - Suite completa del 18 de octubre: 235 pruebas, 229 aprobadas y seis omitidas por requerir PostgreSQL (cinco anteriores y la nueva de concurrencia). Ruff, formato, comprobación de migraciones y build TypeScript/Vite aprobados. Sin nuevas migraciones.
 - Preparación real local precedida por dry-run; navegador verificó el caso de obligaciones −81.000 COP y el pronóstico manual a 30/60/90 con corte relativo al día del ensayo. Evidencia detallada en [TESTING](TESTING.md).
 - T14–T16 siguen parciales/pendientes: no se declara QA transversal, concurrencia PostgreSQL ni despliegue remoto completos. Ver [roadmap actualizado](ROADMAP_TRABAJO_IA.md).

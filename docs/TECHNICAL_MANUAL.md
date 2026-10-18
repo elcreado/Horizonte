@@ -1,6 +1,6 @@
 # Manual técnico vigente
 
-Revisión: **15 de octubre de 2026**. Arquitectura inspeccionada en código; estado remoto
+Revisión: **18 de octubre de 2026**. Arquitectura inspeccionada en código; estado remoto
 histórico del 5 de octubre, sin recertificar disponibilidad hoy. [Brechas](ESTADO_Y_PENDIENTES.md).
 
 ## Componentes
@@ -15,6 +15,18 @@ histórico del 5 de octubre, sin recertificar disponibilidad hoy. [Brechas](ESTA
   Celery/Redis sigue como alternativa de desarrollo; no es requisito del usuario final.
 - Electron/NSIS: cliente Windows x64 en línea. No contiene Python, backend ni claves de BD;
   exige HTTPS empaquetado, Node oculto, sandbox y permisos denegados. No ofrece modo offline.
+
+## Entorno local Docker — 18 de octubre de 2026
+
+`docker compose up --build -d --wait` inicia PostgreSQL 16, Redis 7, migraciones,
+Django en 8000, Celery y Vite en 5173. El proxy usa `API_PROXY_TARGET=http://backend:8000`
+solo dentro del contenedor; fuera de Docker conserva localhost. `BACKGROUND_MODE=celery`
+y `DJANGO_LOCAL_WORKER=0` evitan iniciar además el worker de cola BD.
+
+El volumen `postgres_data` conserva su nombre y credenciales locales. No se carga
+`.env.hosted`, no se cambia la configuración remota ni se copia SQLite a PostgreSQL.
+Los Dockerfiles instalan las dependencias versionadas; `.dockerignore` excluye entornos,
+secretos, bases SQLite y artefactos locales. Ver [arranque y pruebas](TESTING.md).
 
 ## Alojamiento y configuración
 

@@ -11,7 +11,7 @@ Revisión: **18 de octubre de 2026**. Rama: `codex/v1-manual-transactions`.
 - **Resumen inmediato** (Operación → Resumen): promedio neto diario de todo el historial registrado hasta la última operación ocurrida (o el corte declarado si es posterior), más compromisos pendientes. No exige confirmar cobertura.
 - **Predicciones avanzadas** (Análisis → Predicciones): requieren cobertura confirmada y una fecha de corte común entre cuentas COP.
 - **Pagos y cobros mensuales** (Operación → Cobros y pagos): programación manual de nómina u otros importes.
-- Arranque local con `manage.py runserver` y `BACKGROUND_MODE=database`: el worker de la cola de base de datos se inicia automáticamente.
+- Arranque local con Docker Compose: frontend, backend, PostgreSQL, Redis y worker Celery incluidos.
 
 ## Recorrido y cifras esperadas
 
@@ -36,7 +36,7 @@ Resumen y predicciones avanzadas son distintos: el Resumen usa el promedio neto 
 
 ## Arranque local
 
-Dos ventanas CMD (backend Django y frontend React/Vite); SQLite local, sin Docker. En el backend define `DJANGO_DEBUG=1`, `POSTGRES_HOST=` y `BACKGROUND_MODE=database`, ejecuta `migrate` y luego `runserver`. Con esa configuración, `manage.py runserver` arranca solo el worker local de la cola de base de datos y la consola muestra «Cola local activa»: las dos ventanas bastan para importar archivos o sincronizar Mock Bank. Solo si decides operar el worker por separado, define `DJANGO_LOCAL_WORKER=0` y abre una tercera ventana con `manage.py run_background`.
+Con Docker Desktop abierto, desde CMD en la raíz ejecutar `docker compose up --build -d --wait` y abrir http://127.0.0.1:5173. Las migraciones y el worker de importaciones están incluidos. Los datos permanecen en el volumen PostgreSQL; la SQLite anterior se conserva separada. Ver comandos completos en el manual.
 
 Para iniciar localmente y consultar evidencia: [pruebas](TESTING.md), [manual](USER_MANUAL.md), [estado](IMPLEMENTATION_STATUS.md). Escritorio, móvil, banca externa, correo real y validación científica siguen fuera de esta entrega. No se ha publicado esta rama en el alojamiento.
 
