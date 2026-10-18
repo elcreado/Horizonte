@@ -261,3 +261,22 @@ El Resumen ahora combina movimientos registrados y compromisos futuros. Cada ing
 En **Cobros y pagos → Pagos y cobros mensuales**, introduce concepto (por ejemplo «Sueldos»), valor, día 1 y fecha inicial; pulsa **Programar todos los meses**. Deja vacía la fecha final para que continúe cada mes. Cada vencimiento aparece en calendario y proyecciones; febrero y los meses cortos usan el último día si elegiste 29–31. No realiza transferencias. Para cambiar importe o frecuencia, detén la programación y crea otra. Detener cancela vencimientos futuros sin conciliaciones y conserva historial. Cuando el pago ya ocurra, concílialo con su movimiento para no contarlo de nuevo como pendiente ni como flujo variable.
 
 Para probar la importación, reinicia el backend, entra en **Fuentes de datos**, descarga el ejemplo y súbelo a la cuenta manual. Debe terminar con dos movimientos nuevos; una segunda carga muestra duplicados omitidos. Los estados y errores aparecen bajo el formulario. Si el archivo contiene fechas posteriores al saldo declarado, actualiza primero el corte. No se necesita ejecutar manualmente un tercer proceso con el arranque local estándar de esta versión.
+
+
+## Preparar una demostración local repetible
+
+Con el entorno local instalado y las migraciones aplicadas, abre CMD en la raíz. Sustituye `TU_USUARIO` por tu usuario ya registrado en esta web:
+
+```bat
+.venv\Scripts\python.exe backend\manage.py prepare_web_demo --username TU_USUARIO --dry-run
+.venv\Scripts\python.exe backend\manage.py prepare_web_demo --username TU_USUARIO
+```
+
+La primera orden solo muestra el plan. La segunda crea **dos empresas nuevas**, con identificador de lote y fecha de hoy, sin modificar empresas existentes ni la contraseña. Cada nueva ejecución crea otro lote y conserva el anterior. El comando se limita a SQLite local con `DJANGO_DEBUG=1`; no puede preparar datos en PostgreSQL ni producción. `--as-of AAAA-MM-DD` permite fijar un corte pasado para reproducir un ensayo.
+
+Entra con ese usuario y selecciona:
+
+- **Demo V1 Obligaciones**: saldo 500.000 COP, cobro 119.000 a corte+10 y pago 700.000 a corte+15, sin historial variable. Resumen: −81.000 desde el pago; umbral 100.000, diferencia al mínimo 181.000 COP.
+- **Demo V1 Historial manual**: saldo declarado 500.000, ingreso 70.000 y egreso 140.000 en siete días sintéticos completos. Ya tiene cobertura confirmada para Predicciones → Estimación inicial. Saldos finales 30/60/90: 200.000, −100.000 y −400.000 COP. No hay compromisos en este caso.
+
+Los movimientos se identifican como capturas manuales sintéticas y cada lote queda auditado. Para ensayar la captura tú mismo, crea una tercera empresa desde la interfaz; no agregues esos mismos movimientos de nuevo esperando que la curva conserve las cifras iniciales.

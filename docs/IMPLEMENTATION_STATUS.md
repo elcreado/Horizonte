@@ -1,6 +1,6 @@
 # Estado de implementación
 
-Revisión: **16 de octubre de 2026**. Entrega web en `codex/v1-manual-transactions`.
+Revisión de documentación: **18 de octubre de 2026**. Entrega web en `codex/v1-manual-transactions`. La verificación histórica conserva las cifras del 16 de octubre; el nuevo corte del 18 de octubre figura al final.
 
 ## Implementado en esta rama
 
@@ -8,15 +8,16 @@ Actualización de navegación: dashboard dividido por barra lateral en Operació
 
 - Alta manual de transacciones con cuenta propia manual, ingreso/egreso, fecha, importe y categoría opcional.
 - Recibo inmutable `ManualEntry`, UUID único por empresa, restricción de BD y bloqueo transaccional. El mismo envío devuelve el ID original; contenido distinto con la misma clave devuelve 409. La categoría puede corregirse sin romper el reintento.
-- Validaciones Decimal, fecha hasta hoy (hoy por defecto); el corte limita la predicción, no la captura, roles propietario/contador, sesión/CSRF y auditoría de autor/fecha. Captura manual diferenciada de clasificación manual.
-- Saldo declarado sin modificación; retirada de cobertura cuando cambia historial confirmado.
+- Validaciones Decimal, fecha hasta hoy (hoy por defecto); el corte limita solo el pronóstico experimental avanzado, no la captura ni el resumen; roles propietario/contador, sesión/CSRF y auditoría de autor/fecha. Captura manual diferenciada de clasificación manual.
+- Saldo declarado sin modificación y sin contarse dos veces: solo las operaciones posteriores al saldo actualizan la caja disponible, mientras el historial anterior alimenta la estimación sin duplicar caja; retirada de cobertura cuando cambia el historial confirmado.
 - Refresco de vistas financieras. Claves React distintas por sección para evitar duplicados al actualizar.
-- Estimación inicial de promedio neto diario de todo el historial registrado hasta el corte, con mínimo siete días completos, 30/60/90 días, gráfica y ejecuciones guardadas. Conserva los modelos experimentales previos y el escenario contractual.
+- Resumen: promedio neto diario de movimientos registrados y compromisos conocidos, disponible de inmediato, sin exigir confirmaciones ni esperar el corte. El pronóstico experimental avanzado (30/60/90 días, gráfica y ejecuciones guardadas) sí exige historial confirmado a través del corte común y un mínimo de siete días completos. Conserva los modelos experimentales previos y el escenario contractual.
+- Programaciones mensuales persistentes, con migración `forecast.0007_monthlyschedule_monthlyoccurrence_and_more`, y worker de cola local automático con `runserver` frente a workers separados en producción.
 - Contratos OpenAPI actualizados y migración `banking.0011_manualentry`.
 
-## Verificación local
+## Verificación histórica — 16 de octubre
 
-- Suite backend: 231 pruebas, 226 aprobadas y cinco omitidas por requerir PostgreSQL. La repetición fuera del sandbox pasó; la ejecución restringida falló al limpiar temporales. Inventario API regenerado antes de la repetición.
+- Evidencia histórica del 16 de octubre de 2026, no una ejecución nueva: suite backend con 231 pruebas, 226 aprobadas y cinco omitidas por requerir PostgreSQL. La repetición fuera del sandbox pasó; la ejecución restringida falló al limpiar temporales. Inventario API regenerado antes de la repetición.
 - Ruff lint y formato aprobados; sin migraciones pendientes de generar.
 - TypeScript y build Vite aprobados.
 - La migración se aplicó a SQLite local. Ninguna BD remota se migró.
@@ -37,3 +38,13 @@ La matriz académica detallada permanece en [estado y pendientes](ESTADO_Y_PENDI
 - Migración `forecast.0007_monthlyschedule_monthlyoccurrence_and_more` aplicada solo a SQLite local.
 - `manage.py runserver` selecciona cola de BD local salvo configuración explícita e inicia un worker hijo en DEBUG; se detiene junto al servidor. En producción se mantienen workers separados. Ya no hace falta una tercera consola para importar con el arranque local estándar.
 - Archivo de ejemplo validado mediante carga multipart y worker real de BD; reimportarlo omite duplicados. Pruebas y límites en TESTING.md.
+
+
+## Avance y verificación — 18 de octubre de 2026
+
+- Dos tareas documentales ejecutadas por OpenCode en worktrees aislados, después de simulación y autorización del envío limitado. Codex inspeccionó reportes, archivos, diffs y corrigió una imprecisión financiera antes de integrar. La carpeta original `.agents/` se conservó por SHA-256.
+- T12: comando `prepare_web_demo --username TU_USUARIO --dry-run` y ejecución sin esa opción. Crea dos empresas sintéticas nuevas en SQLite local; no borra datos ni modifica contraseñas. Pruebas de simulación sin escrituras, repetición con lotes nuevos, cifras financieras y rollback de toda la preparación ante fallos.
+- T13: prueba PostgreSQL de un mismo UUID enviado simultáneamente por propietario y contador; espera una sola transacción, un recibo y una auditoría, con respuestas 201/200. Incluida en la suite CI existente, pero no ejecutada aquí por usar SQLite.
+- Suite completa del 18 de octubre: 235 pruebas, 229 aprobadas y seis omitidas por requerir PostgreSQL (cinco anteriores y la nueva de concurrencia). Ruff, formato, comprobación de migraciones y build TypeScript/Vite aprobados. Sin nuevas migraciones.
+- Preparación real local precedida por dry-run; navegador verificó el caso de obligaciones −81.000 COP y el pronóstico manual a 30/60/90 con corte relativo al día del ensayo. Evidencia detallada en [TESTING](TESTING.md).
+- T14–T16 siguen parciales/pendientes: no se declara QA transversal, concurrencia PostgreSQL ni despliegue remoto completos. Ver [roadmap actualizado](ROADMAP_TRABAJO_IA.md).

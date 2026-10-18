@@ -8,7 +8,23 @@ Referencias: [plan de demo](PLAN_DEMO_FUNCIONAL.md), [matriz de objetivos y requ
 [convenciones](../CODESTYLE.md) y [pruebas](TESTING.md).
 
 Este documento conserva la planificación del 16 de octubre anterior a la implementación. Para el estado actual consultar [IMPLEMENTATION_STATUS](IMPLEMENTATION_STATUS.md). Sus casillas no son una matriz vigente.
-Organiza paquetes delegables a distintos agentes; **no se han iniciado agentes ni implementaciones**.
+La distribución por agentes inferior es histórica. El 18 de octubre se ejecutaron dos tareas documentales de OpenCode en worktrees aislados y Codex revisó e integró sus diffs; las implementaciones financieras permanecen bajo Codex.
+
+## Corte de ejecución — 18 de octubre de 2026
+
+| Paquete | Estado y evidencia actual |
+|---|---|
+| T01–T06, T09–T11 | Base implementada: onboarding, captura manual, contrato, recibos, auditoría, navegación y refresco. Las reglas vigentes son las del código y manual; el contrato mínimo histórico inferior fue ajustado para permitir registrar hoy aunque el corte sea anterior. |
+| T02–T03 | Guion y textos actualizados con revisión de Codex sobre dos tareas acotadas de OpenCode. Resumen inmediato y Predicciones al corte se distinguen. |
+| T07–T08 | Pruebas API de errores, roles, idempotencia, caja y obligaciones. La suite verifica el caso −81.000 COP; no sustituye QA completo ni concurrencia PostgreSQL. |
+| T12 | Implementado `prepare_web_demo`: simulación y preparación de dos empresas nuevas para un usuario local existente, con fechas relativas al corte. Nunca borra datos ni cambia contraseñas. SQLite de desarrollo únicamente; pruebas de preservación y reversión atómica. |
+| T13 | Parcial. Nueva prueba de solicitudes simultáneas por propietario/contador para PostgreSQL; se omite con SQLite. Falta ejecutarla en PostgreSQL y registrar resultado; la configuración CI existente ya ejecuta la suite con ese motor. |
+| T14–T15 | Parcial. Hay recorridos locales de captura, navegación, CSV y mensualidades; falta cerrar aceptación transversal (red, teclado y usuarios) con la versión final. |
+| T16 | Pendiente: no publicar hasta cerrar dependencias y QA. No se ha desplegado este corte. |
+
+Preparación desde CMD: `python backend\manage.py prepare_web_demo --username TU_USUARIO --dry-run`; después ejecutar sin `--dry-run`. Iniciar sesión con esa cuenta y elegir las empresas nuevas. Ver [manual](USER_MANUAL.md) y [guion](PLAN_DEMO_FUNCIONAL.md).
+
+Las tareas de investigación P01–P10, correo real, aceptación de escritorio y móvil mantienen sus límites y prioridades; no se declaran completadas por esta ejecución.
 
 ## Cómo interpretar el orden
 
