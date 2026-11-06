@@ -1,0 +1,21 @@
+{
+  "fecha": "2026-10-30",
+  "alcance": "Ejercicio académico aislado; no modifica backend",
+  "equivalencia": {
+    "estado": "OK",
+    "comprobaciones": 26,
+    "dependencias": "biblioteca estándar; sin BD"
+  },
+  "TDD": {
+    "Red": "El stub acepta45: falla el criterio de rechazo (fallo esperado)",
+    "Green": "Servicio rechaza45 con ValueError",
+    "Refactor": "Guard clause conserva resultados en18combinaciones y8rechazos"
+  },
+  "venta": "Sintaxis compilada con ast.parse en resolver.py; adaptadores y compensación no implementados",
+  "prueba_aislamiento": {
+    "comando": "C:\\Users\\elcre\\Desktop\\Programas\\Proyecto\\.venv\\Scripts\\python.exe C:\\Users\\elcre\\Desktop\\Programas\\Proyecto\\backend\\manage.py test tests.test_application.ApplicationTests.test_company_isolation --verbosity 2",
+    "exit_code": 0,
+    "log": "_trabajo/prueba_aislamiento.log",
+    "resultado": "Pasó"
+  }
+}

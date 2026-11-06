@@ -1,5 +1,7 @@
 # Horizonte: primera versión de escritorio funcional
 
+> Referencia de escritorio/alcance ampliado con evidencia histórica; la prioridad actual es la web local con Docker. Estado y tareas vigentes en [roadmap](../ROADMAP_TRABAJO_IA.md). Esta auditoría no repitió la aceptación del instalador ni del alojamiento.
+
 Alcance acordado el 5 de octubre de 2026: primera versión utilizable de escritorio,
 sin exigir todavía perfección ni cierre de todas las metas académicas y de producción.
 El alcance ampliado y sus validaciones siguen registrados en `../acceptance/V1_ACCEPTANCE.md`.

@@ -2,10 +2,12 @@
 
 > **Revisión documental del 15 de octubre de 2026:** [objetivos y pendientes](docs/ESTADO_Y_PENDIENTES.md) e [índice](docs/README.md). Se conservan los requisitos originales; escritorio funcional no implica cierre académico. Las decisiones y cortes anteriores están separados en `docs/archive/`.
 
-> **Estado de ejecución vigente:** Django + CSRF y React alojados en Render Free, PostgreSQL en Supabase y cliente Windows Electron/NSIS para pruebas sin Docker. ETL CSV/XLSX/XML, Mock Bank, roles, obligaciones y conciliación reversible implementados. Pronósticos y cuantiles estadísticos experimentales, sin calibración demostrada. [Manual](docs/USER_MANUAL.md) · [Aceptación pendiente](docs/acceptance/V1_ACCEPTANCE.md). Respaldo manual únicamente: no activar respaldo diario automático.
+> **Entorno vigente de pruebas locales:** Docker Compose completo con Django, React/Vite, PostgreSQL, Redis y Celery. El alojamiento Render/Supabase y el cliente Windows son un entorno separado con evidencia histórica, sin disponibilidad recertificada. ETL CSV/XLSX/XML, Mock Bank, roles, obligaciones y conciliación reversible implementados. Pronósticos y cuantiles estadísticos experimentales, sin calibración demostrada. [Manual](docs/USER_MANUAL.md) · [Aceptación pendiente](docs/acceptance/V1_ACCEPTANCE.md). Respaldo manual únicamente: no activar respaldo diario automático.
 
 
 **Plataforma de Inteligencia de Liquidez para Microempresas**
+La arquitectura de referencia, Celery Beat, Nginx y las integraciones propuestas son diseño objetivo; no implican que estén instalados. Estado verificado en [matriz](docs/ESTADO_Y_PENDIENTES.md).
+
 Documento técnico de referencia: arquitectura, modelo de datos, APIs, integraciones, ETL, predicción, seguridad, pruebas, CI/CD y roadmap.
 
 ---

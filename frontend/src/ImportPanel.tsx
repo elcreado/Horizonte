@@ -87,7 +87,7 @@ export function ImportPanel({ company, revision, onChanged }: { company: string;
     {statusError && <p className="error" role="alert">{statusError} Se volverá a consultar automáticamente.</p>}
     {accountsError && <p className="error" role="alert">{accountsError} Se volverá a consultar automáticamente.</p>}
     <div aria-live="polite">{jobs.map(job => <p key={job.id}><strong>Importación #{job.id}: </strong>
-      {job.status === 'queued' ? 'En cola o procesando. Puede tardar si el servicio se está reactivando. En local, reinicia el backend con runserver: inicia también la cola. Si usas un worker independiente, comprueba que esté encendido.' : job.status === 'completed' ? `${job.created_count} movimientos nuevos y ${job.duplicate_count} duplicados omitidos.` : job.error}
+      {job.status === 'queued' ? 'En cola o procesando. El estado se actualiza automáticamente. Si tarda, comprueba que el entorno local y su worker estén activos; consulta el apartado de Docker del manual antes de volver a subir el archivo.' : job.status === 'completed' ? `${job.created_count} movimientos nuevos y ${job.duplicate_count} duplicados omitidos.` : job.error}
     </p>)}</div>
   </section>;
 }

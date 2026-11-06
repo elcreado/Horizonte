@@ -1,5 +1,7 @@
 # Instalador Windows de pruebas
 
+> Referencia de escritorio/alcance ampliado con evidencia histórica; la prioridad actual es la web local con Docker. Estado y tareas vigentes en [roadmap](../ROADMAP_TRABAJO_IA.md). Esta auditoría no repitió la aceptación del instalador ni del alojamiento.
+
 Artefacto local comprobado el 5 de octubre de 2026:
 `desktop/release/session-isolation/Horizonte Setup 0.1.0.exe`.
 

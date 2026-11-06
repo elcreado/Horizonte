@@ -44,3 +44,11 @@ correo en memoria y cambio de contraseña mediante el enlace generado. El token 
 reutilizar y el mensaje terminal elimina sus argumentos. También se comprueba rechazo 503
 genérico al fallar inserción, sin mensaje ni correo. El backend de correo en memoria evita
 envíos externos: la prueba no demuestra entrega mediante Resend ni funcionamiento remoto.
+
+## Alcance local actual — 18 de octubre de 2026
+
+El Docker local usa Celery/Redis explícitamente; este documento describe la alternativa
+de cola BD y el alojamiento, no el comando principal de arranque. Ver [TESTING](../TESTING.md).
+`test_background_concurrency.py` también verifica 12 mensajes con cuatro hilos y conexiones
+PostgreSQL independientes, sin dobles reclamaciones. Aprobado en la suite local; no sustituye
+ensayos de procesos distribuidos, suspensión remota o recuperación real ante caída.

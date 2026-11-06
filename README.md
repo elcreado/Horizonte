@@ -1,13 +1,8 @@
 # Plataforma de Inteligencia de Liquidez para Microempresas
 
-> **V1 web manual · 16 de octubre de 2026:** captura de ingresos/egresos y estimación inicial 30/60/90 desde todo el historial hasta el corte, confirmado completo y con mínimo siete días, en la rama `codex/v1-manual-transactions`. [Recorrido y cifras esperadas](docs/PLAN_DEMO_FUNCIONAL.md). Implementación local; no publicada.
-
-> **Alcance académico anterior, 15 de octubre de 2026:** [resumen de objetivos y pendientes](docs/ESTADO_Y_PENDIENTES.md), [índice de documentación](docs/README.md) y [verificaciones](docs/IMPLEMENTATION_STATUS.md). La primera versión de escritorio funcional está entregada para pruebas; el alcance académico completo sigue parcial. [Hoja de ruta y V2 móvil](docs/ROADMAP_ENTREGABLES.md).
-
-> **Cliente alojado (entorno separado):** servidor Render Free con PostgreSQL en Supabase y cliente Windows Electron/NSIS. Inicio es público. Importaciones CSV/XLSX/XML, Mock Bank, obligaciones, conciliaciones y escenarios de caja están implementados; los modelos estadísticos siguen experimentales. [Manual de uso](docs/USER_MANUAL.md), [instalador y huella](docs/desktop/DESKTOP_RELEASE.md) y [aceptación pendiente](docs/acceptance/V1_ACCEPTANCE.md). El objetivo completo todavía no está cerrado.
+> **V1 web local — revisión del 18 de octubre de 2026:** captura manual, dashboard por secciones, Resumen con movimientos, pagos mensuales y Docker completo. [Guion](docs/PLAN_DEMO_FUNCIONAL.md), [requisitos y brechas](docs/ESTADO_Y_PENDIENTES.md), [evidencia](docs/IMPLEMENTATION_STATUS.md), [roadmap](docs/ROADMAP_TRABAJO_IA.md) e [índice documental](docs/README.md).
 >
-> **Arranque y acciones externas:** [docs/TESTING.md](docs/TESTING.md). **Convenciones:** [CODESTYLE.md](CODESTYLE.md). Los cortes antiguos están en [archivo histórico](docs/archive/README.md). La demo no requiere claves bancarias ni servicios de pago.
-
+> Las secciones inferiores conservan el alcance académico original y sus metas, no un certificado de implementación. Escritorio, móvil y alojamiento tienen estados separados. [Auditoría documental](docs/DOCUMENTATION_AUDIT.md). Respaldo manual únicamente.
 
 ## Pruebas locales con Docker
 

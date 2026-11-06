@@ -1,52 +1,11 @@
 # Pruebas y arranque vigentes
 
-## Verificación Docker local — 18 de octubre de 2026
-
-Flujo principal: `docker compose up --build -d --wait`. PostgreSQL, Redis, backend,
-worker Celery y frontend activos; migraciones finalizadas con código 0. API directa
-y vía Vite responden; Celery responde a `inspect ping`. Se conserva `postgres_data`.
-
-Suite PostgreSQL ejecutada: **235 pruebas, 233 aprobadas y 2 omitidas** (preparación
-de demo exclusiva de SQLite). Incluye concurrencia de solicitudes con el mismo UUID.
-Ruff check y formato: 208 archivos; migraciones sin cambios; frontend compilado.
-La primera pasada detectó fixtures/configuración ausentes en el contenedor y dos
-supuestos de entorno en pruebas; se corrigieron y se repitió la suite completa.
-No se ha desplegado este corte ni se certifica aceptación visual completa.
-
-
-Revisión: **18 de octubre de 2026**. Para el estado de requisitos consultar
-[resumen](ESTADO_Y_PENDIENTES.md); resultados actuales en [matriz](IMPLEMENTATION_STATUS.md).
-
-## Usuario final: escritorio sin Docker
-
-- Instalar `desktop/release/session-isolation/Horizonte Setup 0.1.0.exe` en Windows x64.
-- Conectar con `https://horizonte-demo.onrender.com`; necesita internet y puede tardar al despertar.
-- Inicio no exige sesión. Registrarse/acceder y seguir el [manual](USER_MANUAL.md).
-- Usar el [recorrido de aceptación](acceptance/DESKTOP_ACCEPTANCE.md) para comparar importes.
-- No arrancar Docker, Redis, Django ni Vite para consumir la aplicación alojada.
-- Correo real no verificado: para probar recuperación se necesita proveedor/remitente/buzón;
-  para los demás flujos no hacen falta credenciales bancarias reales ni servicios de pago.
-
-## Desarrollador: verificaciones locales
-
-Desde la raíz, con `.venv` y dependencias de frontend/escritorio preparadas:
-
-```powershell
-.venv\Scripts\ruff.exe check backend
-.venv\Scripts\ruff.exe format --check backend
-.venv\Scripts\python.exe backend/manage.py makemigrations --check --dry-run
-.venv\Scripts\python.exe backend/manage.py test backend/tests
-npm --prefix frontend run build
-npm --prefix desktop test
-```
-
-La suite sin variables PostgreSQL usa SQLite y omite comprobaciones específicas de PostgreSQL.
-Nunca apuntar la suite a Supabase ni a datos de usuario: crea/destruye una BD de pruebas.
-Si Windows bloquea la limpieza de temporales en el sandbox, registrar el error de permisos
-y ejecutar en un entorno local autorizado; no confundirlo con una prueba aprobada o un bug funcional.
-
-CI contiene backend, backend-postgres con BD efímera, frontend y desktop. El job desktop
-solo usa Node: no instala ni prueba visualmente la aplicación.
+Revisión: **18 de octubre de 2026**. Guía vigente de pruebas y arranque. El veredicto
+autoritativo de implementación y verificación está en
+[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md); la matriz de requisitos en
+[ESTADO_Y_PENDIENTES.md](ESTADO_Y_PENDIENTES.md). Las narrativas de ejecución anteriores
+se conservan en el [archivo del 18 de octubre](archive/2026-10-18/TESTING.md). Las cifras
+de prueba citadas abajo son evidencia previa, no una ejecución nueva de esta guía.
 
 ## Pruebas locales con Docker (flujo principal)
 
@@ -84,6 +43,22 @@ Repetir `docker compose up --build -d --wait` después de modificar código o de
 Los scripts `start-dev.ps1`, `start-backend.ps1` y `start-worker.ps1` usan Compose;
 no abren procesos Python/Node del host. El instalador remoto sigue siendo otro entorno.
 
+## Verificación Docker local — 18 de octubre de 2026
+
+Evidencia previa (no una ejecución nueva de esta guía); el estado autoritativo vigente
+está en [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+
+Flujo principal: `docker compose up --build -d --wait`. PostgreSQL, Redis, backend,
+worker Celery y frontend activos; migraciones finalizadas con código 0. API directa
+y vía Vite responden; Celery responde a `inspect ping`. Se conserva `postgres_data`.
+
+Suite PostgreSQL ejecutada: **235 pruebas, 233 aprobadas y 2 omitidas** (preparación
+de demo exclusiva de SQLite). Incluye concurrencia de solicitudes con el mismo UUID.
+Ruff check y formato: 208 archivos; migraciones sin cambios; frontend compilado.
+La primera pasada detectó fixtures/configuración ausentes en el contenedor y dos
+supuestos de entorno en pruebas; se corrigieron y se repitió la suite completa.
+No se ha desplegado este corte ni se certifica aceptación visual completa.
+
 ## Datos y límites de prueba
 
 - CSV/XLSX: `external_id,date,amount,description`, ingreso positivo/egreso negativo,
@@ -97,6 +72,40 @@ no abren procesos Python/Node del host. El instalador remoto sigue siendo otro e
 - Pronóstico: saldos COP con mismo corte; cobertura confirmada para métodos experimentales.
   Cuantiles y etiquetas de historial no equivalen a precisión o probabilidad demostrada.
 
+## Desarrollador: verificaciones locales
+
+Verificaciones opcionales en el host, separadas del flujo Docker principal.
+Desde la raíz, con `.venv` y dependencias de frontend/escritorio preparadas:
+
+```powershell
+.venv\Scripts\ruff.exe check backend
+.venv\Scripts\ruff.exe format --check backend
+.venv\Scripts\python.exe backend/manage.py makemigrations --check --dry-run
+.venv\Scripts\python.exe backend/manage.py test backend/tests
+npm --prefix frontend run build
+npm --prefix desktop test
+```
+
+La suite sin variables PostgreSQL usa SQLite y omite comprobaciones específicas de PostgreSQL.
+Nunca apuntar la suite a Supabase ni a datos de usuario: crea/destruye una BD de pruebas.
+Si Windows bloquea la limpieza de temporales en el sandbox, registrar el error de permisos
+y ejecutar en un entorno local autorizado; no confundirlo con una prueba aprobada o un bug funcional.
+
+CI contiene backend, backend-postgres con BD efímera, frontend y desktop. El job desktop
+solo usa Node: no instala ni prueba visualmente la aplicación.
+
+## Usuario final: escritorio sin Docker
+
+Escenario alojado histórico/secundario; el flujo principal de verificación es Docker.
+
+- Instalar `desktop/release/session-isolation/Horizonte Setup 0.1.0.exe` en Windows x64.
+- Conectar con `https://horizonte-demo.onrender.com`; necesita internet y puede tardar al despertar.
+- Inicio no exige sesión. Registrarse/acceder y seguir el [manual](USER_MANUAL.md).
+- Usar el [recorrido de aceptación](acceptance/DESKTOP_ACCEPTANCE.md) para comparar importes.
+- No arrancar Docker, Redis, Django ni Vite para consumir la aplicación alojada.
+- Correo real no verificado: para probar recuperación se necesita proveedor/remitente/buzón;
+  para los demás flujos no hacen falta credenciales bancarias reales ni servicios de pago.
+
 ## Ensayos especializados
 
 - [Conectividad y recuperación](acceptance/QA_CONNECTIVITY.md).
@@ -106,63 +115,59 @@ no abren procesos Python/Node del host. El instalador remoto sigue siendo otro e
   mide HTTP secuencial caliente, no renderizado ni concurrencia. No imprimir sus credenciales.
 - [Investigación](research/README.md): reproducir reportes sin mezclar datos de producción.
 
-Los cortes y comandos anteriores están en [pruebas históricas](archive/2026-10-05/TESTING.md).
-
+Los cortes y comandos anteriores están en el [archivo del 18 de octubre](archive/2026-10-18/TESTING.md)
+y en las [pruebas históricas](archive/2026-10-05/TESTING.md).
 
 ## Verificación V1 manual — 16 de octubre de 2026
 
-Rama `codex/v1-manual-transactions`. Ejecutado:
-
-- `python backend/manage.py test backend/tests --noinput`: 222 pruebas, 217 aprobadas, cinco omitidas por requerir PostgreSQL. Ejecución final fuera del sandbox para permitir limpieza de temporales.
-- `ruff check backend`, `ruff format --check backend`: aprobados.
-- `python backend/manage.py makemigrations --check --dry-run`: sin cambios.
-- `npm run build` en frontend: TypeScript y Vite aprobados.
-- Inventario API regenerado con `python backend/manage.py export_api_inventory`.
-
-QA de navegador local con empresa sintética separada, corte 2026-10-16 y saldo 500.000 COP:
-
-| Caso | Resultado observado |
-|---|---|
-| Inicio público y login | Acceso correcto; datos privados disponibles después de iniciar sesión. |
-| Ingreso manual 70.000 y egreso 140.000 | Ambos guardados, clasificación automática Ventas/Proveedores, cuenta y origen manual visibles. |
-| Actualización | Historial y desglose de categorías actualizados. Se corrigió duplicación de secciones por claves React repetidas. |
-| Saldo declarado | Se mantiene en 500.000 COP. |
-| Sin confirmación | La predicción solicita siete días completos; no interpreta datos faltantes como cero silenciosamente. |
-| Confirmar 2026-10-10 a 2026-10-16 | Entrenamiento siete días y dos movimientos; promedio −10.000 diarios. |
-| Horizonte 30/60/90 | Mínimos 200.000 /−100.000 /−400.000 COP. Primer déficit en 60/90: 2026-12-06. |
-| Guardar pronóstico | Guardado desde la interfaz. |
-| Logout y reingreso | Vuelve a Inicio sin datos financieros; al reingresar persisten ambos movimientos, cobertura y pronóstico guardado. |
-
-Pruebas API complementarias verifican persistencia tras reautenticar, permisos de lector/contador, cuenta ajena/conectada, CSRF, validaciones, reintentos, conflicto de clave, cobertura y obligaciones contadas una sola vez. No se simuló pérdida de respuesta ni corte de red en navegador; la idempotencia sí se comprobó por API. No se ejecutó concurrencia en PostgreSQL ni aceptación en servidor remoto. No equivale a aceptación de instalador o auditoría completa de accesibilidad.
-
-Preparar una empresa nueva por ensayo con [guion reproducible](PLAN_DEMO_FUNCIONAL.md). Para arrancar: migrar backend, construir frontend y ejecutar `python backend/manage.py runserver 127.0.0.1:8000`. Abrir el origen local; no cargar `.env.hosted` para pruebas locales.
-
+Narrativa histórica conservada en el [archivo del 18 de octubre](archive/2026-10-18/TESTING.md).
 
 ## Actualización: secciones y captura diaria
 
-- Backend: 224 pruebas, 219 aprobadas y cinco omitidas en SQLite por requerir PostgreSQL. Ruff y build TypeScript/Vite aprobados.
-- Navegador: navegación por las diez secciones de la barra lateral con título y contenido independientes. Movimientos no muestra Facturas ni otras herramientas ajenas.
-- La fecha del formulario se observa como 2026-10-16 (hoy en Colombia). Se guardó también una operación del 2026-10-15 y la fecha volvió a hoy tras confirmar el guardado.
-- Se guardaron dos operaciones nuevas con igual fecha, descripción e importe; ambas aparecen como movimientos separados. No se duplicaron secciones al refrescar.
-- API: fecha omitida usa hoy; un corte anterior no bloquea el registro; el saldo declarado permanece igual. El futuro se rechaza.
-- API: un ingreso de 140 trece días antes del corte y un egreso de 70 al corte producen promedio diario de 5 en catorce días. Una operación posterior al corte queda fuera; confirmar solo siete días devuelve cobertura insuficiente.
-- Los enlaces de navegación usan hash y permiten acceso directo. No se certificó una revisión visual móvil completa.
-
+Narrativa histórica conservada en el [archivo del 18 de octubre](archive/2026-10-18/TESTING.md).
 
 ## Resumen, pagos mensuales y cola local
 
-Suite completa: 231 pruebas, 226 aprobadas y cinco omitidas por requerir PostgreSQL. Ejecución fuera del sandbox para permitir temporales. Build React/TypeScript y Ruff aprobados.
-
-Pruebas nuevas cubren: movimiento manual modifica gráfica sin volver a sumar saldo al corte; movimiento posterior actualiza caja una vez; alerta guardada coincide con Resumen; programación mensual idempotente y reflejada en calendario/proyección; cancelación; día 31 y febrero bisiesto; permisos; archivo de ejemplo procesado por worker real y reimportación sin duplicados, continuidad de mensualidades después de años sin consultar; arranque/cierre del worker junto a runserver.
-
-Navegador local, empresa sintética aislada con 500.000 COP: añadir ingreso 70.000 produjo pendiente positiva (+10.000 diarios) en el resumen; programar «Sueldos» 100.000 para el día 1 creó vencimientos mensuales a partir del próximo mes. Descarga/subida del ejemplo revisada con la propia interfaz: completó con dos movimientos nuevos y cero duplicados, usando el worker iniciado automáticamente por runserver. El resumen cambió tras la carga. La segunda subida del mismo archivo terminó con cero movimientos nuevos y dos duplicados omitidos. No se ha desplegado esta rama en el alojamiento remoto.
-
+Narrativa histórica conservada en el [archivo del 18 de octubre](archive/2026-10-18/TESTING.md).
 
 ## Corte de orquestación y demo repetible — 18 de octubre de 2026
 
-- OpenCode: simulación aprobada; dos workers documentales, cada uno con un archivo exacto de salida, en worktrees aislados y con terminal/subagentes/rutas externas denegados. Codex revisó stdout/stderr, archivos y cada diff. Corrigió una frase sobre saldo posterior al corte y la etiqueta de Predicciones antes de aplicar parches comprobados. No se tomaron reportes de workers como evidencia de pruebas.
-- Nuevo `prepare_web_demo`: pruebas de dry-run sin escrituras, bloqueo fuera de SQLite/desarrollo, usuario inexistente/inactivo, corte futuro, preparación repetida que conserva datos/contraseña, cifras esperadas y rollback ante error. El usuario inactivo se valida por la consulta de alta; no se añade autenticación ni cuentas nuevas.
-- Nuevo test de concurrencia PostgreSQL: dos miembros distintos envían el mismo UUID; verifica 201/200, mismo ID, una transacción, un recibo, una auditoría y saldo inalterado. Se omite con SQLite; falta ejecución real con PostgreSQL.
-- Suite completa: **235 pruebas, 229 aprobadas y seis omitidas**. Ruff check/format, `makemigrations --check --dry-run` y build frontend aprobados.
-- Ensayo local del comando precedido de `--dry-run`, con corte 2026-10-18 y dos empresas nuevas en una cuenta sintética ya existente; no se resembraron empresas anteriores. En navegador, empresa Obligaciones: mínimo −81.000 COP. Empresa Historial manual: siete días completos y dos movimientos; 30/60/90 muestran 200.000/−100.000/−400.000 COP y déficit desde corte+51.
-- No se ejecutaron fallos de red, auditoría completa de teclado/accesibilidad, aceptación remota ni despliegue en este corte. Esa evidencia sigue pendiente y se mantiene separada del ensayo local.
+Narrativa histórica conservada en el [archivo del 18 de octubre](archive/2026-10-18/TESTING.md).
+
+## Regresión de mensualidades y QA web
+
+Con Node 24 en el contenedor:
+
+```bat
+docker compose exec frontend npm test
+```
+
+Cuatro casos verifican conservar payload/UUID tras respuesta incierta o 503, liberar
+el intento tras validación 400 y permitir altas intencionales independientes.
+[Guion web y evidencia local](acceptance/WEB_V1_QA.md). No confundir el corte de conexión
+antes del POST con una respuesta perdida después de confirmar la escritura.
+
+## Pruebas de saldo histórico (30 de octubre de 2026)
+
+Regresión focalizada:
+
+```bat
+docker compose exec backend python backend/manage.py test tests.test_balance_history tests.test_api_inventory --noinput
+docker compose exec frontend npm test
+```
+
+Suite completa PostgreSQL: 247 pruebas, 245 aprobadas y 2 omitidas; SQLite: 240 aprobadas y 7
+omitidas de 247. Las exclusiones de SQLite incluyen bloqueos concurrentes y persistencia de
+Decimal extremo; el cálculo puro Decimal también se comprueba allí. Ver [resultados y casos](acceptance/BALANCE_HISTORY_QA.md).
+La primera pasada SQLite restringida encontró permisos de temporales y su limitación de
+persistencia extrema; la repetición autorizada pasó con exclusiones explícitas, sin ocultar fallos.
+
+## Selección de empresa (4 de noviembre de 2026)
+
+`docker compose exec frontend npm test` ejecuta 13 casos, incluidos cinco de preferencias:
+usuario distinto, empresa no autorizada, JSON inválido, storage denegado y limpieza.
+`docker compose exec frontend npm run build` comprueba TypeScript y Vite (653 módulos).
+La [guía de selección](acceptance/COMPANY_SELECTION_QA.md) distingue resultados Node,
+fixture de hook y web integrada. El fixture de desarrollo se sirve en
+`http://localhost:5173/tests/companySelection.html`; no forma parte del build de la app.
+Suite PostgreSQL repetida: 245 aprobadas y 2 omitidas de 247; no hubo cambios backend.

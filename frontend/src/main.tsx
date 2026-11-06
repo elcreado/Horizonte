@@ -27,6 +27,10 @@ const Movements = React.lazy(() => import('./Movements').then(module => ({ defau
 const Merchants = React.lazy(() => import('./Merchants').then(module => ({ default: module.Merchants })));
 import { ImportPanel } from './ImportPanel';
 import { PlatformUsers } from './PlatformUsers';
+import { forgetCompany } from './companySelection';
+import { useCompanySelection } from './useCompanySelection';
+import { DashboardNavigation } from './DashboardNavigation';
+import { dashboardSections } from './dashboardSections';
 
 const DashboardChart = React.lazy(() => import('./DashboardChart').then(module => ({ default: module.DashboardChart })));
 
@@ -64,18 +68,9 @@ async function api<T>(path: string, body?: object, signal?: AbortSignal): Promis
   return response.status === 204 ? undefined as T : response.json();
 }
 
-const dashboardSections = [
-  { group: 'Operación', id: 'overview', label: 'Resumen', description: 'Saldo, próximos compromisos y escenario de caja.' },
-  { group: 'Operación', id: 'movements', label: 'Movimientos', description: 'Registra ingresos y egresos manualmente y consulta tus transacciones.' },
-  { group: 'Operación', id: 'obligations', label: 'Cobros y pagos', description: 'Compromisos pendientes y calendario de vencimientos.' },
-  { group: 'Operación', id: 'invoices', label: 'Facturas', description: 'Importación y revisión de documentos de facturación.' },
-  { group: 'Análisis', id: 'forecasts', label: 'Predicciones', description: 'Estimaciones con tu historial, recurrencias y ejecuciones guardadas.' },
-  { group: 'Análisis', id: 'history', label: 'Historial y categorías', description: 'Compara ingresos, egresos y su distribución.' },
-  { group: 'Análisis', id: 'alerts', label: 'Alertas de liquidez', description: 'Umbral de caja y evaluaciones guardadas.' },
-  { group: 'Configuración', id: 'accounts', label: 'Cuentas y saldos', description: 'Saldo declarado, fecha de corte e historial completo.' },
-  { group: 'Configuración', id: 'sources', label: 'Fuentes de datos', description: 'Importa archivos o conecta una fuente bancaria de prueba, si lo deseas.' },
-  { group: 'Configuración', id: 'rules', label: 'Reglas y comercios', description: 'Organiza la clasificación y las etiquetas de tus movimientos.' },
-];
+const loadCompanies = (signal: AbortSignal) => api<Company[]>('/companies/', undefined, signal);
+
+
 
 function App() {
   const [route, setRoute] = useState(window.location.hash || '#/');
@@ -97,11 +92,12 @@ function App() {
   const [checking, setChecking] = useState(true);
   const [sessionError, setSessionError] = useState('');
   const [sessionRevision, setSessionRevision] = useState(0);
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [company, setCompany] = useState('');
+  const { companies, company, status: companyStatus, error: companyError, selectCompany, addCompany, retryCompanies } = useCompanySelection(user, loadCompanies);
   const [financialRevision, setFinancialRevision] = useState(0);
   const [horizon, setHorizon] = useState(30);
-  const [data, setData] = useState<Dashboard | null>(null);
+  const [loadedDashboard, setLoadedDashboard] = useState<{ key: string; value: Dashboard } | null>(null);
+  const dashboardKey = JSON.stringify([user, company, horizon, financialRevision]);
+  const data = loadedDashboard?.key === dashboardKey ? loadedDashboard.value : null;
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -128,21 +124,14 @@ function App() {
     return () => controller.abort();
   }, [sessionRevision]);
   useEffect(() => {
-    if (!user) return;
-    const controller = new AbortController();
-    api<Company[]>('/companies/', undefined, controller.signal).then(value => {
-      setCompanies(value); setCompany(value[0] ? String(value[0].id) : '');
-    }).catch(e => { if (e.name !== 'AbortError') setError(e.message); });
-    return () => controller.abort();
-  }, [user]);
-  useEffect(() => {
     if (!company || !user) return;
     const controller = new AbortController();
-    setData(null); setError('');
+    setLoadedDashboard(null); setError('');
     api<Dashboard>(`/companies/${company}/dashboard/?horizon=${horizon}`, undefined, controller.signal)
-      .then(setData).catch(e => { if (e.name !== 'AbortError') setError(e.message); });
+      .then(value => { if (!controller.signal.aborted) setLoadedDashboard({ key: dashboardKey, value }); })
+      .catch(e => { if (!controller.signal.aborted) setError(e.message); });
     return () => controller.abort();
-  }, [company, horizon, user, financialRevision]);
+  }, [company, horizon, user, financialRevision, dashboardKey]);
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError('');
@@ -157,7 +146,8 @@ function App() {
   async function signOut() {
     try {
       await api('/auth/logout/', {});
-      setUser(null); setData(null); setCompanies([]); setCompany(''); setError('');
+      forgetCompany(() => window.localStorage);
+      setUser(null); setLoadedDashboard(null); setError('');
       window.location.hash = '/';
     } catch (e) { setError((e as Error).message); }
   }
@@ -171,27 +161,34 @@ function App() {
   if (!user) return <main className="login"><a className="brand" href="#/">◈ HORIZONTE</a><p className="back-home"><a href="#/">← Volver al inicio</a></p>
     <h1>Tu caja, con perspectiva.</h1><p>Explora la liquidez de tu empresa y anticipa tus próximos compromisos.</p>
     <form onSubmit={signIn}><h2>Entrar a la aplicación</h2>
-      <label>Usuario<input name="username" autoComplete="username" required defaultValue="demo" /></label>
+      <label>Usuario<input name="username" autoComplete="username" spellCheck={false} required /></label>
       <label>Contraseña<input name="password" type="password" autoComplete="current-password" required /></label>
       {error && <p role="alert" className="error">{error}</p>}
       <button disabled={busy}>{busy ? 'Ingresando…' : 'Ingresar'}</button>
       <p><a href="#/recover-password">Olvidé mi contraseña</a></p>
       <p>¿No tienes cuenta? <a href="#/register">Crear cuenta y empresa</a></p>
-      <small>Entorno académico · utiliza la contraseña configurada con DEMO_PASSWORD.</small>
+      <small>Entorno académico · ingresa con el usuario y la contraseña de tu cuenta.</small>
     </form></main>;
   if (route === '#/account') return <Profile />;
   if (route === '#/platform') return <><header><a href="#/dashboard">Volver al dashboard</a><button onClick={signOut}>Cerrar sesión</button></header><PlatformUsers key={user} /></>;
-  if (route === '#/team') return <><header><a className="brand" href="#/">◈ HORIZONTE</a><a href="#/dashboard">Volver al dashboard</a><button className="secondary" onClick={signOut}>Cerrar sesión</button></header><main><h1>Empresa y equipo</h1><CreateCompany onCreated={created => { setCompanies(items => [...items, created]); setCompany(String(created.id)); }} /><label>Empresa<select value={company} onChange={e => setCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>{company ? <Team key={`Team-${company}`} company={company} companyName={companies.find(c => String(c.id) === company)?.name || ''} /> : <p>No tienes empresas disponibles.</p>}</main></>;
-  return <><header><a className="brand" href="#/">◈ HORIZONTE</a><a href="#/">Inicio</a><a href="#/team">Empresa y equipo</a><a href="#/account">Mi cuenta</a>{platformAdmin && <a href="#/platform">Administración</a>}<span>Inteligencia de liquidez</span><button className="secondary" onClick={signOut}>Cerrar sesión</button></header>
-    <div className="dashboard-layout"><aside className="dashboard-sidebar"><nav aria-label="Secciones del dashboard">{['Operación', 'Análisis', 'Configuración'].map(group => <div className="sidebar-group" key={group}><p>{group}</p>{dashboardSections.filter(item => item.group === group).map(item => <a key={item.id} href={item.id === 'overview' ? '#/dashboard' : `#/dashboard/${item.id}`} aria-current={sectionId === item.id ? 'page' : undefined}>{item.label}</a>)}</div>)}</nav><p className="sidebar-help">Puedes gestionar tus movimientos manualmente sin conectar una cuenta bancaria.</p></aside>
-    <main className="dashboard-content"><div className="toolbar"><div><p className="eyebrow">{section?.group || 'PANORAMA FINANCIERO'}</p><h1>{section?.label || 'Resumen'}</h1><p>{section?.description}</p></div>
-      <label>Empresa<select value={company} onChange={e => setCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div>
+  const companyFeedback = companyStatus === 'loading' ? <p role="status">Cargando empresas…</p> : companyStatus === 'error' ? <div role="alert"><p className="error">{companyError}</p><button className="secondary" onClick={retryCompanies}>Reintentar carga de empresas</button></div> : null;
+  if (route === '#/team') return <><header><a className="brand" href="#/">◈ HORIZONTE</a><a href="#/dashboard">Volver al dashboard</a><button className="secondary" onClick={signOut}>Cerrar sesión</button></header><main><h1>Empresa y equipo</h1>{error && <p role="alert" className="error">{error}</p>}{companyFeedback}{companyStatus === 'ready' && <CreateCompany key={user} onCreated={addCompany} />}<label>Empresa<select value={company} disabled={companyStatus !== 'ready' || !companies.length} onChange={e => selectCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>{company ? <Team key={`Team-${company}`} company={company} companyName={companies.find(c => String(c.id) === company)?.name || ''} /> : companyStatus === 'ready' ? <p>No tienes empresas disponibles.</p> : null}</main></>;
+  return <><header className="app-header"><a className="brand" href="#/" translate="no"><span aria-hidden="true">◈</span> HORIZONTE</a><nav aria-label="Navegación de cuenta"><a href="#/">Inicio</a><a href="#/team">Empresa y equipo</a><a href="#/account">Mi cuenta</a>{platformAdmin && <a href="#/platform">Administración</a>}</nav><button className="secondary" onClick={signOut}>Cerrar sesión</button></header>
+    <div className="dashboard-layout"><DashboardNavigation sectionId={sectionId} />
+    <main id="main-content" className="dashboard-content"><div className="toolbar page-heading"><div><p className="eyebrow">{section?.group || 'PANORAMA FINANCIERO'}</p><h1>{section?.label || 'Resumen'}</h1><p>{section?.description}</p></div>
+      <label className="company-selector">Empresa<select name="company" value={company} disabled={companyStatus !== 'ready' || !companies.length} onChange={e => selectCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div>
       {error && <p role="alert" className="error">{error}</p>}
-      {!company && !error && <p role="status">No tienes empresas disponibles. <a href="#/team">Crea tu empresa</a> o solicita acceso a su propietario.</p>}
+      {companyFeedback}
+      {companyStatus === 'ready' && !company && !error && <p role="status">No tienes empresas disponibles. <a href="#/team">Crea tu empresa</a> o solicita acceso a su propietario.</p>}
       {company && !data && !error && <p role="status">Cargando panorama…</p>}
       {company && <React.Suspense fallback={<p role="status">Cargando sección…</p>}>
       {sectionId === 'overview' && <>
-      {data && <><div className="notice"><strong>ESTIMACIÓN DE CAJA</strong> {data.notice} Corte: {dateLabel(data.as_of)}.</div>
+      {data && <><nav className="quick-actions" aria-label="Acciones frecuentes">
+        <a href="#/dashboard/movements"><span aria-hidden="true">＋</span><div><strong>Registrar movimiento</strong><small>Agrega un ingreso o un egreso</small></div><span aria-hidden="true">→</span></a>
+        <a href="#/dashboard/obligations"><span aria-hidden="true">↻</span><div><strong>Programar pagos</strong><small>Organiza tus compromisos mensuales</small></div><span aria-hidden="true">→</span></a>
+        <a href="#/dashboard/sources"><span aria-hidden="true">↑</span><div><strong>Importar movimientos</strong><small>Sube un archivo de transacciones</small></div><span aria-hidden="true">→</span></a>
+      </nav>
+      <div className="estimate-summary"><p><span className="status-dot" aria-hidden="true" />Estimación orientativa <span>· corte {dateLabel(data.as_of)}</span></p><details><summary>Cómo se calcula esta estimación</summary><p>{data.notice}</p></details></div>
         <section className="cards" aria-label="Resumen financiero">
           {[['Saldo disponible', data.balance], [`Por cobrar · ${horizon} días`, data.receivable], [`Por pagar · ${horizon} días`, data.payable]].map(([label, value]) => <article key={label}><p>{label}</p><strong>{money(value)}</strong><small>COP · pesos colombianos</small></article>)}
           <article className={data.first_deficit ? 'risk' : ''}><p>Escenario de liquidez</p><strong>{data.first_deficit ? `Déficit: ${dateLabel(data.first_deficit)}` : 'Sin déficit previsto'}</strong><small>Según movimientos y compromisos registrados</small></article>
@@ -208,8 +205,7 @@ function App() {
         </section>
         {data.first_deficit && <DeficitExplanation firstDeficit={data.first_deficit} asOf={data.as_of} balance={data.balance} obligations={data.obligations} money={money} dateLabel={dateLabel} />}
         {data.overdue_count > 0 && <p role="status">Hay {data.overdue_count} obligaciones vencidas o con vencimiento en la fecha de corte. Requieren una nueva fecha estimada; no se incluyen como futuros cobros o pagos.</p>}
-        <div className="columns"><section className="panel"><h2>Próximos compromisos</h2><p>Fechas y valores pendientes del período</p><div className="table-wrap"><table><thead><tr><th>Concepto</th><th>Fecha</th><th>Valor</th></tr></thead><tbody>{data.obligations.map(o => <tr key={o.id}><td>{o.description}<small>{o.direction === 'in' ? 'Por cobrar' : 'Por pagar'}</small></td><td>{dateLabel(o.due_date)}</td><td className={o.direction === 'in' ? 'positive' : ''}>{o.direction === 'in' ? '+' : '−'}{money(o.amount)}</td></tr>)}</tbody></table>{!data.obligations.length && <p>No hay obligaciones en este período.</p>}</div></section>
-</div>
+        <section className="panel commitments-panel"><div className="toolbar"><div><h2>Próximos compromisos</h2><p>Fechas y valores pendientes del período</p></div><a className="text-link" href="#/dashboard/obligations">Ver cobros y pagos →</a></div><div className="table-wrap">{data.obligations.length > 0 && <table><thead><tr><th>Concepto</th><th>Fecha</th><th>Valor</th></tr></thead><tbody>{data.obligations.map(o => <tr key={o.id}><td>{o.description}<small>{o.direction === 'in' ? 'Por cobrar' : 'Por pagar'}</small></td><td>{dateLabel(o.due_date)}</td><td className={o.direction === 'in' ? 'positive' : ''}>{o.direction === 'in' ? '+' : '−'}{money(o.amount)}</td></tr>)}</tbody></table>}{!data.obligations.length && <div className="empty-state"><strong>No tienes compromisos en este período</strong><p>Registra tus cobros, pagos o sueldos mensuales para incluirlos en la proyección.</p><a href="#/dashboard/obligations">Agregar un compromiso →</a></div>}</div></section>
       </>}
       </>}
       {sectionId === 'movements' && <><ManualMovement key={`ManualMovement-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /><Movements key={`Movements-${company}`} company={company} refresh={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /></>}

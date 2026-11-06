@@ -1,6 +1,6 @@
 # Manual de uso y pruebas de Horizonte
 
-Revisión documental: 18 de octubre de 2026. Describe la versión funcional de pruebas;
+Revisión funcional: 5 de noviembre de 2026. Describe la versión funcional de pruebas;
 no certifica el cierre académico ni disponibilidad remota actual. [Estado y pendientes](ESTADO_Y_PENDIENTES.md).
 Utilizar empresas, archivos y correos de prueba. No cargar información bancaria real.
 
@@ -220,7 +220,7 @@ lista es un procedimiento pendiente; no representa pruebas de usuario ya ejecuta
 
 Para fallos, informar el paso, mensaje, hora y si ocurre en web o escritorio. No enviar
 contraseñas, claves API, enlaces de recuperación ni archivos financieros privados en capturas.
-# Corregir el nombre visible de un comercio
+## Corregir el nombre visible de un comercio
 
 En **Comercios identificados**, propietario y contador pueden pulsar **Editar nombre**,
 escribir hasta 250 caracteres y elegir **Guardar** o **Cancelar**. El guardado queda auditado.
@@ -266,3 +266,51 @@ Entra con ese usuario y selecciona:
 - **Demo V1 Historial manual**: saldo declarado 500.000, ingreso 70.000 y egreso 140.000 en siete días sintéticos completos. Ya tiene cobertura confirmada para Predicciones → Estimación inicial. Saldos finales 30/60/90: 200.000, −100.000 y −400.000 COP. No hay compromisos en este caso.
 
 Los movimientos se identifican como capturas manuales sintéticas y cada lote queda auditado. Para ensayar la captura tú mismo, crea una tercera empresa desde la interfaz; no agregues esos mismos movimientos de nuevo esperando que la curva conserve las cifras iniciales.
+
+## Reintentar una programación mensual
+
+Si no se confirma el guardado, el formulario conserva los datos originales y ofrece
+**Reintentar guardado**. Los campos y las acciones de detener programaciones quedan
+bloqueados hasta confirmar el resultado. Un error de validación permite corregir datos.
+Antes de recargar o salir de esta sección con un envío incierto, consulta las
+programaciones: la solicitud de reintento solo se conserva mientras el formulario está abierto.
+
+## Consultar saldo histórico al cierre
+
+En **Análisis → Historial y categorías**, elige 30 días, 90 días o doce meses hasta el corte.
+Abre «Ver saldos diarios y su origen» para consultar los centavos exactos y «Ver saldos y
+cobertura por cuenta» para revisar sus fuentes. Los huecos significan falta de cobertura,
+no cero dinero. Solo el punto del corte conserva el saldo declarado sin exigir historial.
+
+Para reconstruir días anteriores, en Cuentas y saldos abre «Confirmar historial completo»
+y confirma cada cuenta únicamente si registraste toda la actividad desde el inicio elegido
+hasta el corte común. Se usa el inicio más reciente entre esas cuentas. Agregar/importar un
+movimiento dentro del periodo retira la confirmación: revisar y reconfirmar. Los saldos
+reconstruidos no son una predicción ni una verificación bancaria independiente.
+
+## Conservar la empresa seleccionada
+
+El selector **Empresa** se comparte entre dashboard y **Empresa y equipo**. La web
+recuerda la elección al recargar en el mismo navegador, después de confirmar que tu
+usuario sigue teniendo acceso. Si la empresa ya no está disponible, selecciona la
+primera autorizada. Al cerrar sesión correctamente se borra esta preferencia.
+
+Si aparece un error al consultar empresas, pulsa **Reintentar carga de empresas**.
+Si el almacenamiento del navegador está bloqueado, puedes seguir seleccionando
+empresas durante la sesión; la elección podría no conservarse al recargar.
+No se almacenan contraseñas, tokens ni importes en esta preferencia.
+
+## Moverte por la interfaz
+
+En escritorio, usa la barra lateral agrupada en Operación, Análisis y Configuración.
+En móvil, pulsa **Cambiar sección**; elige un destino o pulsa Escape para cerrar el menú.
+La empresa seleccionada se conserva al cambiar de sección.
+
+Desde Resumen puedes ir directamente a **Registrar movimiento**, **Programar pagos**
+o **Importar movimientos**. Consulta **Cómo se calcula esta estimación** para revisar
+los supuestos y límites del escenario. Las cifras diarias siguen disponibles bajo la gráfica.
+
+Al registrar un movimiento elige **Ingreso** si entró dinero o **Egreso** si salió.
+Escribe siempre un importe positivo y revisa la fecha. Para detener una programación,
+pulsa **Detener programación** y revisa la confirmación; **Mantener programación**
+cierra la confirmación sin detenerla.

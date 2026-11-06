@@ -1,224 +1,165 @@
 # Roadmap de implementación: dificultad, paralelismo y bloqueos
 
-Fecha: **16 de octubre de 2026**. Objetivo actual: una **aplicación web útil y presentable**
-que demuestre la idea con datos sintéticos y permita registrar transacciones manualmente.
-Escritorio y Android/iOS están aplazados. Presupuesto inicial 0 USD; respaldo manual únicamente.
+Revisión: **5 de noviembre de 2026**. Único seguimiento operativo por tareas.
+[Requisitos y evidencia](ESTADO_Y_PENDIENTES.md), [verificaciones](IMPLEMENTATION_STATUS.md),
+[hitos del producto](ROADMAP_ENTREGABLES.md). Se conservan T01–T16 y P01–P10.
 
-Referencias: [plan de demo](PLAN_DEMO_FUNCIONAL.md), [matriz de objetivos y requisitos](ESTADO_Y_PENDIENTES.md),
-[convenciones](../CODESTYLE.md) y [pruebas](TESTING.md).
-
-Este documento conserva la planificación del 16 de octubre anterior a la implementación. Para el estado actual consultar [IMPLEMENTATION_STATUS](IMPLEMENTATION_STATUS.md). Sus casillas no son una matriz vigente.
-La distribución por agentes inferior es histórica. El 18 de octubre se ejecutaron dos tareas documentales de OpenCode en worktrees aislados y Codex revisó e integró sus diffs; las implementaciones financieras permanecen bajo Codex.
+Estados: **Planned**, **In Progress**, **Blocked**, **Done**, **Needs Verification**.
+Done exige comportamiento y evidencia delimitada; Needs Verification puede tener
+implementación completa, pero conserva aceptación abierta. No se asignan porcentajes ni fechas futuras.
+Prioridad P0 = bloquea demo; P1 = completa V1; P2 = alcance académico/posterior.
 
 ## Corte de ejecución — 18 de octubre de 2026
 
-| Paquete | Estado y evidencia actual |
-|---|---|
-| T01–T06, T09–T11 | Base implementada: onboarding, captura manual, contrato, recibos, auditoría, navegación y refresco. Las reglas vigentes son las del código y manual; el contrato mínimo histórico inferior fue ajustado para permitir registrar hoy aunque el corte sea anterior. |
-| T02–T03 | Guion y textos actualizados con revisión de Codex sobre dos tareas acotadas de OpenCode. Resumen inmediato y Predicciones al corte se distinguen. |
-| T07–T08 | Pruebas API de errores, roles, idempotencia, caja y obligaciones. La suite verifica el caso −81.000 COP; no sustituye QA completo ni concurrencia PostgreSQL. |
-| T12 | Implementado `prepare_web_demo`: simulación y preparación de dos empresas nuevas para un usuario local existente, con fechas relativas al corte. Nunca borra datos ni cambia contraseñas. SQLite de desarrollo únicamente; pruebas de preservación y reversión atómica. |
-| T13 | Prueba de concurrencia ejecutada y aprobada en PostgreSQL local con Docker el 18 de octubre. Suite completa: 235 pruebas, 233 aprobadas y 2 omitidas por ser del preparador SQLite. La aceptación de seguridad más amplia sigue abierta. |
-| T14–T15 | Parcial. Hay recorridos locales de captura, navegación, CSV y mensualidades; falta cerrar aceptación transversal (red, teclado y usuarios) con la versión final. |
-| T16 | Pendiente: no publicar hasta cerrar dependencias y QA. No se ha desplegado este corte. |
+Docker completo funciona localmente. Suite PostgreSQL registrada antes de esta auditoría:
+235 pruebas, 233 aprobadas y 2 omitidas del preparador SQLite; frontend y Ruff correctos.
+No es evidencia de publicación, accesibilidad, correo real ni validación científica.
 
-Preparación opcional exclusiva de SQLite (no para el entorno Docker): `python backend\manage.py prepare_web_demo --username TU_USUARIO --dry-run`; después ejecutar sin `--dry-run`. Iniciar sesión con esa cuenta y elegir las empresas nuevas. Ver [manual](USER_MANUAL.md) y [guion](PLAN_DEMO_FUNCIONAL.md).
+## Hito 1: base funcional y contratos
 
-Las tareas de investigación P01–P10, correo real, aceptación de escritorio y móvil mantienen sus límites y prioridades; no se declaran completadas por esta ejecución.
+| ID | Prioridad | Requisitos | Estado | Trabajo y criterio de aceptación | Dependencias | Evidencia o cierre pendiente |
+|---|---|---|---|---|---|---|
+| T01 | P1 | Todos | Done | Fijar el punto de partida: cambios locales, funciones existentes y comandos de comprobación. | Ninguna. | Inventario y revisión en [auditoría](DOCUMENTATION_AUDIT.md). |
+| T02 | P1 | RF-10, RF-13 | Done | Escribir guion de presentación y cifras esperadas con fechas relativas al corte. | Ninguna. | [Guion](PLAN_DEMO_FUNCIONAL.md); cifras en test_prepare_web_demo y test_cashflow_fixes. |
+| T03 | P1 | RF-10, RF-13 | Done | Preparar textos para diferenciar saldo al corte, movimiento ocurrido y obligación futura. | Ninguna. | [Manual](USER_MANUAL.md) y reglas en banking/manual.py. |
+| T04 | P1 | V1-01, RNF-07 | Done | Cerrar reglas y contrato del alta manual: campos, cuenta, fecha, signo, categoría, saldo, origen, permisos, idempotencia y errores. | T01. | Contrato [API](API_DOCUMENTATION.md); test_manual_entries. |
+| T05 | P1 | RF-01, RF-02 | Needs Verification | Revisar onboarding y elección de empresa/cuenta manual; corregir solo faltas de usabilidad detectadas. | T01. | Onboarding implementado y test_company_onboarding; falta aceptación de UI final. |
+| T06 | P1 | V1-01, V1-02 | Needs Verification | Construir el formulario de movimiento contra el contrato: cuenta, fecha, ingreso/egreso, importe, descripción y categoría opcional. | T04. | ManualMovement.tsx y build correcto; falta cerrar errores/red/teclado en navegador. |
+| T07 | P1 | RNF-07, V1-01 | Done | Preparar casos y fixtures de QA: permisos, fechas, importes, doble envío, cuenta ajena, fallos de red y saldo inalterado. | T02 y T04. | test_manual_entries, test_cashflow_fixes y test_manual_concurrency aprobados en PostgreSQL. |
+| T08 | P1 | RF-05, RF-10, RF-12 | Done | Verificar el escenario de obligaciones existente, conciliación/reversión y resultado esperado de la demo. | T01 y T02. | test_obligations, test_cashflow_fixes; escenario −81.000 COP. |
+| T09 | P1 | BN-03, V1-01 | Done | Preparar persistencia e idempotencia del movimiento manual; decidir si necesita migración y separar origen de captura de origen de clasificación. | T04. | ManualEntry, migración banking.0011 y prueba concurrente PostgreSQL. |
+| T10 | P1 | V1-01, RF-08, RNF-06 | Done | Implementar API/servicio de alta: validación, permisos, Decimal, normalización, clasificación, auditoría y retirada de cobertura cuando corresponda. | T09. | banking/manual.py, test_manual_entries y test_manual_concurrency. |
+| T11 | P1 | V1-02, V1-03 | Needs Verification | Integrar formulario y API reales; refrescar movimientos, histórico, categorías y vistas experimentales afectadas. | T05, T06 y T10. | main.tsx integra captura/refresco; smoke local previo, falta QA transversal. |
+| T12 | P1 | RF-10, RF-13 | Done | Preparar datos/caso repetible y herramienta o procedimiento seguro de preparación de la demo. | T02, T08 y T11. | prepare_web_demo y sus pruebas previas SQLite; solo DEBUG/SQLite. Docker usa preparación manual desde la web. |
+
+## Hito 2: seguridad, aceptación y publicación
+
+| ID | Prioridad | Requisitos | Estado | Trabajo y criterio de aceptación | Dependencias | Evidencia o cierre pendiente |
+|---|---|---|---|---|---|---|
+| T13 | P0 | RNF-01, RNF-07 | Needs Verification | Verificar seguridad e integridad del flujo nuevo: roles, tenant, CSRF, concurrencia/reintentos, clasificación, auditoría y cobertura. | T07 y T10. | Regresión PostgreSQL aprobada; aún falta revisión transversal de seguridad, no se cierra por un único ensayo. |
+| T14 | P0 | V1-01–V1-06, RNF-10 | Needs Verification | Ejecutar QA de navegador con escenario real: ingreso/egreso manual, clasificación, obligaciones, conciliación, dashboard, red, logout y persistencia. | T08, T11, T12 y T13. | Recorridos locales previos acotados; faltan red, teclado, recuperación de errores y sesión completos. |
+| T15 | P0 | Hallazgos de T14 | In Progress | Corregir problemas de uso que encuentre QA y cerrar guía corta de presentación. | T14 ejecutada y hallazgos registrados. | Esperar hallazgos registrados de T14 y volver a ejecutar los casos corregidos. |
+| T16 | P1 | RNF-09, RF-16 | Planned | Publicar y comprobar la versión demostrable: integración, CI, migraciones, despliegue y prueba de humo sobre la versión publicada. | T12, T13, T14 y T15. | Después de QA y autorización del despliegue: CI, migraciones, smoke y recuperación sobre versión publicada. |
+
+T16 requiere cerrar T12–T15 y autorización de publicación; no se contrata ni despliega nada
+como parte de la limpieza documental. La concurrencia PostgreSQL ya está verificada en
+su caso específico, aunque T13 conserva controles más amplios pendientes.
+
+## Avance local de T14/T15
+
+[Guion y resultados parciales](acceptance/WEB_V1_QA.md): registro, movimientos del mismo
+día, Resumen, mensualidad con interrupción del backend, importación real con Celery y
+logout/reingreso verificados. Corregido el payload mutable de reintento mensual y agregadas
+cuatro regresiones frontend a CI. Textos de acceso/importación y parche source-map-js revisados.
+235 pruebas backend (233 aprobadas, 2 omitidas), cuatro frontend y tres escritorio; build,
+Ruff y migraciones correctos. No se cierra T14/T15: faltan escenarios de red tras commit,
+roles visuales, reimportación visual, teclado completo y otros casos de la tabla.
+
+## Hito 3: objetivos completos
+
+| ID | Prioridad | Requisitos | Estado | Criterio de aceptación y dependencias |
+|---|---|---|---|---|
+| P01 | P2 | RF-01–RF-16 | Needs Verification | Completar manuales, ejemplos y aceptación documental. Para documentar el comportamiento nuevo como implementado: T11 y su evidencia. Borradores pueden empezar antes. |
+| P02 | P2 | RF-01 | Blocked | Configurar y comprobar recuperación real por correo. Proveedor/remitente/buzón autorizados y secretos privados; no depende del formulario manual. No contratar nada de pago. |
+| P03 | P2 | Entregable 14 | Needs Verification | Completar ejemplos/errores OpenAPI de todas las familias. Contratos reales de cada familia; para alta manual, T04 y T10. Generación central coordinada. |
+| P04 | P2 | RF-02 | Planned | Administración ampliada de usuarios/empresas. Contrato de capacidades, autorización/auditoría y pruebas de abuso antes de publicar mutaciones. Independiente del alta manual, pero comparte cuentas/roles y exige coordinación. |
+| P05 | P2 | RF-14 | Needs Verification | Implementado saldo diario reconstruido con ancla declarada, cobertura de todas las cuentas, huecos nulos, rangos y procedencia. Doce regresiones backend y cuatro frontend nuevas; navegador con cifras exactas. Falta aceptación más amplia y contraste independiente; no es saldo certificado por banco. [Entrega](releases/2026-10-30.md). |
+| P06 | P2 | RNF-02–RNF-10 | Needs Verification | Rendimiento, concurrencia, accesibilidad y recuperación manual. Versión estable y condiciones medibles; corpus/entornos aislados para carga y restore. El ensayo completo de nueva UI espera T11. |
+| P07 | P2 | RF-06–RF-09 | Needs Verification | Evaluación de clasificación y recurrencias. Corpus independiente autorizado, etiquetas temporales y separación por empresa/grupo; las pruebas sintéticas actuales no bastan. |
+| P08 | P2 | RF-10, OE-4 | Needs Verification | Validar híbrido/comparación académica y resolver inclusión de Prophet. Evidencia disponible en cada corte, corpus temporal y protocolo fijado antes de comparar. No atribuir cambios posteriores al pasado. |
+| P09 | P2 | RF-11, RF-12, RF-15 | Needs Verification | Calibración de cuantiles, riesgo/factores y confianza por perfil. Corpus/protocolo de P08 y validación temporal de los modelos evaluados; no deducir probabilidad de déficit de una banda sin metodología. |
+| P10 | P2 | OE-6, RNF-01, tesis | Needs Verification | Revisión de seguridad integral, operación y entrega de tesis. Alcance ASVS definido, funcionalidades finales verificadas y resultados disponibles. Threat modeling puede avanzar antes; cumplimiento final y conclusiones no. |
+
+P01: auditoría y guías actualizadas; falta que un tercero complete el recorrido.
+P02: bloqueo externo por proveedor/remitente/buzón; no impide probar manualmente con una cuenta conocida.
+P03: inventario de 52 rutas/68 operaciones existente; errores, ejemplos y snapshots requieren revisión.
+P06: los ensayos limitados de concurrencia no prueban carga, disponibilidad o varios workers en producción.
+Escritorio, móvil y proveedor bancario externo permanecen Planned y aplazados; no son tareas aprobadas
+para implementar durante esta auditoría.
+
+## Contrato vigente de captura manual
+
+La fecha inicia en hoy (America/Bogota), permite pasado y varios movimientos por día,
+incluso después del corte, nunca futuro. Saldo declarado sin cambios automáticos;
+Resumen suma a caja solo operaciones posteriores al corte y usa historial para estimar.
+Predicciones avanzadas requieren cobertura confirmada hasta corte común. Recibos UUID,
+Decimal, tenant, rol, CSRF y auditoría se conservan. Contrato completo en [API](API_DOCUMENTATION.md).
 
 ## Cómo interpretar el orden
 
-- **Dificultad y prioridad no son lo mismo.** Las tablas están ordenadas de fácil a difícil;
-  el orden de ejecución lo determinan las dependencias y las oleadas siguientes.
-- Dificultad 1: documentación/textos; 2: cambios locales acotados; 3: contratos/interfaz;
-  4: integridad financiera e integración; 5: investigación o cambios estructurales amplios.
-- Una dependencia indicada es **obligatoria**: si aparecen varias, deben terminar **todas**.
-- «Puede empezar» no significa «puede darse por terminado». Un formulario con respuestas
-  simuladas permite avanzar en diseño, pero no acredita que guarde en el servidor.
-- Para terminar una tarea hacen falta cambios revisables, comprobaciones pertinentes y evidencia
-  del criterio de aceptación. No basta que un agente diga que terminó o que el build pase.
+Codex retiene contratos, seguridad, integridad y revisión. Las tareas simples e independientes
+pueden delegarse a OpenCode en worktrees aislados con plan simulado, alcance exacto y revisión
+antes de integrar. No ejecutar implementaciones dependientes sin su contrato y evidencia.
 
-## Base que ya existe y no hay que rehacer
+## Planificación histórica
 
-- Inicio público, registro/login/logout, empresas y roles propietario/contador/lector.
-- El alta de empresa **ya crea una cuenta manual con saldo y corte** en
-  `backend/apps/accounts/onboarding.py`; revisar su uso, no implementar otra alta equivalente.
-- CSV/XLSX/XML, Mock Bank, reglas/corrección de categorías, obligaciones, conciliación y reversión.
-- Dashboard contractual 30/60/90, calendario, histórico de flujos y pronósticos experimentales.
-- El formulario/API de alta manual fue implementado en `codex/v1-manual-transactions`; consultar contrato y verificaciones vigentes.
+El [plan anterior completo](archive/2026-10-18/ROADMAP_TRABAJO_IA.md) conserva dificultad,
+oleadas, criterios originales, reparto de archivos y decisiones. Su regla antigua que limitaba
+captura al corte quedó superada por la captura diaria autorizada; no usarla como contrato actual.
 
-## 1. Tareas fáciles
+## Accesos a secciones históricas
 
-| ID | Dificultad | Trabajo concreto | Dependencias obligatorias | Paralelismo y resultado esperado |
-|---|---|---|---|---|
-| T01 | 1/5 | Fijar el punto de partida: cambios locales, funciones existentes y comandos de comprobación. | Ninguna. | Paralela a T02/T03. Entregar una lista de archivos/contratos que ya existen y pendientes reales; no borrar cambios previos del usuario. |
-| T02 | 1/5 | Escribir guion de presentación y cifras esperadas con fechas relativas al corte. | Ninguna. | Paralela a T01/T03. Entregar caso 500.000 +119.000 −700.000 = −81.000 COP y pasos de uso, sin afirmar que la captura manual funciona todavía. |
-| T03 | 2/5 | Preparar textos para diferenciar saldo al corte, movimiento ocurrido y obligación futura. | Ninguna. | Paralela a T01/T02. Entregar textos y ubicación propuesta, sin cambiar cálculos ni reglas financieras. |
+<a id="1-tareas-fáciles"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#1-tareas-fáciles).
 
-## 2. Tareas de dificultad media
+<a id="2-tareas-de-dificultad-media"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#2-tareas-de-dificultad-media).
 
-| ID | Dificultad | Trabajo concreto | Dependencias obligatorias | Paralelismo y resultado esperado |
-|---|---|---|---|---|
-| T04 | 3/5 | Cerrar reglas y contrato del alta manual: campos, cuenta, fecha, signo, categoría, saldo, origen, permisos, idempotencia y errores. | T01. | Puede coincidir con T02/T03/T05. Entregar un contrato único y casos de aceptación; es el desbloqueo principal. |
-| T05 | 3/5 | Revisar onboarding y elección de empresa/cuenta manual; corregir solo faltas de usabilidad detectadas. | T01. | Paralela a T04. Registro/alta debe conducir a una cuenta utilizable sin editar BD ni código. No depende de rehacer la creación de cuenta existente. |
-| T06 | 3/5 | Construir el formulario de movimiento contra el contrato: cuenta, fecha, ingreso/egreso, importe, descripción y categoría opcional. | T04. | Paralela a T09/T10 con respuestas simuladas o adaptador acordado. Entregar componente aislado con carga/error/éxito; su guardado real queda bloqueado por T10. |
-| T07 | 3/5 | Preparar casos y fixtures de QA: permisos, fechas, importes, doble envío, cuenta ajena, fallos de red y saldo inalterado. | T02 y T04. | Paralela a T06/T09. Escribir pruebas/casos contra el contrato; las pruebas que necesiten la API no pueden aprobarse antes de T10. |
-| T08 | 3/5 | Verificar el escenario de obligaciones existente, conciliación/reversión y resultado esperado de la demo. | T01 y T02. | Paralela al alta manual: estas funciones ya existen. Entregar comprobación de cifras y fallos reales encontrados, sin sustituir la prueba manual futura. |
-| T15 | 3/5 | Corregir problemas de uso que encuentre QA y cerrar guía corta de presentación. | T14 ejecutada y hallazgos registrados. | Puede dividirse por componentes sin archivos compartidos. Volver a ejecutar los casos afectados y cerrar los bloqueantes; no limitarse a cambiar textos si falla la persistencia. |
+<a id="3-tareas-difíciles-de-la-demo"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#3-tareas-difíciles-de-la-demo).
 
-T15 aparece aquí por dificultad, pero se ejecuta al final de la integración. No comenzar
-por ella solo porque sea más fácil que el backend.
+<a id="4-contrato-mínimo-que-desbloquea-el-alta-manual--t04"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#4-contrato-mínimo-que-desbloquea-el-alta-manual--t04).
 
-## 3. Tareas difíciles de la demo
+<a id="5-oleadas-de-ejecución-y-agentes-en-paralelo"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#5-oleadas-de-ejecución-y-agentes-en-paralelo).
 
-| ID | Dificultad | Trabajo concreto | Dependencias obligatorias | Paralelismo y resultado esperado |
-|---|---|---|---|---|
-| T09 | 4/5 | Preparar persistencia e idempotencia del movimiento manual; decidir si necesita migración y separar origen de captura de origen de clasificación. | T04. | Paralela a T06/T07/T08. Entregar estrategia/implementación con restricciones necesarias y pruebas. Si no hace falta migración, justificar cómo se preservan las garantías. |
-| T10 | 4/5 | Implementar API/servicio de alta: validación, permisos, Decimal, normalización, clasificación, auditoría y retirada de cobertura cuando corresponda. | T09. | Paralela a T06/T07/T08, con un único propietario de modelos/rutas. Entregar alta persistente y reintento idempotente, sin modificar silenciosamente el saldo ni cuentas conectadas. |
-| T11 | 4/5 | Integrar formulario y API reales; refrescar movimientos, histórico, categorías y vistas experimentales afectadas. | T05, T06 y T10. | Paralela a T13. Entregar flujo real con la empresa/cuenta correctas y mensajes ante respuesta perdida; nunca simular éxito local. |
-| T12 | 4/5 | Preparar datos/caso repetible y herramienta o procedimiento seguro de preparación de la demo. | T02, T08 y T11. | Paralela a T13 cuando esas dependencias terminen. Entregar escenario aislado con fechas relativas; no borrar datos existentes ni ejecutar seeds de desarrollo en producción. |
-| T13 | 4/5 | Verificar seguridad e integridad del flujo nuevo: roles, tenant, CSRF, concurrencia/reintentos, clasificación, auditoría y cobertura. | T07 y T10. | Paralela a T11/T12 según disponibilidad. Entregar pruebas significativas, incluyendo PostgreSQL para garantías de concurrencia; identificar lo que no se pudo ejecutar. |
-| T14 | 4/5 | Ejecutar QA de navegador con escenario real: ingreso/egreso manual, clasificación, obligaciones, conciliación, dashboard, red, logout y persistencia. | T08, T11, T12 y T13. | No adelantar la aceptación completa usando mocks. Entregar resultados y lista de fallos; encontrar fallos no convierte el recorrido en aprobado. Desbloquea T15. |
-| T16 | 4/5 | Publicar y comprobar la versión demostrable: integración, CI, migraciones, despliegue y prueba de humo sobre la versión publicada. | T12, T13, T14 y T15. | Publicación serializada por el integrador. CI y casos bloqueantes deben pasar; dejar plan de recuperación, sin restauraciones destructivas ni recursos de pago. |
+<a id="6-reparto-de-archivos-para-evitar-que-los-agentes-se-pisen"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#6-reparto-de-archivos-para-evitar-que-los-agentes-se-pisen).
 
-## 4. Contrato mínimo que desbloquea el alta manual — T04
+<a id="7-paquete-mínimo-para-encargar-una-tarea-a-otro-agente"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#7-paquete-mínimo-para-encargar-una-tarea-a-otro-agente).
 
-- [ ] El movimiento representa dinero **ya ocurrido**, con fecha no posterior al corte ni
-  futura respecto al día de registro. Los flujos futuros se crean como obligaciones.
-- [ ] La cuenta pertenece a la empresa autenticada y es manual. No permitir inyectar datos
-  en cuentas de Mock Bank/proveedor; propietario y contador escriben, lector consulta.
-- [ ] La interfaz solicita importe positivo y sentido ingreso/egreso. Definir una sola
-  conversión al signo persistido para no invertirlo dos veces entre cliente y servidor.
-- [ ] Usar Decimal y cadenas JSON. Definir longitudes, precisión y categorías compatibles.
-- [ ] Mantener saldo declarado al corte: **registrar historial no lo vuelve a sumar/restar**.
-  Explicar cómo actualizar el saldo explícitamente. No adoptar actualización automática sin
-  redefinir antes esta regla y los casos de conciliación.
-- [ ] Generar identidad de movimiento sin pedir un ID técnico al usuario. El reintento de
-  una misma solicitud debe reutilizar su clave; una operación nueva debe generar otra.
-- [ ] Definir respuesta para solicitud repetida y para misma clave con contenido distinto.
-  No deduplicar solo por importe/fecha/descripción: dos movimientos legítimos pueden coincidir.
-- [ ] Reutilizar normalización/clasificación y reglas de empresa. El origen «capturado
-  manualmente» no equivale a «categoría corregida manualmente».
-- [ ] Auditar autor, fecha y acción. Creación, idempotencia, auditoría y retirada de confirmación
-  de cobertura deben tener límites transaccionales claros para no dejar resultados parciales.
-- [ ] Definir endpoint, cuerpos, códigos HTTP, permisos y ejemplos antes de integrar frontend,
-  pruebas e inventario OpenAPI. El agente no debe inventar una API diferente por su cuenta.
+<a id="8-puerta-de-salida-idea-demostrable"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#8-puerta-de-salida-idea-demostrable).
 
-**NO pueden implementarse con garantías T09/T10 antes de cerrar T04.** Sí se puede investigar
-código, proponer alternativas o preparar bocetos; no consolidar decisiones contradictorias.
+<a id="9-vía-posterior-objetivos-completos-de-menor-a-mayor-dificultad"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#9-vía-posterior-objetivos-completos-de-menor-a-mayor-dificultad).
 
-## 5. Oleadas de ejecución y agentes en paralelo
+<a id="base-que-ya-existe-y-no-hay-que-rehacer"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#base-que-ya-existe-y-no-hay-que-rehacer).
 
-Ejemplo para **cuatro agentes**, sin exigir un modelo concreto ni una duración prometida.
-Un agente integrador puede asumir tareas cuando no está integrando.
+<a id="qué-no-puede-darse-por-hecho-ni-ejecutarse-antes"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#qué-no-puede-darse-por-hecho-ni-ejecutarse-antes).
 
-| Oleada | Agente A: integración/backend | Agente B: interfaz | Agente C: pruebas | Agente D: producto/demo |
-|---|---|---|---|---|
-| 0: preparar | T01, después T04. | T03; revisar T05 sin invadir archivos de A. | Inspeccionar pruebas existentes; casos preliminares sin dar por aprobado el endpoint nuevo. | T02. |
-| 1: contrato cerrado | T09 → T10, secuenciales. | T05 → T06, según disponibilidad del contrato. | T07 y T08 cuando sus dependencias estén listas. | Borrador de guía/datos, sin ejecutar todavía T12. |
-| 2: API terminada | Integrar cambios de modelos/contrato y apoyar fallos de API. | T11, solo con T05/T06/T10 terminadas. | T13 sobre la API real. | T12 solo después de T11 y T08; antes puede revisar el guion. |
-| 3: demostrar | Resolver hallazgos backend asignados. | Resolver hallazgos UI asignados. | T14; tras correcciones, repetir casos afectados. | Guía final y cifras de T15; coordinar resultado con QA. |
-| 4: publicar | T16 como responsable único del despliegue. | Comprobar la UI publicada. | Prueba de humo y sesión sobre la versión publicada. | Ensayar la presentación y documentar límites. |
+<a id="qué-sí-puede-avanzar-sin-esperar-toda-la-implementación"></a>
+[Consultar sección histórica](archive/2026-10-18/ROADMAP_TRABAJO_IA.md#qué-sí-puede-avanzar-sin-esperar-toda-la-implementación).
 
-No confundir la oleada 3 con cuatro tareas independientes: T14 primero produce los hallazgos;
-T15 los corrige y exige repetir las pruebas. T16 espera el cierre de todos los bloqueantes.
+## Actualización significativa — 30 de octubre de 2026
 
-### Qué sí puede avanzar sin esperar toda la implementación
+P05 implementado de extremo a extremo sin convertir neto mensual en saldo. Contrato API,
+cálculo, gráfica, tabla exacta, cobertura y documentación verificados. [Evidencia y límites](releases/2026-10-30.md).
+247 pruebas PostgreSQL (245 aprobadas, 2 omitidas), 8 frontend y 3 escritorio; SQLite 240/247
+con 7 exclusiones explícitas. No se cierra todo RF-14, T14 ni T16: siguen accesibilidad,
+selección de empresa al recargar, escenarios de red, aceptación independiente y publicación.
 
-- Guion y cifras esperadas mientras se define la API.
-- Revisión del onboarding y textos mientras se prepara persistencia.
-- Formulario contra contrato mientras backend implementa el servicio.
-- Casos de prueba y verificación de obligaciones existentes mientras se crea el alta manual.
-- Pruebas de API/aislamiento mientras frontend conecta el formulario.
-- Investigación offline y documentación del alcance académico en una vía separada de la demo.
+## Avance T14/T15 — 4 de noviembre de 2026
 
-### Qué NO puede darse por hecho ni ejecutarse antes
+Corregida la selección de empresa al recargar, con validación de membresía y separación
+por usuario; reintento de carga, datos obsoletos descartados y error de logout visible
+en Equipo. [Evidencia de selección](acceptance/COMPANY_SELECTION_QA.md): recarga dashboard
+/Equipo y cierre/reingreso reales; fallos, vacío y respuestas fuera de orden en fixture.
+Cinco regresiones nuevas (13 frontend aprobadas), build correcto y PostgreSQL 245/247
+con dos exclusiones conocidas. La selección al recargar indicada en el corte anterior
+queda resuelta para estos casos. T14/T15 siguen Needs Verification/In Progress: faltan
+recorrido completo por teclado, roles visuales, respuestas perdidas tras commit y QA
+transversal. T16 no se inicia ni se publica con esta entrega.
 
-| Trabajo bloqueado | Debe existir antes | Motivo |
-|---|---|---|
-| API financiera final | Contrato T04 y persistencia T09. | Evitar reglas de saldo, identidad y clasificación incompatibles. |
-| Guardado real desde el formulario | API T10 y formulario T06, con cuenta utilizable T05. | Un mock no guarda datos ni prueba autorización. |
-| Refresco validado y persistencia entre sesiones | T11 conectado a servidor real. | Cambiar estado React no demuestra persistencia ni actualización de todas las vistas. |
-| Garantía de no duplicación concurrente | T09/T10 y pruebas pertinentes de T13. | Deshabilitar un botón no evita dos solicitudes o procesos simultáneos. |
-| Preparación ejecutable de la demo completa | T08 y T11 terminadas. | Las cifras del guion deben corresponder al flujo implementado. |
-| Aceptación integral en navegador | T11, T12 y T13. | Necesita integración, datos reproducibles y controles de seguridad. |
-| Publicar como demo comprobada | T14/T15 sin bloqueantes y CI de la misma versión. | Publicar no reemplaza probar; pasar unitarias no prueba navegador. |
-| Prometer riesgo/probabilidad/confianza validada | Corpus temporal y calibración de la vía posterior. | Cuantiles experimentales y etiquetas de historial no son validación científica. |
+## Mejora de interfaz T14/T15 — 5 de noviembre de 2026
 
-## 6. Reparto de archivos para evitar que los agentes se pisen
-
-| Responsable | Área principal | Puntos de coordinación obligatoria |
-|---|---|---|
-| A: backend/integrador | Nuevo servicio/serializer de alta en `backend/apps/banking/`; modelos/migraciones solo si T09 los necesita. | Propietario único de `backend/config/urls.py`, modelos compartidos y registro central de contratos. Coordinar reutilización con `banking/tasks.py`, clasificación y normalización existentes. |
-| B: frontend | Nuevo componente de alta; `frontend/src/Movements.tsx` y refresco de vistas. | Acordar quién integra `frontend/src/main.tsx`, `style.css`, cuentas y helper CSRF. No cambiar contrato o cálculos financieros desde React. |
-| C: QA | Nuevos tests específicos y recorrido de navegador; fixtures aisladas. | No modificar modelos/API para forzar expectativas propias. Registrar defectos; el responsable del área cambia implementación y C verifica. |
-| D: producto/demo | Guion, datos sintéticos y aceptación en `docs/acceptance/`; propuesta de preparación de datos. | No modificar el seed compartido, modelos ni datos remotos por su cuenta. A integra cualquier comando ejecutable de preparación tras T12. |
-
-- Trabajar en ramas/worktrees separados cuando el entorno lo permita. Aislar también BD,
-  archivos temporales y empresas de prueba; un checkout distinto no aísla la BD.
-- En una carpeta compartida, asignar archivos concretos antes de escribir. Si dos agentes
-  necesitan el mismo archivo, uno entrega el cambio propuesto y el propietario lo integra.
-- No permitir migraciones simultáneas sin coordinar dependencias y nombres. Integrarlas
-  y verificarlas antes de que otros agentes basen trabajo sobre ellas.
-- Solo el integrador actualiza dependencias/lockfiles, el inventario OpenAPI generado y
-  configuración de despliegue compartida. Los demás proponen cambios delimitados.
-- No ejecutar la suite destructiva contra Supabase ni resetear datos de terceros.
-  No publicar credenciales, respaldos ni archivos financieros en commits o conversaciones.
-
-## 7. Paquete mínimo para encargar una tarea a otro agente
-
-Entregar a cada agente una tarjeta con estos campos; no basta «encárgate del backend»:
-
-```text
-Tarea: ID y nombre de este roadmap.
-Objetivo: comportamiento observable que debe quedar funcionando.
-Dependencias: IDs terminados y ubicación del contrato vigente.
-Archivos propios: rutas que puede modificar; propietario de archivos compartidos.
-Fuera de alcance: lo que no debe implementar ni cambiar en esta tarea.
-Invariantes: saldo al corte, Decimal, empresa/rol, CSRF, idempotencia y auditoría.
-Aceptación: casos concretos y evidencia que debe entregar.
-Entorno: BD aislada, datos sintéticos, sin nuevos costes ni cambios remotos no acordados.
-Entrega: archivos/commit, pruebas ejecutadas, resultados, límites y bloqueos reales.
-```
-
-La selección de IA depende de capacidad: tareas de texto/revisión acotada pueden usar
-modelos más ligeros; integridad, concurrencia, migraciones y conciliación requieren razonamiento
-y revisión más cuidadosos. No elegir por velocidad sacrificando pruebas de reglas financieras.
-
-## 8. Puerta de salida: idea demostrable
-
-- [ ] Desde navegador se entra sin sesión a Inicio y luego se registra/inicia sesión.
-- [ ] Se crea/elige empresa con cuenta manual, saldo y corte comprensibles.
-- [ ] Se registra un ingreso y un egreso sin archivos ni identificadores técnicos visibles.
-- [ ] Ambos persisten, se pueden clasificar y no se duplican al reintentar.
-- [ ] El usuario entiende por qué el historial no modifica otra vez el saldo declarado.
-- [ ] Cobros/pagos pendientes alimentan calendario y escenario 30/60/90 sin doble conteo.
-- [ ] Se reproduce el caso −81.000 COP y un cambio de compromiso recalcula el resultado.
-- [ ] Lector/empresa ajena no pueden modificar datos; la auditoría conserva autor y operación.
-- [ ] Se completa logout/reingreso y un error recuperable sin fingir éxito.
-- [ ] QA no tiene defectos que impidan el recorrido y la versión publicada pasa la prueba de humo.
-- [ ] La guía distingue escenario contractual de modelo experimental; correo no disponible
-  y suspensión del alojamiento gratuito se declaran como límites cuando sigan presentes.
-
-**No bloquean esta puerta** el instalador, Android/iOS, banca de producción, publicación en
-tiendas, offline ni demostrar todas las hipótesis científicas. Siguen pendientes, no eliminados.
-
-## 9. Vía posterior: objetivos completos, de menor a mayor dificultad
-
-Puede avanzar en paralelo a la demo en archivos y entornos separados, sin bloquearla.
-
-| ID | Dificultad | Trabajo posterior | Dependencias que NO se pueden saltar |
-|---|---|---|---|
-| P01 | 2/5 | Completar manuales, ejemplos y aceptación documental. | Para documentar el comportamiento nuevo como implementado: T11 y su evidencia. Borradores pueden empezar antes. |
-| P02 | 3/5 | Configurar y comprobar recuperación real por correo. | Proveedor/remitente/buzón autorizados y secretos privados; no depende del formulario manual. No contratar nada de pago. |
-| P03 | 3/5 | Completar ejemplos/errores OpenAPI de todas las familias. | Contratos reales de cada familia; para alta manual, T04 y T10. Generación central coordinada. |
-| P04 | 4/5 | Administración ampliada de usuarios/empresas. | Contrato de capacidades, autorización/auditoría y pruebas de abuso antes de publicar mutaciones. Independiente del alta manual, pero comparte cuentas/roles y exige coordinación. |
-| P05 | 4/5 | Gráfico de saldo histórico real. | Definir fuentes, cobertura y reconstrucción de saldos. No convertir flujo neto mensual en saldo bancario sin esa base. |
-| P06 | 4/5 | Rendimiento, concurrencia, accesibilidad y recuperación manual. | Versión estable y condiciones medibles; corpus/entornos aislados para carga y restore. El ensayo completo de nueva UI espera T11. |
-| P07 | 4/5 | Evaluación de clasificación y recurrencias. | Corpus independiente autorizado, etiquetas temporales y separación por empresa/grupo; las pruebas sintéticas actuales no bastan. |
-| P08 | 5/5 | Validar híbrido/comparación académica y resolver inclusión de Prophet. | Evidencia disponible en cada corte, corpus temporal y protocolo fijado antes de comparar. No atribuir cambios posteriores al pasado. |
-| P09 | 5/5 | Calibración de cuantiles, riesgo/factores y confianza por perfil. | Corpus/protocolo de P08 y validación temporal de los modelos evaluados; no deducir probabilidad de déficit de una banda sin metodología. |
-| P10 | 5/5 | Revisión de seguridad integral, operación y entrega de tesis. | Alcance ASVS definido, funcionalidades finales verificadas y resultados disponibles. Threat modeling puede avanzar antes; cumplimiento final y conclusiones no. |
-
-Escritorio y port móvil permanecen en la [hoja de entregables](ROADMAP_ENTREGABLES.md) como
-etapas aplazadas. Retomarlos requiere una decisión posterior, no una asignación implícita.
+Aplicadas Web Interface Guidelines al dashboard y estilos compartidos: menú móvil con
+Escape/foco, acciones directas, explicación desplegable, radios de captura y confirmación
+mensual. [Evidencia y límites](acceptance/UI_GUIDELINES_QA.md): escritorio, 320/390/650 px,
+validación nativa y teclado focalizado. 13 frontend, build y 245 PostgreSQL aprobadas
+con dos exclusiones conocidas. T14/T15 no se cierran: restan lector de pantalla, zoom,
+contraste completo, borradores, sincronización de filtros/URL y QA transversal previo.

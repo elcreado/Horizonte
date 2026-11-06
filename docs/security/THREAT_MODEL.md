@@ -68,3 +68,12 @@ hasta completar las validaciones externas y la política de tratamiento de datos
 Evidencia disponible: pruebas en `backend/tests`, contrato de origen en `desktop/tests`, smoke
 de configuración en `.local-logs/desktop-smoke`, estado en `../IMPLEMENTATION_STATUS.md` y reportes
 sintéticos de investigación. Una prueba unitaria o build aprobado no demuestra el despliegue remoto.
+
+## Alcance de la revisión documental — 18 de octubre de 2026
+
+El modelo anterior se conserva para el alojamiento/escritorio. El entorno Docker local
+publica puertos solo en loopback y usa credenciales exclusivas de desarrollo; no se
+considera configuración de producción. Captura manual y mensualidades añaden mutaciones
+con roles, CSRF, UUID y auditoría (test_manual_entries y test_cashflow_fixes).
+La prueba test_manual_concurrency acredita un caso concurrente en PostgreSQL, no ASVS
+ni resistencia general a abuso. La revisión integral de amenazas de la V1 sigue abierta.

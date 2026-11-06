@@ -6157,6 +6157,127 @@
                     "notice": {
                       "type": "string"
                     },
+                    "balance_history": {
+                      "type": "object",
+                      "properties": {
+                        "currency": {
+                          "type": "string",
+                          "enum": [
+                            "COP"
+                          ]
+                        },
+                        "cutoff": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "declared_balance": {
+                          "type": "string",
+                          "pattern": "^-?\\d+\\.\\d{2}$"
+                        },
+                        "complete_from": {
+                          "type": "string",
+                          "format": "date",
+                          "nullable": true
+                        },
+                        "notice": {
+                          "type": "string"
+                        },
+                        "accounts": {
+                          "type": "array",
+                          "minItems": 1,
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "account_id": {
+                                "type": "integer"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "declared_balance": {
+                                "type": "string",
+                                "pattern": "^-?\\d+\\.\\d{2}$"
+                              },
+                              "balance_date": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "complete_from": {
+                                "type": "string",
+                                "format": "date",
+                                "nullable": true
+                              },
+                              "complete_through": {
+                                "type": "string",
+                                "format": "date",
+                                "nullable": true
+                              },
+                              "coverage_valid": {
+                                "type": "boolean"
+                              },
+                              "coverage_source": {
+                                "type": "string",
+                                "enum": [
+                                  "source",
+                                  "manual_confirmation"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "account_id",
+                              "name",
+                              "declared_balance",
+                              "balance_date",
+                              "complete_from",
+                              "complete_through",
+                              "coverage_valid",
+                              "coverage_source"
+                            ]
+                          }
+                        },
+                        "points": {
+                          "type": "array",
+                          "minItems": 1,
+                          "maxItems": 366,
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "balance": {
+                                "type": "string",
+                                "pattern": "^-?\\d+\\.\\d{2}$",
+                                "nullable": true
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "declared",
+                                  "reconstructed",
+                                  "unknown"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "date",
+                              "balance",
+                              "status"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "currency",
+                        "cutoff",
+                        "declared_balance",
+                        "complete_from",
+                        "notice",
+                        "accounts",
+                        "points"
+                      ]
+                    },
                     "months": {
                       "type": "array",
                       "minItems": 12,
@@ -6225,6 +6346,7 @@
                     "first_transaction",
                     "count",
                     "notice",
+                    "balance_history",
                     "months",
                     "categories"
                   ]
@@ -6288,7 +6410,7 @@
           }
         },
         "x-contract-status": "history-fields-documented",
-        "description": "Todos los roles de empresa pueden consultar. Doce meses hasta el corte común de cuentas COP, inclusive; mes actual posiblemente parcial. Mes sin filas se muestra con ceros y count=0, sin afirmar ausencia de actividad. Solo movimientos de esta empresa; neto mensual no equivale a saldo bancario. Categorías en orden alfabético."
+        "description": "Todos los roles de empresa pueden consultar. Doce meses hasta el corte común de cuentas COP, inclusive; mes actual posiblemente parcial. Mes sin filas se muestra con ceros y count=0, sin afirmar ausencia de actividad. Solo movimientos de esta empresa; neto mensual no equivale a saldo bancario. Categorías en orden alfabético. balance_history reconstruye cierres diarios hacia atrás desde el saldo declarado. Antes del corte exige cobertura de todas las cuentas; días sin cobertura tienen balance=null, no cero. El punto del corte siempre es declarado. No certifica saldos bancarios."
       }
     },
     "/api/companies/{company_id}/imports/": {

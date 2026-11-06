@@ -1,5 +1,7 @@
 # Aceptación de la primera versión funcional
 
+> Referencia de escritorio/alcance ampliado con evidencia histórica; la prioridad actual es la web local con Docker. Estado y tareas vigentes en [roadmap](../ROADMAP_TRABAJO_IA.md). Esta auditoría no repitió la aceptación del instalador ni del alojamiento.
+
 El usuario ajustó el objetivo a una primera versión de escritorio simplemente funcional.
 La entrega correspondiente se describe en `../desktop/DESKTOP_V1_FUNCTIONAL.md`. Esta matriz conserva
 el alcance académico/ampliado; sus pendientes no se declaran resueltos por el cambio de objetivo.

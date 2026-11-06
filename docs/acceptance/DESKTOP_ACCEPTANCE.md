@@ -1,5 +1,7 @@
 # Ensayo de aceptación del cliente Windows
 
+> Referencia de escritorio/alcance ampliado con evidencia histórica; la prioridad actual es la web local con Docker. Estado y tareas vigentes en [roadmap](../ROADMAP_TRABAJO_IA.md). Esta auditoría no repitió la aceptación del instalador ni del alojamiento.
+
 Procedimiento pendiente de ejecución visual, no certificado de pruebas aprobadas.
 Usar una empresa nueva sin otras cuentas, obligaciones ni conexiones. Los importes son COP.
 Las fechas son fijas: no sustituirlas por la fecha actual del equipo.

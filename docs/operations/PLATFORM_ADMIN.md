@@ -35,7 +35,7 @@ No incluir contraseña en argumentos, documentación ni instalador. En el servic
 ejecutar contra la conexión autorizada y migrada. No reutilizar la cuenta demo para administración.
 La provisión por sí sola no habilita `/admin/`: requiere configuración adicional.
 
-Pendientes para la interfaz: acceso reservado a administrador de plataforma, CSRF y límite
+Pendientes para una futura interfaz Django `/admin/` (distinta de la consulta React existente): acceso reservado a administrador de plataforma, CSRF y límite
 persistente de login, archivos estáticos, operaciones explícitas con auditoría, conservación
 de invariantes de último propietario y pruebas de rechazo de usuarios de empresa. No registrar
 tablas financieras con CRUD genérico que eluda validaciones de la aplicación.

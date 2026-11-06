@@ -1,56 +1,31 @@
-> Actualización 16 de octubre de 2026: la prioridad vigente es la V1 web manual, implementada localmente en `codex/v1-manual-transactions`. Escritorio y móvil están aplazados. Consultar [estado actual](IMPLEMENTATION_STATUS.md) y [recorrido](PLAN_DEMO_FUNCIONAL.md); los entregables académicos inferiores mantienen sus límites.
-
 # Hoja de ruta vigente
 
-Revisión: **16 de octubre de 2026**. La prioridad actual es la aplicación web útil y
-presentable, con transacciones manuales. No se eliminan los objetivos académicos originales:
-sus brechas están en [estado y pendientes](ESTADO_Y_PENDIENTES.md).
+Revisión: **18 de octubre de 2026**. El seguimiento de tareas, dependencias, prioridad y
+criterios de cierre se mantiene únicamente en [ROADMAP_TRABAJO_IA](ROADMAP_TRABAJO_IA.md).
+La [matriz de requisitos](ESTADO_Y_PENDIENTES.md) conserva el alcance académico original.
 
 ## Etapa actual: demostrar la idea desde la web
 
-Seguir el [plan de demostración](PLAN_DEMO_FUNCIONAL.md). El reparto concreto por dificultad,
-paralelismo y bloqueos está en el [roadmap para agentes IA](ROADMAP_TRABAJO_IA.md).
-
-- [ ] Implementar captura manual segura de ingresos/egresos, sin alterar dos veces el saldo.
-- [ ] Integrar clasificación, histórico, cobertura y refresco de vistas.
-- [ ] Verificar cobros/pagos, conciliación y proyección con resultados esperados.
-- [ ] Preparar caso repetible y guía de presentación.
-- [ ] Ejecutar QA de navegador y comprobar la versión publicada.
-
-Presupuesto inicial 0 USD; suspensión del servicio gratuito aceptada. Respaldo manual únicamente.
-No se exige correo real para mostrar el recorrido con una cuenta conocida, pero su ausencia
-debe declararse. No se exige perfeccionar el modelo estadístico antes de demostrar el escenario.
+La captura manual, el Resumen inmediato, las mensualidades y Docker local están
+implementados y tienen pruebas delimitadas. Faltan QA transversal y publicación del corte.
+Ver T01–T16 y V1-01–V1-06 en el roadmap; no volver a implementar capacidades existentes.
 
 ## Escritorio: disponible, mejoras aplazadas
 
-- [x] Cliente Windows x64 Electron/NSIS con Inicio sin sesión y servidor HTTPS configurable.
-- [x] React/Django y PostgreSQL alojados para uso sin Docker local; importaciones y cola disponibles.
-- [ ] Aceptación en Windows limpio: instalación, flujo financiero, reintentos y desinstalación.
-- [ ] Firma, distribución y actualización del instalador.
-
-Para probar: Windows x64 e internet. El cliente depende del servidor y no ofrece modo offline.
-Estas tareas no bloquean la demostración web actual.
+Cliente Electron/NSIS existente, con evidencia histórica del 5 de octubre. Aceptación
+en Windows limpio, firma y actualización siguen en **Needs Verification / Planned**;
+no bloquean el ensayo web local. [Referencia](desktop/DESKTOP_V1_FUNCTIONAL.md).
 
 ## Completar los objetivos originales
 
-- [ ] Administración de plataforma conforme al actor definido en README.
-- [ ] Gráfico de saldo histórico real y revisión de todos los gráficos RF-14.
-- [ ] Modelo híbrido/recurrencias/clasificación sobre corpus independiente y temporalmente válido.
-- [ ] Calibración de cuantiles, riesgo/factores y confianza con evidencia por segmento.
-- [ ] Comparación de modelos acordada, incluida decisión explícita sobre Prophet.
-- [ ] ASVS, rendimiento con carga/renderizado, disponibilidad y accesibilidad comprobados.
-- [ ] OpenAPI, despliegue completo reproducible y entrega académica consolidada.
+P01–P10 conservan documentación, correo, API, administración, saldo histórico, calidad,
+investigación, calibración y seguridad/tesis. No se eliminan al reducir la demo.
 
 ## Segunda versión
 
-- [ ] **Port Android/iOS:** reutilizar el backend HTTPS y evaluar reutilización de React;
-  adaptar navegación, carga de archivos, gráficos y autenticación/CSRF de WebView.
-- [ ] QA en dispositivos reales, funcionamiento ante conectividad irregular y distribución.
-  Confirmar herramientas de Android y entorno macOS para iOS al ejecutar la fase, con costes
-  autorizados; no prometer publicación gratuita en tiendas sin comprobar sus condiciones.
-- [ ] Conector externo autorizado y facturación de proveedor cuando aporte valor frente al XML.
-- [ ] Notificaciones opt-in, observabilidad, actualizaciones del cliente y soporte.
-- [ ] Modelos nuevos solo tras comparación que justifique incorporarlos; supervisión de deriva.
+Android/iOS, proveedor financiero externo autorizado, notificaciones y observabilidad
+se mantienen en **Planned**, después de estabilizar y aceptar la web. Faltan decisiones
+de alcance, acceso, dispositivos y costes; no se prometen fechas ni publicación gratuita.
 
-No incluir transferencias, banca de producción ni contabilidad oficial silenciosamente.
-La [hoja anterior](archive/2026-10-05/ROADMAP_ENTREGABLES.md) se conserva como historia, no como plan vigente.
+Presupuesto inicial 0 USD, respaldo manual únicamente, sin transferencias ni contabilidad oficial.
+[Plan previo completo](archive/2026-10-18/ROADMAP_ENTREGABLES.md).

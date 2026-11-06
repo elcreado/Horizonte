@@ -12,3 +12,10 @@ No usar estos archivos como guía de arranque ni como estado vigente. Punto de e
 Los documentos experimentales están separados en [investigación](../research/README.md),
 porque siguen siendo evidencia útil y no se consideran obsoletos por estar fuera de la V1 básica.
 Los archivos no versionados de `Proyecto/` pertenecientes al usuario se mantuvieron intactos.
+
+## Auditoría del 18 de octubre de 2026
+
+[2026-10-18](2026-10-18/README.md) conserva íntegros los seis documentos previos a
+la consolidación de guías, matrices y roadmap. Sus enlaces relativos se ajustaron a
+la ubicación del archivo; no se alteraron cifras ni requisitos históricos.
+La cronología deja de repetirse en las guías operativas vigentes.

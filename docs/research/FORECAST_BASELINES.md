@@ -53,7 +53,7 @@ Las pruebas verifican aritmética residual, periodicidad, acumulación del saldo
 
 La API `GET /api/companies/{id}/experimental-forecast/?horizon=30|60|90&method=naive|seasonal_naive|ses` y la sección «Referencia estadística experimental» consultan movimientos hasta el corte compartido de las cuentas. La ventana de entrenamiento es de 90 días completos, declarados por propietario o contador para **cada cuenta** manual en el dashboard; Mock Bank declara su cobertura sintética al sincronizar. Una declaración humana no demuestra que el banco entregó todos los movimientos. Se exigen al menos cuatro días con flujo variable distinto de cero; si faltan datos, la API responde 409 y explica el motivo.
 
-El residual descuenta importes de conciliaciones activas y los movimientos de recurrencias confirmadas que tienen una obligación futura vinculada dentro del horizonte. Las obligaciones pendientes se suman una sola vez como flujos conocidos. La referencia arranca del saldo declarado, sin volver a sumar el historial. Cambiar el corte o importar nuevas filas en un periodo confirmado retira la declaración de cobertura. Los estados de la UI siguen separados: el escenario principal conserva solo obligaciones; la referencia es experimental y no incluye P10/P50/P90, validación de precisión con empresas reales ni probabilidad de déficit.
+El residual descuenta importes de conciliaciones activas y los movimientos de recurrencias confirmadas que tienen una obligación futura vinculada dentro del horizonte. Las obligaciones pendientes se suman una sola vez como flujos conocidos. La referencia arranca del saldo declarado, sin volver a sumar el historial. Cambiar el corte o importar nuevas filas en un periodo confirmado retira la declaración de cobertura. Los estados de la UI siguen separados: el Resumen ahora combina el promedio de movimientos ocurridos y obligaciones; sin historial conserva solo obligaciones. La referencia es experimental y no incluye P10/P50/P90, validación de precisión con empresas reales ni probabilidad de déficit.
 
 Las pruebas de integración cubren falta de cobertura, suma de obligación y estimación residual, exclusión de recurrencia, aislamiento de empresa, permisos y revocación de cobertura. Las ejecuciones estadísticas guardadas incluyen serie de entrenamiento, flujos conocidos y resultado; son revisables desde el dashboard. Faltan versiones temporales de conciliaciones para evaluación histórica, comparar modelos más avanzados y calibrar intervalos antes de presentar un pronóstico probabilístico.
 ## Candidato ARIMA de investigación
@@ -66,9 +66,10 @@ y MAE con SES, sin depender de instalar statsmodels en CI.
 
 Ya se integró la opción `--include-arima` en `research_forecast`. Piloto completado con
 cinco empresas ×24 meses, cortes de 90 días y horizontes 30/60/90; resultados en `ARIMA_PILOT.md`.
-La ejecución de 100 empresas con cortes de 30 días se detuvo ante un ajuste sin convergencia.
-No existe todavía un resultado global aceptado. Falta registrar cobertura y ventanas fallidas
-sin ocultarlas ni comparar promedios sobre conjuntos de ventanas distintos.
+Una ejecución inicial de 100 empresas se detuvo ante un ajuste sin convergencia. Ese
+pendiente histórico se resolvió para la política explícita de respaldo SES: el resultado
+aceptado está en [ARIMA_RESULTS](ARIMA_RESULTS.md), con sus fallos contabilizados.
+No equivale a evaluar ARIMA puro sin respaldo ni otros órdenes o Prophet.
 
 `arima_candidate.predict_arima` implementa ARIMA(1,0,0) con constante y estacionariedad
 impuesta, orden prefijado antes de evaluar, entrenamiento mínimo de 60 días y ventana máxima
@@ -77,8 +78,7 @@ céntimos. Ajustes sin convergencia o predicciones no finitas fallan explícitam
 
 Dependencias locales opcionales: `pip install -r backend/requirements-research.txt`.
 Render no instala estas dependencias ni ejecuta este candidato. Se comprobó un ajuste real de
-statsmodels 0.15.0 con 180 observaciones sintéticas y 30 predicciones finitas. Falta integrarlo
-en rolling-origin y comparar 30/60/90 días sobre el dataset versionado; esta comprobación no
+statsmodels 0.15.0 con 180 observaciones sintéticas y 30 predicciones finitas. La comparación rolling-origin 30/60/90 con respaldo SES ya está registrada; este ajuste aislado no
 demuestra mejora de precisión ni calibración. No sustituye los métodos del producto.
 
 Referencia: [API oficial ARIMA de statsmodels](https://www.statsmodels.org/stable/generated/statsmodels.tsa.arima.model.ARIMA.html).

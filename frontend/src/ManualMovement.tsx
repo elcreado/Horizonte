@@ -59,23 +59,25 @@ export function ManualMovement({ company, revision, onChanged }: { company: stri
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   }
+  const errorMessage = useRef<HTMLParagraphElement>(null);
+  useEffect(() => { if (error) errorMessage.current?.focus(); }, [error]);
   const selected = accounts?.find(item => String(item.id) === account);
-  return <section className="panel"><h2>Registrar movimiento</h2>
-    <p>Lleva tus transacciones manualmente sin conectar un banco. La fecha inicial es hoy (hora de Colombia); puedes cambiarla si la operación ocurrió antes. Puedes registrar varios movimientos el mismo día. El Resumen se recalcula con cada movimiento; el saldo declarado ya incluye esas operaciones y no se suma otra vez. Los compromisos futuros van en Cobros y pagos.</p>
+  return <section className="panel manual-entry"><div className="section-heading"><div><h2>Registrar movimiento</h2><p>¿Entró o salió dinero? Registra la operación aquí.</p></div><span className="section-badge">Captura manual</span></div>
+    <details className="form-explainer"><summary>Cómo afecta este movimiento a tu caja</summary><p>Puedes registrar varios movimientos el mismo día, sin conectar un banco. El Resumen se recalcula al guardar: los movimientos posteriores al corte actualizan la caja; los anteriores alimentan la estimación sin sumarse otra vez al saldo declarado. Para un pago que aún no ocurrió, usa <a href="#/dashboard/obligations">Cobros y pagos</a>.</p></details>
     {selected && date > selected.balance_date && <p className="notice">El corte de esta cuenta es {selected.balance_date}. El Resumen incluirá esta operación al guardarla. Para los modelos avanzados actualiza el corte y el saldo en <a href="#/dashboard/accounts">Cuentas y saldos</a>.</p>}
-    {error && <p role="alert" className="error">{error}</p>}{notice && <p role="status">{notice}</p>}
+    {error && <p ref={errorMessage} tabIndex={-1} role="alert" className="error">{error}</p>}{notice && <p role="status">{notice}</p>}
     {!accounts && !error && <p role="status">Cargando cuentas…</p>}
     {!accounts && error && <button onClick={() => setReload(value => value + 1)}>Reintentar consulta</button>}
     {accounts && !canEdit && <p>Tu rol permite consultar. Un propietario o contador puede registrar movimientos.</p>}
     {canEdit && accounts?.length === 0 && <p>Esta empresa no tiene cuentas manuales. En Empresa y equipo puedes crear una empresa con cuenta manual.</p>}
-    {canEdit && Boolean(accounts?.length) && <form onSubmit={save}>
-      <fieldset className="manual-movement-fields" disabled={busy || pending}>
-        <label>Cuenta manual<select value={account} onChange={e => setAccount(e.target.value)}>{accounts?.map(item => <option key={item.id} value={item.id}>{item.name} · corte {item.balance_date}</option>)}</select></label>
-        <label>Fecha del movimiento<input type="date" name="date" value={date} onChange={event => setDate(event.target.value)} max={businessToday()} required /></label>
-        <label>Tipo<select value={direction} onChange={e => setDirection(e.target.value)}><option value="in">Ingreso</option><option value="out">Egreso</option></select></label>
-        <label>Importe positivo COP<input type="number" name="amount" min="0.01" max="9999999999999999.99" step="0.01" required /></label>
-        <label>Descripción<input name="description" maxLength={250} required /></label>
-        <label>Categoría<select name="category" key={direction}><option value="">Clasificar automáticamente</option>{(direction === 'in' ? income : expense).map(value => <option key={value}>{value}</option>)}</select></label>
+    {canEdit && Boolean(accounts?.length) && <form onSubmit={save} autoComplete="off">
+      <fieldset className="manual-movement-fields" disabled={busy || pending}><legend className="sr-only">Datos del movimiento</legend>
+        <label>Cuenta manual<select name="account" value={account} onChange={e => setAccount(e.target.value)}>{accounts?.map(item => <option key={item.id} value={item.id}>{item.name} · corte {item.balance_date}</option>)}</select></label>
+        <label>Fecha del movimiento<input type="date" name="date" value={date} onChange={event => setDate(event.target.value)} max={businessToday()} aria-describedby="movement-date-help" required /><small id="movement-date-help">Hoy en Colombia. Puedes elegir una fecha anterior.</small></label>
+        <fieldset className="movement-type"><legend>Tipo de movimiento</legend><div><label><input type="radio" name="direction" value="in" checked={direction === 'in'} onChange={() => setDirection('in')} /><span>Ingreso<small>Entró dinero</small></span></label><label><input type="radio" name="direction" value="out" checked={direction === 'out'} onChange={() => setDirection('out')} /><span>Egreso<small>Salió dinero</small></span></label></div></fieldset>
+        <label>Valor del movimiento (COP)<input type="number" inputMode="decimal" name="amount" min="0.01" max="9999999999999999.99" step="0.01" aria-describedby="movement-amount-help" required /><small id="movement-amount-help">Escribe un valor positivo, sin signo ni separadores de miles.</small></label>
+        <label>Descripción<input name="description" maxLength={250} placeholder="Ej.: Venta del día…" required /></label>
+        <label>Categoría<select name="category" aria-describedby="movement-category-help" key={direction}><option value="">Clasificar automáticamente</option>{(direction === 'in' ? income : expense).map(value => <option key={value}>{value}</option>)}</select><small id="movement-category-help">Puedes dejar que Horizonte sugiera una categoría.</small></label>
       </fieldset>
       {pending && !busy && <p role="status">No se confirmó el guardado. Reintenta con la misma solicitud para evitar duplicados.</p>}
       <button disabled={busy}>{busy ? 'Guardando…' : pending ? 'Reintentar guardado' : 'Guardar movimiento'}</button>

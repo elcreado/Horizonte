@@ -1,5 +1,7 @@
 # Aceptación de conexión y recuperación del cliente
 
+> Referencia de escritorio/alcance ampliado con evidencia histórica; la prioridad actual es la web local con Docker. Estado y tareas vigentes en [roadmap](../ROADMAP_TRABAJO_IA.md). Esta auditoría no repitió la aceptación del instalador ni del alojamiento.
+
 Estado: **pendiente de ejecución**, 5 de octubre de 2026. La compilación no demuestra estos
 recorridos. El navegador de automatización no pudo arrancar: `apply deny-read ACLs` del
 sandbox Windows. No se obtuvieron capturas ni resultados visuales.

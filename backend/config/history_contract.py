@@ -1,4 +1,4 @@
-"""Contrato del histórico registrado, separado del saldo y del pronóstico."""
+"""Contrato de flujos y saldos históricos reconstruidos, separado del pronóstico."""
 
 from .auth_contracts import object_response
 
@@ -12,12 +12,16 @@ def apply_history_contract(path, method, operation):
     }
     count = {"type": "integer", "minimum": 0}
     date = {"type": "string", "format": "date"}
+    balance = {"type": "string", "pattern": r"^-?\d+\.\d{2}$"}
     operation["x-contract-status"] = "history-fields-documented"
     operation["description"] = (
         "Todos los roles de empresa pueden consultar. Doce meses hasta el corte común de "
         "cuentas COP, inclusive; mes actual posiblemente parcial. Mes sin filas se muestra "
         "con ceros y count=0, sin afirmar ausencia de actividad. Solo movimientos de esta "
-        "empresa; neto mensual no equivale a saldo bancario. Categorías en orden alfabético."
+        "empresa; neto mensual no equivale a saldo bancario. Categorías en orden alfabético. "
+        "balance_history reconstruye cierres diarios hacia atrás desde el saldo declarado. "
+        "Antes del corte exige cobertura de todas las cuentas; días sin cobertura tienen "
+        "balance=null, no cero. El punto del corte siempre es declarado. No certifica saldos bancarios."
     )
     operation["responses"].pop("2XX", None)
     operation["responses"]["200"] = {
@@ -31,6 +35,49 @@ def apply_history_contract(path, method, operation):
                         "first_transaction": {**date, "nullable": True},
                         "count": count,
                         "notice": {"type": "string"},
+                        "balance_history": object_response(
+                            {
+                                "currency": {"type": "string", "enum": ["COP"]},
+                                "cutoff": date,
+                                "declared_balance": balance,
+                                "complete_from": {**date, "nullable": True},
+                                "notice": {"type": "string"},
+                                "accounts": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": object_response(
+                                        {
+                                            "account_id": {"type": "integer"},
+                                            "name": {"type": "string"},
+                                            "declared_balance": balance,
+                                            "balance_date": date,
+                                            "complete_from": {**date, "nullable": True},
+                                            "complete_through": {**date, "nullable": True},
+                                            "coverage_valid": {"type": "boolean"},
+                                            "coverage_source": {
+                                                "type": "string",
+                                                "enum": ["source", "manual_confirmation"],
+                                            },
+                                        }
+                                    ),
+                                },
+                                "points": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "maxItems": 366,
+                                    "items": object_response(
+                                        {
+                                            "date": date,
+                                            "balance": {**balance, "nullable": True},
+                                            "status": {
+                                                "type": "string",
+                                                "enum": ["declared", "reconstructed", "unknown"],
+                                            },
+                                        }
+                                    ),
+                                },
+                            }
+                        ),
                         "months": {
                             "type": "array",
                             "minItems": 12,

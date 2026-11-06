@@ -2,7 +2,7 @@
 
 `openapi-inventory.json` registra las rutas reales de Django en formato OpenAPI 3.0.3.
 
-Revisión del 15 de octubre de 2026: **50 rutas y 64 operaciones**, ninguna limitada a
+Revisión documental del 18 de octubre de 2026: **52 rutas y 68 operaciones**, ninguna limitada a
 `route-inventory-only`. Dashboard, obligaciones/conciliación, recurrencias, pronósticos y
 evidencia versionada también tienen contratos de campos. Sigue siendo parcial por revisión
 pendiente de errores/ejemplos y algunas instantáneas históricas; no usar el número de rutas
@@ -30,7 +30,7 @@ incluyen entradas derivadas de serializadores, campos de respuesta, páginas de 
 capacidades por rol y protección del último propietario activo. Mutaciones reservadas a
 propietarios; no se envían invitaciones ni se eliminan datos financieros al retirar membresía.
 Las respuestas exitosas están descritas; los cuerpos detallados de errores aún están pendientes.
-Actualmente contiene 48 rutas y 61 operaciones, identificadores únicos, parámetros de ruta,
+El inventario conserva identificadores únicos, parámetros de ruta,
 distinción entre acceso público y cookie de sesión, y cabecera CSRF para métodos mutantes.
 
 ```powershell
@@ -166,3 +166,13 @@ El pronóstico experimental y las ejecuciones guardadas admiten `method=manual_a
 201 al crear; mismo UUID/empresa y datos devuelve 200; clave con otros datos 409. Día 1–31, importe Decimal positivo, fecha final opcional no anterior a inicial. GET devuelve results y can_edit. `POST .../monthly-schedules/{schedule_id}/cancel/` detiene futuras generaciones y cancela obligaciones futuras sin conciliaciones, sin borrar historial. Fechas con día inexistente usan fin de mes. Vencimientos son obligaciones únicas para conciliación, calendario, dashboard y pronósticos. No realiza transferencias.
 
 Dashboard mantiene su formato JSON y ahora estima con todos los movimientos registrados, descontando importes conciliados, más compromisos. La caja disponible suma solo movimientos posteriores al saldo declarado; as_of es el mayor entre el corte declarado y la última operación ocurrida. Sin historial conserva el escenario de compromisos. La alerta guardada usa summary_v2 con summary_points; instantáneas anteriores obligations_v1 se conservan.
+
+## Saldo histórico diario (30 de octubre de 2026)
+
+`GET /api/companies/{company_id}/history/` conserva flujos y categorías e incorpora
+`balance_history`: currency, cutoff, declared_balance, complete_from, notice, accounts y points.
+Cada punto contiene date, balance (cadena decimal o null) y status (declared/reconstructed/unknown).
+El corte es declarado; antes se reconstruye solo con cobertura común válida. Un null no es cero.
+Se documentan origen de cobertura, saldo y fechas por cuenta. Todos los roles del tenant pueden
+leer; otra empresa devuelve 404. Cortes/monedas incompatibles o ausencia de cuentas devuelven 409.
+Se mantienen 52 rutas y 68 operaciones; el contrato/inventario añaden campos sin nuevas rutas.

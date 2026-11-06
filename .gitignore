@@ -16,3 +16,9 @@ data/generated/
 
 .env.example
 .editorconfig
+.agents
+
+AGENTS.md
+CODESTYLE.md
+
+SPECS.md
