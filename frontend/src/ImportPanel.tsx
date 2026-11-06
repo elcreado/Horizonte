@@ -1,45 +1,74 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 
-type Account = { id: number; name: string; balance_date: string };
+type Account = { id: number; name: string; balance_date: string; connection_id: number | null };
 type Job = { id: number; status: string; created_count: number; duplicate_count: number; error: string };
 
-export function ImportPanel({ company }: { company: string }) {
+export function ImportPanel({ company, revision, onChanged }: { company: string; revision: number; onChanged: () => void }) {
+  const observedJobs = useRef<Map<number, string> | null>(null);
+  const notify = useRef(onChanged);
+  useEffect(() => { notify.current = onChanged; }, [onChanged]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [canImport, setCanImport] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [error, setError] = useState('');
+  const [statusError, setStatusError] = useState('');
+  const [accountsError, setAccountsError] = useState('');
   const [sending, setSending] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
+    let accountsLoaded = false;
     async function load() {
+      if (!accountsLoaded && !controller.signal.aborted) {
+        try {
+          const response = await fetch(`/api/companies/${company}/accounts/`, { signal: controller.signal });
+          if (!response.ok) throw new Error('No se pudieron consultar las cuentas.');
+          const result = await response.json();
+          if (!controller.signal.aborted) {
+            setAccounts(result.accounts.filter((account: Account) => !account.connection_id));
+            setCanImport(result.can_import); setAccountsError(''); accountsLoaded = true;
+          }
+        } catch (error) { if (!controller.signal.aborted) setAccountsError((error as Error).message); }
+      }
       try {
         const response = await fetch(`/api/companies/${company}/imports/`, { signal: controller.signal });
         if (!response.ok) throw new Error('No se pudo consultar el estado de las importaciones.');
-        setJobs(await response.json());
-      } catch (e) { if (!controller.signal.aborted) setError((e as Error).message); }
+        const result = await response.json();
+        if (!controller.signal.aborted) {
+          const changed = observedJobs.current !== null && (result as Job[]).some(job => job.status === 'completed' && observedJobs.current?.get(job.id) !== 'completed');
+          observedJobs.current = new Map((result as Job[]).map(job => [job.id, job.status]));
+          setJobs(result); setStatusError('');
+          if (changed) notify.current();
+        }
+      } catch (e) { if (!controller.signal.aborted) setStatusError((e as Error).message); }
       if (!controller.signal.aborted) timer = setTimeout(load, 3000);
     }
-    fetch(`/api/companies/${company}/accounts/`, { signal: controller.signal }).then(async response => {
-      if (!response.ok) throw new Error('No se pudieron consultar las cuentas.');
-      const result = await response.json(); setAccounts(result.accounts); setCanImport(result.can_import);
-    }).catch(e => { if (!controller.signal.aborted) setError(e.message); });
     void load();
     return () => { controller.abort(); clearTimeout(timer); };
-  }, [company]);
+  }, [company, revision]);
 
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSending(true); setError('');
     const form = event.currentTarget;
+    const payload = new FormData(form);
     try {
+      const file = payload.get('file');
+      if (!(file instanceof File) || !/\.(csv|xlsx)$/i.test(file.name) || file.size > 2 * 1024 * 1024) {
+        throw new Error('Selecciona un CSV o XLSX de hasta 2 MB.');
+      }
+      if (!file.size) throw new Error('El archivo está vacío. Selecciona un archivo con movimientos.');
       const tokenResponse = await fetch('/api/auth/csrf/');
+      if (!tokenResponse.ok) throw new Error('No se pudo verificar la sesión. Reintenta cuando el servidor esté disponible.');
       const token = await tokenResponse.json();
+      if (typeof token.csrfToken !== 'string' || !token.csrfToken) throw new Error('Respuesta de sesión inválida. Recarga e intenta de nuevo.');
       const response = await fetch(`/api/companies/${company}/imports/`, {
-        method: 'POST', headers: { 'X-CSRFToken': token.csrfToken }, body: new FormData(form),
-      });
-      const result = await response.json();
+        method: 'POST', headers: { 'X-CSRFToken': token.csrfToken }, body: payload,
+      }).catch(() => { throw new Error('Se perdió la conexión durante la carga. Consulta las importaciones antes de volver a enviar el archivo: el servidor puede haberlo recibido.'); });
+      const result = await response.json().catch(() => { throw new Error('No se pudo leer el resultado de la carga. Consulta las importaciones antes de volver a enviar el archivo.'); });
       if (!response.ok) throw new Error(result.detail || 'No se pudo cargar el archivo.');
+      observedJobs.current = new Map([...(observedJobs.current || new Map<number, string>()), [result.id, result.status]]);
       setJobs(previous => [result, ...previous].slice(0, 20)); form.reset();
+      if (result.status === 'completed') notify.current();
     } catch (e) { setError((e as Error).message); }
     finally { setSending(false); }
   }
@@ -49,14 +78,16 @@ export function ImportPanel({ company }: { company: string }) {
     <p><a href="/movimientos-ejemplo.csv" download>Descargar CSV de ejemplo</a></p>
     <p className="footnote">Columnas: external_id, date, amount, description. Fechas AAAA-MM-DD; decimales con punto. Cada movimiento necesita un ID estable. En XLSX: una sola hoja, columnas A–D, IDs como texto y sin fórmulas. Importar historial no cambia el saldo disponible ni las obligaciones.</p>
     {canImport && <form onSubmit={upload} className="toolbar">
-      <label>Cuenta<select name="account_id" required>{accounts.map(a => <option value={a.id} key={a.id}>{a.name} · corte {a.balance_date}</option>)}</select></label>
-      <label>Archivo CSV o XLSX<input name="file" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required /></label>
+      <label>Cuenta<select name="account_id" required disabled={sending}>{accounts.map(a => <option value={a.id} key={a.id}>{a.name} · corte {a.balance_date}</option>)}</select></label>
+      <label>Archivo CSV o XLSX<input name="file" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required disabled={sending} /></label>
       <button disabled={sending || !accounts.length}>{sending ? 'Enviando…' : 'Importar archivo'}</button>
     </form>}
     {!canImport && <p>El propietario o contador puede importar movimientos.</p>}
     {error && <p role="alert" className="error">{error}</p>}
+    {statusError && <p className="error" role="alert">{statusError} Se volverá a consultar automáticamente.</p>}
+    {accountsError && <p className="error" role="alert">{accountsError} Se volverá a consultar automáticamente.</p>}
     <div aria-live="polite">{jobs.map(job => <p key={job.id}><strong>Importación #{job.id}: </strong>
-      {job.status === 'queued' ? 'En cola o procesando. Si no avanza, comprueba que el worker esté iniciado.' : job.status === 'completed' ? `${job.created_count} movimientos nuevos y ${job.duplicate_count} duplicados omitidos. Recarga el panorama para verlos.` : job.error}
+      {job.status === 'queued' ? 'En cola o procesando. El estado se actualiza automáticamente. Si tarda, comprueba que el entorno local y su worker estén activos; consulta el apartado de Docker del manual antes de volver a subir el archivo.' : job.status === 'completed' ? `${job.created_count} movimientos nuevos y ${job.duplicate_count} duplicados omitidos.` : job.error}
     </p>)}</div>
   </section>;
 }

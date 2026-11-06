@@ -1,0 +1,60 @@
+Found 1 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: rest_framework
+  Apply all migrations: accounts, auth, banking, classify, contenttypes, forecast, invoices, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying accounts.0001_initial... OK
+  Applying accounts.0002_auditlog... OK
+  Applying accounts.0003_company_liquidity_threshold... OK
+  Applying accounts.0004_backgroundtask... OK
+  Applying accounts.0005_ratelimitbucket... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying banking.0001_initial... OK
+  Applying banking.0002_importjob... OK
+  Applying banking.0003_transaction_classification_source... OK
+  Applying banking.0004_importjob_file_format... OK
+  Applying banking.0005_transaction_merchant_name_and_more... OK
+  Applying banking.0006_normalize_history... OK
+  Applying banking.0007_bankaccount_history_complete_from_and_more... OK
+  Applying banking.0008_bankconnection_bankaccount_connection_bankconsent_and_more... OK
+  Applying banking.0009_merchant_transaction_merchant_merchantalias_and_more... OK
+  Applying banking.0010_backfill_merchants... OK
+  Applying banking.0011_manualentry... OK
+  Applying classify.0001_initial... OK
+  Applying forecast.0001_initial... OK
+  Applying forecast.0002_obligation_cancelled_obligation_counterparty_and_more... OK
+  Applying forecast.0003_recurrencereview... OK
+  Applying forecast.0004_recurrenceoccurrence... OK
+  Applying forecast.0005_alertevaluation... OK
+  Applying forecast.0006_forecastrun... OK
+  Applying forecast.0007_monthlyschedule_monthlyoccurrence_and_more... OK
+  Applying invoices.0001_initial... OK
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).
+
+Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+
+test_company_isolation (tests.test_application.ApplicationTests.test_company_isolation) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.154s
+
+OK
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+

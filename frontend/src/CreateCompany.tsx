@@ -1,3 +1,4 @@
+import { getCsrf } from './csrf';
 import { FormEvent, useState } from 'react';
 export function CreateCompany({ onCreated }: { onCreated: (company: { id: number; name: string }) => void }) {
   const [busy, setBusy] = useState(false);
@@ -6,7 +7,7 @@ export function CreateCompany({ onCreated }: { onCreated: (company: { id: number
     event.preventDefault(); const form = event.currentTarget;
     const body = Object.fromEntries(new FormData(form)); setBusy(true); setError('');
     try {
-      const csrf = await (await fetch('/api/auth/csrf/')).json();
+      const csrf = await getCsrf();
       const response = await fetch('/api/companies/create/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf.csrfToken }, body: JSON.stringify(body) });
       const result = await response.json();
       if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : Object.values(result).flat().join(' '));

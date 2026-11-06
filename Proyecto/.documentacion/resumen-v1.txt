@@ -1,0 +1,472 @@
+PAGE 1
+  
+ 
+  
+Diseño de base de datos de Horizonte 
+ 
+ 
+ 
+ 
+ 
+Adrian Perez Pacheco 
+1111043406 
+ 
+ 
+Base de datos II - DR 
+Geovanny Rubiano Torres 
+ 
+Universidad de pamplona – Villa del Rosario 
+Facultad de Ingeniería y Arquitecturas 
+
+PAGE 2
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+2 
+1. Introducción y planteamiento del problema 
+Horizonte es una plataforma de inteligencia de liquidez para microempresas. Su base de datos 
+integra cuentas bancarias, movimientos, facturas y obligaciones para consultar el dinero 
+disponible y los cobros o pagos pendientes. Este trabajo presenta el diseñ o de su núcleo 
+financiero mediante un modelo entidad relación, un modelo relacional y la normalización hasta 
+tercera forma normal o FN3. 
+1.1 Problema 
+La información financiera puede encontrarse dispersa entre extractos bancarios, facturas y 
+archivos de cálculo. Esta separación dificulta identificar movimientos duplicados, conocer las 
+obligaciones pendientes y relacionar un pago con su documento de orige n. Si los mismos datos 
+se repiten en varios registros, una modificación puede producir inconsistencias. 
+También es necesario diferenciar una factura de un movimiento real de dinero. Emitir una factura 
+no significa haber recibido su valor; el cobro o pago se reconoce al relacionar la obligación con 
+un movimiento bancario mediante una conciliación. 
+1.2 Objetivo general 
+Diseñar una base de datos relacional normalizada hasta FN3 que permita organizar y consultar 
+la información financiera básica de las microempresas que utilizan Horizonte. 
+1.3 Objetivos específicos 
+• Identificar las entidades, atributos y relaciones del núcleo financiero. 
+• Definir claves primarias, claves foráneas y restricciones de integridad. 
+• Representar el MER y transformarlo en un modelo relacional. 
+• Eliminar grupos repetidos y dependencias parciales y transitivas. 
+• Explicar la relación entre facturas, obligaciones y movimientos conciliados. 
+1.4 Justificación 
+El diseño relacional centraliza los datos y permite consultarlos con SQL. La normalización reduce 
+redundancias y las claves foráneas evitan referencias inexistentes. Esto facilita mantener 
+información consistente sobre saldos, ingresos, egresos y compromisos de pago. 
+  
+
+PAGE 3
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+3 
+2. Alcance y entidades del sistema 
+El diseño se concentra en la gestión de empresas y usuarios, cuentas y saldos, movimientos, 
+categorías, facturas, obligaciones y conciliaciones. Se trabaja con pesos colombianos COP. La 
+integración bancaria automática, los modelos predictivos, la auditoría  técnica y las tareas en 
+segundo plano quedan fuera de este alcance académico. 
+Entidad Función principal 
+empresa Identifica cada microempresa y su umbral operativo de liquidez. 
+usuario Identifica a las personas que acceden al sistema. 
+rol Catálogo de responsabilidades dentro de una empresa. 
+membresia Resuelve la relación muchos a muchos entre usuarios y empresas. 
+cuenta Identifica cada cuenta bancaria de una empresa. 
+corte_cuenta Conserva saldos observados por cuenta y fecha sin confundirlos con sumas 
+de movimientos. 
+categoria Taxonomía compartida de categorías financieras. 
+tercero Identifica comercios normalizados en el contexto de una empresa. 
+movimiento Registra ingresos y egresos bancarios sin duplicarlos. 
+obligacion Representa un cobro o pago esperado antes de su conciliación. 
+conciliacion Asocia un abono parcial o total de un movimiento a una obligación. 
+factura Guarda la cabecera financiera extraída del XML sin repetirla en un JSON. 
+parte_factura Registra las dos partes históricas del XML como filas atómicas. 
+registro_factura Asocia una factura global con cada empresa que la registra. 
+factura_obligacion Separa el vínculo opcional uno a uno entre registro empresarial y 
+obligación. 
+2.1 Requerimientos principales 
+• Administrar empresas y sus usuarios con roles de propietario, contador y consulta. 
+• Registrar cuentas, cortes de saldo y movimientos de ingreso o egreso. 
+• Clasificar movimientos por categoría y asociarlos a un tercero cuando se conozca. 
+• Registrar facturas, sus partes y su incorporación en cada empresa. 
+• Gestionar obligaciones y conciliar sus abonos parciales o totales. 
+El modelo es una propuesta del núcleo de datos de Horizonte; su adopción requiere ajustar las migraciones del 
+esquema implementado. 
+  
+
+PAGE 4
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+4 
+3. Modelo entidad relación MER 
+Cada rectángulo representa una entidad. Los segmentos muestran sus vínculos y cardinalidades; 
+las entidades repetidas son la misma entidad. El atributo sobre cada línea indica cómo se 
+relacionan los registros. 
+ 
+Lectura: 1 significa exactamente un registro, 0..1 una relación opcional y 0..N cero o muchos registros. Una 
+factura debe tener dos partes: emisor y receptor. 
+3.1 Relaciones muchos a muchos 
+Una empresa puede tener varios usuarios y un usuario participar en varias empresas; membresia 
+resuelve esta relación. Un movimiento puede aplicarse a varias obligaciones y una obligación 
+recibir varios abonos; conciliacion registra cada aplicación. 
+  
+
+
+PAGE 5
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+5 
+4. Relaciones de facturación y conciliación 
+Las relaciones completan el modelo del núcleo financiero. La conciliación resuelve el vínculo entre 
+movimientos y obligaciones, mientras registro_factura permite que una empresa incorpore un 
+documento sin duplicar su cabecera fiscal. 
+ 
+La pareja empresa y factura es única. Un registro empresarial puede vincularse a una obligación y cada 
+obligación puede vincularse a un solo registro de factura. 
+  
+
+
+PAGE 6
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+6 
+5. Modelo relacional y diccionario de datos 
+PK identifica la clave primaria; FK referencia la PK de la entidad indicada; UQ indica unicidad; NULL permite 
+ausencia de valor. Los demás atributos son obligatorios. Las PK compuestas se forman con todos los campos 
+marcados PK. Las tablas usan tipos de PostgreSQL. 
+5.1 empresa 
+Identifica cada microempresa y su umbral operativo de liquidez. 
+Campo Tipo de dato Clave y referencia 
+id BIGINT PK 
+nit VARCHAR(30) UQ 
+nombre VARCHAR(200) Obligatorio 
+umbral NUMERIC(18,2) Obligatorio 
+5.2 usuario 
+Identifica a las personas que acceden al sistema. 
+Campo Tipo de dato Clave y referencia 
+id BIGINT PK 
+username VARCHAR(150) UQ 
+password_hash VARCHAR(128) Obligatorio 
+nombres VARCHAR(150) Obligatorio 
+apellidos VARCHAR(150) Obligatorio 
+email VARCHAR(254) Obligatorio 
+5.3 rol 
+Catálogo de responsabilidades dentro de una empresa. 
+Campo Tipo de dato Clave y referencia 
+codigo VARCHAR(16) PK 
+nombre VARCHAR(40) UQ 
+5.4 membresia 
+Resuelve la relación muchos a muchos entre usuarios y empresas. 
+Campo Tipo de dato Clave y referencia 
+empresa_id BIGINT PK FK empresa 
+usuario_id BIGINT PK FK usuario 
+rol_codigo VARCHAR(16) FK rol 
+
+PAGE 7
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+7 
+5.5 cuenta 
+Identifica cada cuenta bancaria de una empresa. 
+Campo Tipo de dato Clave y referencia 
+id BIGINT PK 
+empresa_id BIGINT FK empresa 
+nombre VARCHAR(120) Obligatorio 
+password_hash conserva una contraseña protegida por el mecanismo de autenticación; nunca se guarda la 
+contraseña en texto plano. 
+  
+
+PAGE 8
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+8 
+6. Modelo relacional de movimientos y obligaciones 
+6.1 corte cuenta 
+Conserva saldos observados por cuenta y fecha sin confundirlos con sumas de movimientos. 
+Campo Tipo de dato Clave y referencia 
+cuenta_id BIGINT PK FK cuenta 
+fecha DATE PK 
+saldo NUMERIC(18,2) Obligatorio 
+6.2 categoria 
+Taxonomía compartida de categorías financieras. 
+Campo Tipo de dato Clave y referencia 
+id BIGINT PK 
+nombre VARCHAR(80) UQ 
+6.3 tercero 
+Identifica comercios normalizados en el contexto de una empresa. 
+Campo Tipo de dato Clave y referencia 
+id BIGINT PK 
+empresa_id BIGINT FK empresa 
+nombre_normalizado VARCHAR(250) Obligatorio 
+nombre_visible VARCHAR(250) Obligatorio 
+UQ adicional: (empresa_id,nombre_normalizado). 
+6.4 movimiento 
+Registra ingresos y egresos bancarios sin duplicarlos. 
+Campo Tipo de dato Clave y referencia 
+id BIGINT PK 
+cuenta_id BIGINT FK cuenta 
+externo_id VARCHAR(120) Obligatorio 
+fecha DATE Obligatorio 
+importe NUMERIC(18,2) Obligatorio 
+descripcion VARCHAR(250) Obligatorio 
+tercero_id BIGINT NULL FK tercero 
+categoria_id BIGINT FK categoria 
+UQ adicional: (cuenta_id,externo_id). 
+
+PAGE 9
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+9 
+6.5 obligacion 
+Representa un cobro o pago esperado antes de su conciliación. 
+Campo Tipo de dato Clave y referencia 
+id BIGINT PK 
+empresa_id BIGINT FK empresa 
+referencia VARCHAR(120) Obligatorio 
+contraparte_original VARCHAR(200) Obligatorio 
+descripcion VARCHAR(200) Obligatorio 
+direccion VARCHAR(3) Obligatorio 
+vencimiento DATE Obligatorio 
+importe_base NUMERIC(18,2) Obligatorio 
+cancelada BOOLEAN Obligatorio 
+UQ adicional: (empresa_id,referencia). 
+Un importe positivo indica ingreso y uno negativo egreso. corte_cuenta guarda el saldo observado por fecha. El 
+pendiente de una obligación se calcula restando las conciliaciones activas a importe_base. 
+  
+
+PAGE 10
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+10 
+7. Modelo relacional de facturación y conciliación 
+7.1 conciliacion 
+Asocia un abono parcial o total de un movimiento a una obligación. 
+Campo Tipo de dato Clave y referencia 
+id BIGINT PK 
+obligacion_id BIGINT FK obligacion 
+movimiento_id BIGINT FK movimiento 
+usuario_id BIGINT FK usuario 
+importe NUMERIC(18,2) Obligatorio 
+solicitud_id UUID Obligatorio 
+creada_en TIMESTAMPTZ Obligatorio 
+revertida_en TIMESTAMPTZ NULL 
+UQ adicional: (obligacion_id,solicitud_id). 
+7.2 factura 
+Guarda la cabecera financiera extraída del XML sin repetirla en un JSON. 
+Campo Tipo de dato Clave y referencia 
+id BIGINT PK 
+cufe VARCHAR(150) UQ 
+numero VARCHAR(100) Obligatorio 
+emision DATE Obligatorio 
+vencimiento_xml DATE NULL 
+subtotal NUMERIC(18,2) Obligatorio 
+total NUMERIC(18,2) Obligatorio 
+pagadero NUMERIC(18,2) Obligatorio 
+creada_en TIMESTAMPTZ Obligatorio 
+7.3 parte factura 
+Registra las dos partes históricas del XML como filas atómicas. 
+Campo Tipo de dato Clave y referencia 
+factura_id BIGINT PK FK factura 
+papel VARCHAR(8) PK 
+nit_declarado VARCHAR(30) Obligatorio 
+nombre_declarado VARCHAR(200) Obligatorio 
+
+PAGE 11
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+11 
+7.4 registro factura 
+Asocia una factura global con cada empresa que la registra. 
+Campo Tipo de dato Clave y referencia 
+id BIGINT PK 
+empresa_id BIGINT FK empresa 
+factura_id BIGINT FK factura 
+registrada_en TIMESTAMPTZ Obligatorio 
+UQ adicional: (empresa_id,factura_id). 
+7.5 factura obligacion 
+Separa el vínculo opcional uno a uno entre registro empresarial y obligación. 
+Campo Tipo de dato Clave y referencia 
+registro_id BIGINT PK FK registro_factura 
+obligacion_id BIGINT UQ FK obligacion 
+CUFE es único globalmente. registro_factura separa la incorporación del documento por empresa. Los nombres 
+y NIT de parte_factura conservan los valores históricos declarados en el XML. 
+  
+
+PAGE 12
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+12 
+8. Normalización hasta tercera forma normal 
+8.1 Primera forma normal FN1 
+Cada celda contiene un valor atómico y cada fila representa un hecho. Los movimientos de una 
+cuenta se almacenan en filas independientes; los usuarios de una empresa se relacionan 
+mediante membresia. Las partes de una factura se registran como dos filas, sin listas de nombres 
+o documentos dentro de una celda. 
+8.2 Segunda forma normal FN2 
+Cada atributo no clave depende de la clave completa. En membresia la clave es (empresa_id, 
+usuario_id) y el rol corresponde a esa combinación. El nombre del usuario se conserva en 
+usuario, porque no depende de la empresa. En corte_cuenta, saldo depende de la cuenta y de la 
+fecha, no de uno de esos atributos por separado. 
+8.3 Tercera forma normal FN3 
+Se eliminan dependencias transitivas entre atributos no clave. El nombre de la categoría se 
+almacena en categoria y el movimiento guarda su FK. Los datos de la empresa no se repiten en 
+cuenta ni movimiento; el movimiento obtiene la empresa a través de su cuenta. Los nombres de 
+los roles se almacenan solamente en rol. 
+Grupo de tablas Dependencia funcional y verificación 
+empresa usuario rol categoria 
+tercero 
+La PK determina los atributos descriptivos. Los identificadores o nombres 
+declarados UQ también son claves candidatas. 
+membresia corte_cuenta 
+parte_factura 
+Los atributos no clave dependen de la combinación completa de la PK. No 
+se repiten datos descriptivos de sus entidades relacionadas. 
+cuenta movimiento obligacion 
+conciliacion 
+Cada hecho tiene identidad propia y referencia a sus entidades por FK. 
+Las claves naturales de movimiento y obligacion se mantienen mediante 
+UQ. 
+factura registro_factura 
+factura_obligacion 
+CUFE determina la cabecera global. La asociación empresa factura se 
+guarda aparte. factura_obligacion contiene dos claves candidatas, sin 
+repetir empresa o dirección. 
+8.4 Ejemplo de eliminación de redundancia 
+Una tabla con movimiento_id, categoria_id y nombre_categoria mantendría la dependencia 
+movimiento_id → categoria_id → nombre_categoria. Al separar CATEGORIA(id, nombre) y 
+conservar solo categoria_id en MOVIMIENTO, el nombre se modifica en un único lugar. La unión 
+mediante FK permite recuperar la misma información sin repetirla. 
+En las 15 tablas del modelo, bajo estas reglas de negocio, los atributos son atómicos, no existen 
+dependencias parciales de atributos no clave y los atributos descriptivos dependen de claves 
+candidatas. Los valores históricos declarados por una factura no se sustituyen por el nombre 
+actual de sus partes. 
+  
+
+PAGE 13
+ 
+ 
+"Formando nuevas generaciones con sello de excelencia comprometidos 
+con la transformación social de las regiones y un país en paz"  
+Universidad de Pamplona 
+Pamplona - Norte de Santander - Colombia 
+Tels: (+57) 3153429495 - 3160244475 
+www.unipamplona.edu.co 
+ 
+SC-CER96940 
+13 
+9. Reglas de integridad y ejemplo de uso 
+Regla Aplicación 
+Identidad y unicidad No se repiten NIT de empresa, username, CUFE, membresías ni la pareja cuenta 
+e identificador externo de un movimiento. 
+Pertenencia empresarial El tercero, la cuenta, la obligación y el registro de factura de una operación deben 
+pertenecer a la misma empresa. 
+Conciliación El importe aplicado debe ser positivo y no superar el pendiente de la obligación ni 
+el valor disponible del movimiento. El signo debe corresponder a cobro o pago. 
+Facturación Cada factura tiene un emisor y un receptor. La empresa que la registra debe 
+coincidir con una de esas partes. 
+Trazabilidad Revertir una conciliación registra revertida_en; los registros relacionados se 
+conservan y las FK restringen el borrado. 
+9.1 Ejemplo de conciliación 
+Una empresa tiene una obligación de pago de COP 600 000. Se registra un egreso bancario por 
+COP 200 000 y se concilia con esa obligación. El pendiente queda en COP 400 000. Si se revierte 
+la conciliación, el pendiente vuelve a COP 600 000. La factura respalda el documento comercial; 
+el movimiento demuestra la salida de dinero. 
+Pendiente = importe base − suma de conciliaciones activas. La operación debe ejecutarse dentro 
+de una transacción, verificando empresa e importes antes de confirmar el abono. Una solicitud 
+repetida se reconoce por la combinación obligacion_id y solicitud_i d, sin aplicar dos veces el 
+mismo importe. 
+9.2 Conclusiones 
+El modelo propuesto reúne los datos esenciales de Horizonte en 15 tablas relacionadas. El MER 
+muestra los vínculos del negocio y el modelo relacional define atributos, tipos y claves. La 
+normalización hasta FN3 reduce la repetición de datos y facilita mant ener información 
+consistente. 
+La separación entre facturas, obligaciones y movimientos permite distinguir el documento 
+comercial, el compromiso esperado y el dinero efectivamente recibido o pagado. La conciliación 
+los conecta y permite consultar los saldos pendientes de cada empresa. 
+9.3 Referencias 
+Horizonte. README.md y SPECS.md: descripción y alcance del proyecto. Modelos Django de los módulos 
+accounts, banking, invoices y forecast: entidades y reglas de información financiera. Documentación de base de 
+datos de Horizonte: desarrollo completo del di seño. Plantilla institucional de la Universidad de Pamplona y 
+ejemplos proporcionados para la presentación. 

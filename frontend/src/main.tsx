@@ -1,23 +1,43 @@
-import React, { FormEvent, useEffect, useState } from 'react';
+import { MonthlySchedules } from './MonthlySchedules';
+import { ManualMovement } from './ManualMovement';
+import React, { FormEvent, useEffect, useLayoutEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import './style.css';
-import { History } from './History';
+import { ScreenBoundary } from './ScreenBoundary';
+const History = React.lazy(() => import('./History').then(module => ({ default: module.History })));
 import { ClassificationRules } from './ClassificationRules';
 import { CreateCompany } from './CreateCompany';
 import { Profile } from './Profile';
+import { Coverage, CoverageData } from './Coverage';
+import { AccountBalances } from './AccountBalances';
+import { BankConnections } from './BankConnections';
+import { LiquidityAlert, AlertData } from './LiquidityAlert';
+import { DeficitExplanation } from './DeficitExplanation';
+import { AlertHistory } from './AlertHistory';
+const ForecastPreview = React.lazy(() => import('./ForecastPreview').then(module => ({ default: module.ForecastPreview })));
 import { Home } from './Home';
 import { Register } from './Register';
 import { Team } from './Team';
 import { PasswordRecovery } from './PasswordRecovery';
-import { Invoices } from './Invoices';
-import { Obligations } from './Obligations';
+const Invoices = React.lazy(() => import('./Invoices').then(module => ({ default: module.Invoices })));
+const Obligations = React.lazy(() => import('./Obligations').then(module => ({ default: module.Obligations })));
+const ObligationCalendar = React.lazy(() => import('./ObligationCalendar').then(module => ({ default: module.ObligationCalendar })));
 import { Recurrences } from './Recurrences';
-import { Movements } from './Movements';
+const Movements = React.lazy(() => import('./Movements').then(module => ({ default: module.Movements })));
+const Merchants = React.lazy(() => import('./Merchants').then(module => ({ default: module.Merchants })));
 import { ImportPanel } from './ImportPanel';
+import { PlatformUsers } from './PlatformUsers';
+import { forgetCompany } from './companySelection';
+import { useCompanySelection } from './useCompanySelection';
+import { DashboardNavigation } from './DashboardNavigation';
+import { dashboardSections } from './dashboardSections';
+
+const DashboardChart = React.lazy(() => import('./DashboardChart').then(module => ({ default: module.DashboardChart })));
 
 type Company = { id: number; name: string };
 type Dashboard = {
+  liquidity_alert: AlertData;
+  coverage: CoverageData;
   company: string; as_of: string; balance: string; receivable: string; payable: string;
   method: string; notice: string; first_deficit: string | null; minimum_balance: string;
   overdue_count: number; points: { date: string; balance: string }[];
@@ -33,7 +53,9 @@ async function api<T>(path: string, body?: object, signal?: AbortSignal): Promis
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (body) {
     const response = await fetch('/api/auth/csrf/');
+    if (!response.ok) throw new Error('No se pudo verificar la sesión. Reintenta cuando el servidor esté disponible.');
     const token = await response.json();
+    if (typeof token.csrfToken !== 'string' || !token.csrfToken) throw new Error('Respuesta de sesión inválida. Recarga e intenta de nuevo.');
     headers['X-CSRFToken'] = token.csrfToken;
   }
   const response = await fetch(`/api${path}`, {
@@ -41,10 +63,14 @@ async function api<T>(path: string, body?: object, signal?: AbortSignal): Promis
   });
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || 'No se pudo completar la solicitud. Comprueba que el backend esté disponible.');
+    throw new Error(error.detail || 'No se pudo completar la solicitud. Comprueba tu conexión y vuelve a intentarlo.');
   }
   return response.status === 204 ? undefined as T : response.json();
 }
+
+const loadCompanies = (signal: AbortSignal) => api<Company[]>('/companies/', undefined, signal);
+
+
 
 function App() {
   const [route, setRoute] = useState(window.location.hash || '#/');
@@ -54,35 +80,58 @@ function App() {
     return () => window.removeEventListener('hashchange', onRoute);
   }, []);
   const [user, setUser] = useState<string | null>(null);
+  const [platformAdmin, setPlatformAdmin] = useState(false);
+  useEffect(() => {
+    setPlatformAdmin(false);
+    if (!user) return;
+    const controller = new AbortController();
+    api<{ platform_admin: boolean }>('/auth/me/', undefined, controller.signal)
+      .then(value => { if (!controller.signal.aborted) setPlatformAdmin(value.platform_admin); }).catch(() => {});
+    return () => controller.abort();
+  }, [user]);
   const [checking, setChecking] = useState(true);
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [company, setCompany] = useState('');
+  const [sessionError, setSessionError] = useState('');
+  const [sessionRevision, setSessionRevision] = useState(0);
+  const { companies, company, status: companyStatus, error: companyError, selectCompany, addCompany, retryCompanies } = useCompanySelection(user, loadCompanies);
   const [financialRevision, setFinancialRevision] = useState(0);
   const [horizon, setHorizon] = useState(30);
-  const [data, setData] = useState<Dashboard | null>(null);
+  const [loadedDashboard, setLoadedDashboard] = useState<{ key: string; value: Dashboard } | null>(null);
+  const dashboardKey = JSON.stringify([user, company, horizon, financialRevision]);
+  const data = loadedDashboard?.key === dashboardKey ? loadedDashboard.value : null;
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  useLayoutEffect(() => {
+    if (!checking) focusMainContent();
+  }, [route, checking, user]);
+
   useEffect(() => {
-    api<{ username: string }>('/auth/me/').then(value => setUser(value.username))
-      .catch(() => setUser(null)).finally(() => setChecking(false));
-  }, []);
-  useEffect(() => {
-    if (!user) return;
     const controller = new AbortController();
-    api<Company[]>('/companies/', undefined, controller.signal).then(value => {
-      setCompanies(value); setCompany(value[0] ? String(value[0].id) : '');
-    }).catch(e => { if (e.name !== 'AbortError') setError(e.message); });
+    setChecking(true); setSessionError('');
+    async function checkSession() {
+      try {
+        const response = await fetch('/api/auth/me/', { signal: controller.signal });
+        if (response.status === 403) { if (!controller.signal.aborted) setUser(null); return; }
+        if (!response.ok) throw new Error('No se pudo comprobar la sesión. El servicio puede estar reactivándose.');
+        const result = await response.json();
+        if (typeof result.username !== 'string') throw new Error('Respuesta de sesión inválida. Reintenta la conexión.');
+        if (!controller.signal.aborted) setUser(result.username);
+      } catch (error) {
+        if (!controller.signal.aborted) setSessionError(error instanceof Error ? error.message : 'No se pudo comprobar la sesión.');
+      } finally { if (!controller.signal.aborted) setChecking(false); }
+    }
+    void checkSession();
     return () => controller.abort();
-  }, [user]);
+  }, [sessionRevision]);
   useEffect(() => {
     if (!company || !user) return;
     const controller = new AbortController();
-    setData(null); setError('');
+    setLoadedDashboard(null); setError('');
     api<Dashboard>(`/companies/${company}/dashboard/?horizon=${horizon}`, undefined, controller.signal)
-      .then(setData).catch(e => { if (e.name !== 'AbortError') setError(e.message); });
+      .then(value => { if (!controller.signal.aborted) setLoadedDashboard({ key: dashboardKey, value }); })
+      .catch(e => { if (!controller.signal.aborted) setError(e.message); });
     return () => controller.abort();
-  }, [company, horizon, user, financialRevision]);
+  }, [company, horizon, user, financialRevision, dashboardKey]);
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError('');
@@ -97,57 +146,87 @@ function App() {
   async function signOut() {
     try {
       await api('/auth/logout/', {});
-      setUser(null); setData(null); setCompanies([]); setCompany(''); setError('');
+      forgetCompany(() => window.localStorage);
+      setUser(null); setLoadedDashboard(null); setError('');
       window.location.hash = '/';
     } catch (e) { setError((e as Error).message); }
   }
   if (route === '#/recover-password' || route.startsWith('#/reset-password?')) return <PasswordRecovery key={route} route={route} />;
   if (route === '#/register' && !user) return <Register onRegistered={username => { setUser(username); window.location.hash = '/dashboard'; }} />;
-  if (route === '#/' || !['#/login', '#/dashboard', '#/register', '#/team', '#/account'].includes(route)) return <Home authenticated={Boolean(user)} />;
+  const sectionId = ['#/dashboard', '#/login', '#/register'].includes(route) ? 'overview' : route.replace('#/dashboard/', '');
+  const section = dashboardSections.find(item => item.id === sectionId);
+  if (route === '#/' || (!section && !['#/login', '#/dashboard', '#/register', '#/team', '#/account', '#/platform'].includes(route))) return <Home authenticated={Boolean(user)} />;
   if (checking) return <main><p role="status">Cargando sesión…</p></main>;
+  if (sessionError) return <main className="login"><a href="#/">Volver al inicio</a><h1>No se pudo comprobar tu sesión</h1><p role="alert">{sessionError}</p><button onClick={() => setSessionRevision(value => value + 1)}>Reintentar conexión</button></main>;
   if (!user) return <main className="login"><a className="brand" href="#/">◈ HORIZONTE</a><p className="back-home"><a href="#/">← Volver al inicio</a></p>
     <h1>Tu caja, con perspectiva.</h1><p>Explora la liquidez de tu empresa y anticipa tus próximos compromisos.</p>
     <form onSubmit={signIn}><h2>Entrar a la aplicación</h2>
-      <label>Usuario<input name="username" autoComplete="username" required defaultValue="demo" /></label>
+      <label>Usuario<input name="username" autoComplete="username" spellCheck={false} required /></label>
       <label>Contraseña<input name="password" type="password" autoComplete="current-password" required /></label>
       {error && <p role="alert" className="error">{error}</p>}
       <button disabled={busy}>{busy ? 'Ingresando…' : 'Ingresar'}</button>
       <p><a href="#/recover-password">Olvidé mi contraseña</a></p>
       <p>¿No tienes cuenta? <a href="#/register">Crear cuenta y empresa</a></p>
-      <small>Entorno académico · utiliza la contraseña configurada con DEMO_PASSWORD.</small>
+      <small>Entorno académico · ingresa con el usuario y la contraseña de tu cuenta.</small>
     </form></main>;
   if (route === '#/account') return <Profile />;
-  if (route === '#/team') return <><header><a className="brand" href="#/">◈ HORIZONTE</a><a href="#/dashboard">Volver al dashboard</a><button className="secondary" onClick={signOut}>Cerrar sesión</button></header><main><h1>Empresa y equipo</h1><CreateCompany onCreated={created => { setCompanies(items => [...items, created]); setCompany(String(created.id)); }} /><label>Empresa<select value={company} onChange={e => setCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>{company ? <Team key={company} company={company} companyName={companies.find(c => String(c.id) === company)?.name || ''} /> : <p>No tienes empresas disponibles.</p>}</main></>;
-  return <><header><a className="brand" href="#/">◈ HORIZONTE</a><a href="#/">Inicio</a><a href="#/team">Empresa y equipo</a><a href="#/account">Mi cuenta</a><span>Inteligencia de liquidez</span><button className="secondary" onClick={signOut}>Cerrar sesión</button></header>
-    <main><div className="toolbar"><div><p className="eyebrow">PANORAMA FINANCIERO</p><h1>Anticipa lo que viene.</h1></div>
-      <label>Empresa<select value={company} onChange={e => setCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div>
+  if (route === '#/platform') return <><header><a href="#/dashboard">Volver al dashboard</a><button onClick={signOut}>Cerrar sesión</button></header><PlatformUsers key={user} /></>;
+  const companyFeedback = companyStatus === 'loading' ? <p role="status">Cargando empresas…</p> : companyStatus === 'error' ? <div role="alert"><p className="error">{companyError}</p><button className="secondary" onClick={retryCompanies}>Reintentar carga de empresas</button></div> : null;
+  if (route === '#/team') return <><header><a className="brand" href="#/">◈ HORIZONTE</a><a href="#/dashboard">Volver al dashboard</a><button className="secondary" onClick={signOut}>Cerrar sesión</button></header><main><h1>Empresa y equipo</h1>{error && <p role="alert" className="error">{error}</p>}{companyFeedback}{companyStatus === 'ready' && <CreateCompany key={user} onCreated={addCompany} />}<label>Empresa<select value={company} disabled={companyStatus !== 'ready' || !companies.length} onChange={e => selectCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>{company ? <Team key={`Team-${company}`} company={company} companyName={companies.find(c => String(c.id) === company)?.name || ''} /> : companyStatus === 'ready' ? <p>No tienes empresas disponibles.</p> : null}</main></>;
+  return <><header className="app-header"><a className="brand" href="#/" translate="no"><span aria-hidden="true">◈</span> HORIZONTE</a><nav aria-label="Navegación de cuenta"><a href="#/">Inicio</a><a href="#/team">Empresa y equipo</a><a href="#/account">Mi cuenta</a>{platformAdmin && <a href="#/platform">Administración</a>}</nav><button className="secondary" onClick={signOut}>Cerrar sesión</button></header>
+    <div className="dashboard-layout"><DashboardNavigation sectionId={sectionId} />
+    <main id="main-content" className="dashboard-content"><div className="toolbar page-heading"><div><p className="eyebrow">{section?.group || 'PANORAMA FINANCIERO'}</p><h1>{section?.label || 'Resumen'}</h1><p>{section?.description}</p></div>
+      <label className="company-selector">Empresa<select name="company" value={company} disabled={companyStatus !== 'ready' || !companies.length} onChange={e => selectCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div>
       {error && <p role="alert" className="error">{error}</p>}
-      {!company && !error && <p role="status">No hay empresas disponibles. Ejecuta seed_demo para preparar los datos.</p>}
+      {companyFeedback}
+      {companyStatus === 'ready' && !company && !error && <p role="status">No tienes empresas disponibles. <a href="#/team">Crea tu empresa</a> o solicita acceso a su propietario.</p>}
       {company && !data && !error && <p role="status">Cargando panorama…</p>}
-      {company && <ImportPanel key={company} company={company} />}
-      {data && <><div className="notice"><strong>DEMO SINTÉTICA</strong> {data.notice} Corte: {dateLabel(data.as_of)}.</div>
+      {company && <React.Suspense fallback={<p role="status">Cargando sección…</p>}>
+      {sectionId === 'overview' && <>
+      {data && <><nav className="quick-actions" aria-label="Acciones frecuentes">
+        <a href="#/dashboard/movements"><span aria-hidden="true">＋</span><div><strong>Registrar movimiento</strong><small>Agrega un ingreso o un egreso</small></div><span aria-hidden="true">→</span></a>
+        <a href="#/dashboard/obligations"><span aria-hidden="true">↻</span><div><strong>Programar pagos</strong><small>Organiza tus compromisos mensuales</small></div><span aria-hidden="true">→</span></a>
+        <a href="#/dashboard/sources"><span aria-hidden="true">↑</span><div><strong>Importar movimientos</strong><small>Sube un archivo de transacciones</small></div><span aria-hidden="true">→</span></a>
+      </nav>
+      <div className="estimate-summary"><p><span className="status-dot" aria-hidden="true" />Estimación orientativa <span>· corte {dateLabel(data.as_of)}</span></p><details><summary>Cómo se calcula esta estimación</summary><p>{data.notice}</p></details></div>
         <section className="cards" aria-label="Resumen financiero">
           {[['Saldo disponible', data.balance], [`Por cobrar · ${horizon} días`, data.receivable], [`Por pagar · ${horizon} días`, data.payable]].map(([label, value]) => <article key={label}><p>{label}</p><strong>{money(value)}</strong><small>COP · pesos colombianos</small></article>)}
-          <article className={data.first_deficit ? 'risk' : ''}><p>Escenario de liquidez</p><strong>{data.first_deficit ? `Déficit: ${dateLabel(data.first_deficit)}` : 'Sin déficit previsto'}</strong><small>Según las obligaciones registradas</small></article>
+          <article className={data.first_deficit ? 'risk' : ''}><p>Escenario de liquidez</p><strong>{data.first_deficit ? `Déficit: ${dateLabel(data.first_deficit)}` : 'Sin déficit previsto'}</strong><small>Según movimientos y compromisos registrados</small></article>
         </section>
         <section className="panel"><div className="toolbar"><div><h2>La trayectoria de tu caja</h2><p>{data.method}</p></div><div className="periods" aria-label="Horizonte">{[30, 60, 90].map(n => <button className={horizon === n ? 'active' : 'secondary'} aria-pressed={horizon === n} key={n} onClick={() => setHorizon(n)}>{n} días</button>)}</div></div>
           <div className="chart" role="img" aria-label={`Saldo mínimo proyectado ${money(data.minimum_balance)}. ${data.first_deficit ? `Primer déficit ${data.first_deficit}` : 'Sin déficit en el horizonte'}`}>
-            <ResponsiveContainer width="100%" height="100%"><LineChart data={data.points.map(p => ({ ...p, balance: Number(p.balance) }))} margin={{ left: 15, right: 15, top: 15 }}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="date" tickFormatter={dateLabel} minTickGap={55} /><YAxis tickFormatter={v => `${Number(v) / 1000000} M`} /><Tooltip formatter={v => money(Number(v))} labelFormatter={v => dateLabel(String(v))} /><ReferenceLine y={0} stroke="#b34035" strokeDasharray="5 5" /><Line type="stepAfter" dataKey="balance" name="Saldo" stroke="#227760" strokeWidth={3} dot={false} isAnimationActive={false} /></LineChart></ResponsiveContainer>
-          </div><p className="footnote">Saldo mínimo: {money(data.minimum_balance)}. Este escenario no equivale a P50 ni tiene intervalos de confianza.</p>
+            <React.Suspense fallback={<p role="status">Cargando gráfico…</p>}><DashboardChart points={data.points} dateLabel={dateLabel} money={money} /></React.Suspense>
+          </div><p className="footnote">Saldo mínimo: {money(data.minimum_balance)}. Se recalcula con cada movimiento y compromiso. Es una estimación orientativa, sin intervalos de confianza.</p>
+          <details><summary>Ver saldos proyectados por día</summary><div className="table-wrap"><table>
+            <caption>Estimación de caja a {horizon} días · COP · corte {dateLabel(data.as_of)}</caption>
+            <thead><tr><th scope="col">Fecha</th><th scope="col">Saldo proyectado COP</th></tr></thead>
+            <tbody>{data.points.map(point => <tr key={point.date}><th scope="row">{dateLabel(point.date)}</th><td>{new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(point.balance))}</td></tr>)}</tbody>
+          </table></div></details>
         </section>
-        {data.first_deficit && <aside className="warning"><strong>Revisa tus compromisos antes del {dateLabel(data.first_deficit)}.</strong><p>Las obligaciones registradas llevan el saldo por debajo de cero. Revisa el calendario de cobros y pagos que se muestra abajo.</p></aside>}
+        {data.first_deficit && <DeficitExplanation firstDeficit={data.first_deficit} asOf={data.as_of} balance={data.balance} obligations={data.obligations} money={money} dateLabel={dateLabel} />}
         {data.overdue_count > 0 && <p role="status">Hay {data.overdue_count} obligaciones vencidas o con vencimiento en la fecha de corte. Requieren una nueva fecha estimada; no se incluyen como futuros cobros o pagos.</p>}
-        <div className="columns"><section className="panel"><h2>Próximos compromisos</h2><p>Fechas y valores pendientes del período</p><div className="table-wrap"><table><thead><tr><th>Concepto</th><th>Fecha</th><th>Valor</th></tr></thead><tbody>{data.obligations.map(o => <tr key={o.id}><td>{o.description}<small>{o.direction === 'in' ? 'Por cobrar' : 'Por pagar'}</small></td><td>{dateLabel(o.due_date)}</td><td className={o.direction === 'in' ? 'positive' : ''}>{o.direction === 'in' ? '+' : '−'}{money(o.amount)}</td></tr>)}</tbody></table>{!data.obligations.length && <p>No hay obligaciones en este período.</p>}</div></section>
-</div>
+        <section className="panel commitments-panel"><div className="toolbar"><div><h2>Próximos compromisos</h2><p>Fechas y valores pendientes del período</p></div><a className="text-link" href="#/dashboard/obligations">Ver cobros y pagos →</a></div><div className="table-wrap">{data.obligations.length > 0 && <table><thead><tr><th>Concepto</th><th>Fecha</th><th>Valor</th></tr></thead><tbody>{data.obligations.map(o => <tr key={o.id}><td>{o.description}<small>{o.direction === 'in' ? 'Por cobrar' : 'Por pagar'}</small></td><td>{dateLabel(o.due_date)}</td><td className={o.direction === 'in' ? 'positive' : ''}>{o.direction === 'in' ? '+' : '−'}{money(o.amount)}</td></tr>)}</tbody></table>}{!data.obligations.length && <div className="empty-state"><strong>No tienes compromisos en este período</strong><p>Registra tus cobros, pagos o sueldos mensuales para incluirlos en la proyección.</p><a href="#/dashboard/obligations">Agregar un compromiso →</a></div>}</div></section>
       </>}
-      {company && <History key={company} company={company} />}
-      {company && <Invoices key={company} company={company} onChange={() => setFinancialRevision(n => n + 1)} />}
-      {company && <Obligations key={company} company={company} refresh={financialRevision} onChange={() => setFinancialRevision(n => n + 1)} />}
-      {company && <Movements key={company} company={company} />}
-      {company && <ClassificationRules key={company} company={company} />}
-      {company && <Recurrences key={company} company={company} horizon={horizon} onChanged={() => setFinancialRevision(n => n + 1)} />}
-      <footer>Horizonte · Prototipo académico v0.1 · Datos sintéticos, solo lectura</footer>
-    </main></>;
+      </>}
+      {sectionId === 'movements' && <><ManualMovement key={`ManualMovement-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /><Movements key={`Movements-${company}`} company={company} refresh={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /></>}
+      {sectionId === 'obligations' && <><MonthlySchedules key={`MonthlySchedules-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /><Obligations key={`Obligations-${company}`} company={company} refresh={financialRevision} onChange={() => setFinancialRevision(n => n + 1)} /><ObligationCalendar key={`ObligationCalendar-${company}`} company={company} refresh={financialRevision} /></>}
+      {sectionId === 'invoices' && <Invoices key={`Invoices-${company}`} company={company} onChange={() => setFinancialRevision(n => n + 1)} />}
+      {sectionId === 'forecasts' && <><div className="toolbar"><label>Horizonte de predicción<select value={horizon} onChange={event => setHorizon(Number(event.target.value))}>{[30, 60, 90].map(days => <option key={days} value={days}>{days} días</option>)}</select></label><a href="#/dashboard/accounts">Revisar saldo, corte y cobertura</a></div><ForecastPreview key={`ForecastPreview-${company}`} company={company} horizon={horizon} revision={financialRevision} /><Recurrences key={`Recurrences-${company}`} company={company} horizon={horizon} onChanged={() => setFinancialRevision(n => n + 1)} /></>}
+      {sectionId === 'history' && <History key={`History-${company}`} company={company} refresh={financialRevision} />}
+      {sectionId === 'alerts' && <>{data && <LiquidityAlert key={`LiquidityAlert-${company}`} company={company} alert={data.liquidity_alert} onChanged={() => setFinancialRevision(n => n + 1)} />}<AlertHistory key={`AlertHistory-${company}`} company={company} horizon={horizon} /></>}
+      {sectionId === 'accounts' && <><AccountBalances key={`AccountBalances-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} />{data && <Coverage data={data.coverage} />}</>}
+      {sectionId === 'sources' && <><div className="notice">La conexión bancaria es opcional. Para registrar operaciones una a una, usa <a href="#/dashboard/movements">Movimientos</a>.</div><ImportPanel key={`ImportPanel-${company}`} company={company} revision={financialRevision} onChanged={() => setFinancialRevision(n => n + 1)} /><BankConnections key={`BankConnections-${company}`} company={company} onChanged={() => setFinancialRevision(n => n + 1)} /></>}
+      {sectionId === 'rules' && <><ClassificationRules key={`ClassificationRules-${company}`} company={company} /><Merchants key={`Merchants-${company}`} company={company} /></>}
+      </React.Suspense>}
+      <footer>Horizonte · Prototipo académico v0.1 · Los pronósticos requieren revisión</footer>
+    </main></div></>;
 }
 
-createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
+function focusMainContent() {
+  const main = document.querySelector('main');
+  if (!main) return;
+  main.tabIndex = -1;
+  main.focus({ preventScroll: true });
+}
+
+createRoot(document.getElementById('root')!).render(<React.StrictMode><button className="skip-content" onClick={() => { focusMainContent(); document.querySelector('main')?.scrollIntoView({ block: 'start' }); }}>Saltar al contenido principal</button><ScreenBoundary><React.Suspense fallback={<main><p role="status">Cargando pantalla…</p></main>}><App /></React.Suspense></ScreenBoundary></React.StrictMode>);

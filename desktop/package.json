@@ -1,0 +1,41 @@
+{
+  "name": "horizonte-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cliente de escritorio de Horizonte",
+  "author": "Horizonte",
+  "main": "main.cjs",
+  "scripts": {
+    "postinstall": "install-electron",
+    "start": "electron .",
+    "test": "node --test tests/*.test.cjs",
+    "dist": "electron-builder --win nsis --x64"
+  },
+  "build": {
+    "appId": "co.horizonte.liquidity",
+    "productName": "Horizonte",
+    "electronDist": "node_modules/electron/dist",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.cjs",
+      "endpoint.cjs",
+      "setup-preload.cjs",
+      "setup.html",
+      "setup.js"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3"
+  }
+}

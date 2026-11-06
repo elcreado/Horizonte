@@ -72,3 +72,74 @@ class RecurrenceOccurrence(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["company", "key"], name="unique_recurrence_occurrence")
         ]
+
+
+class AlertEvaluation(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.PROTECT)
+    user = models.ForeignKey("auth.User", on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    fingerprint = models.CharField(max_length=64)
+    evidence = models.JSONField()
+    result = models.JSONField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "fingerprint"], name="unique_alert_evaluation"
+            )
+        ]
+
+
+class ForecastRun(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.PROTECT)
+    user = models.ForeignKey("auth.User", on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    fingerprint = models.CharField(max_length=64)
+    method = models.CharField(max_length=32)
+    horizon = models.PositiveSmallIntegerField()
+    as_of = models.DateField()
+    evidence = models.JSONField()
+    result = models.JSONField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["company", "fingerprint"], name="unique_forecast_run")
+        ]
+
+
+class MonthlySchedule(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.PROTECT)
+    request_id = models.UUIDField()
+    description = models.CharField(max_length=200)
+    direction = models.CharField(max_length=3, choices=[("in", "Cobro"), ("out", "Pago")])
+    amount = models.DecimalField(max_digits=18, decimal_places=2)
+    day = models.PositiveSmallIntegerField()
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    active = models.BooleanField(default=True)
+    user = models.ForeignKey("auth.User", on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "request_id"], name="unique_monthly_request"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0), name="positive_monthly_amount"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(day__gte=1, day__lte=31), name="valid_monthly_day"
+            ),
+        ]
+
+
+class MonthlyOccurrence(models.Model):
+    schedule = models.ForeignKey(MonthlySchedule, on_delete=models.PROTECT)
+    date = models.DateField()
+    obligation = models.OneToOneField(Obligation, on_delete=models.PROTECT)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["schedule", "date"], name="unique_monthly_date")
+        ]

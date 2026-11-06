@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from apps.accounts.models import AuditLog
 from apps.forecast.models import Obligation
 from apps.forecast.obligations import membership
+from config.background import create_job, dispatch_job
 
 from .models import Invoice, InvoiceImport
 from .tasks import import_invoice
@@ -65,14 +66,14 @@ def invoice_imports(request, company_id):
             content = upload.read().decode("utf-8-sig")
         except UnicodeDecodeError:
             raise ValidationError("El archivo debe utilizar UTF-8.") from None
-        job = InvoiceImport.objects.create(
-            company_id=company_id, user=request.user, content=content
+        job = create_job(
+            import_invoice, InvoiceImport, company_id=company_id, user=request.user, content=content
         )
     try:
-        import_invoice.apply_async(args=[job.id], retry=False)
+        dispatch_job(import_invoice, args=[job.id], retry=False)
     except Exception:
         job.status = "failed"
-        job.error = "Redis no está disponible. Vuelve a cargar el XML cuando se recupere la cola."
+        job.error = "La cola no está disponible. Vuelve a cargar el XML cuando se recupere la cola."
         job.content = ""
         job.finished_at = timezone.now()
         job.save()

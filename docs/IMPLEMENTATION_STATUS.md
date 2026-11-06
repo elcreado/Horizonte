@@ -1,76 +1,103 @@
-# Estado del alcance — 25 de septiembre de 2026
+# Estado de implementación
 
-Objetivo activo: implementar lo que falta en la aplicación. Esta matriz conserva el alcance
-de README/SPECS; no redefine el MVP alrededor de las funciones existentes.
+## Interfaz más intuitiva — 5 de noviembre de 2026
 
-## Requisitos funcionales
+Sidebar con iconos y menú móvil, acciones frecuentes, Resumen simplificado con método
+desplegable, captura con radios/ayudas y confirmación para detener mensualidades.
+[Cambios, pruebas visuales y revisión pendiente](acceptance/UI_GUIDELINES_QA.md). Docker:
+13 pruebas frontend, build de 655 módulos y PostgreSQL 245 aprobadas + 2 omitidas de 247.
+T14/T15 siguen abiertos; no se declara certificación de accesibilidad ni publicación.
 
-| Requisito | Evidencia actual | Pendiente para completar |
-|---|---|---|
-| RF-01 autenticación | Sesión, logout, CSRF, Argon2 y prueba HTTP con Origin | Prueba de SMTP externo pendiente; registro, recuperación, UI de cuenta y alta inicial implementados |
-| RF-02 empresas/roles | Modelos Company/CompanyMember y controles de lectura/escritura por tenant | Administración de plataforma pendiente; empresas adicionales, nombre y membresías owner/accountant/viewer implementados |
-| RF-03 fuentes bancarias | Cuentas/saldo de demo, CSV solo lectura | Adaptadores, consentimiento, conexión/revocación, sincronización Mock y sandbox externo |
-| RF-04 CSV/XLSX | CSV/XLSX 2 MB/10.000 filas con jobs, rechazo atómico y duplicados | Prueba de carga en base de datos ≥10.000 y medición |
-| RF-05 facturación | XML Invoice y AttachedDocument, CUFE único, emisor/receptor, revisión de pendiente y obligación vinculada | Ampliar corpus UBL y casos tributarios; vínculo manual↔XML implementado; no certifica DIAN |
-| RF-06 normalización | Descripción normalizada y comercio explícito persistidos; historial migrado y original conservado | Entidad Merchant y resolución de comercios por proveedor; reglas ampliadas con corpus bancario |
-| RF-07 categorías | Reglas por tokens y categorías por signo | Clasificador TF-IDF/ML y medición de cobertura/precisión |
-| RF-08 correcciones | Edición, regla por empresa, trazabilidad, prueba de futura importación | Listado paginado y eliminación auditada implementados; revisión UX ampliada pendiente |
-| RF-09 recurrencias | Candidatos semanales/mensuales con evidencia y corte; confirmación/rechazo/reapertura persistidos y auditados | Calendario 30/60/90 y vinculación/creación por fecha implementados; desvinculación auditada implementada; pendiente gestión ampliada de cambios y evaluación con corpus real |
-| RF-10 híbrido 30/60/90 | Escenario determinístico de obligaciones | Modelo híbrido real y persistencia de ejecuciones |
-| RF-11 cuantiles | No se presentan cuantiles ficticios | P10/P50/P90, intervalos y validación de cobertura |
-| RF-12 alertas | Primer déficit/mínimo determinístico | Riesgo, ventanas, factores, umbral por empresa, historial de alertas |
-| RF-13 dashboard | Saldo, cobros/pagos del horizonte y escenario | Evaluar experiencia con nuevos usuarios y conectar forecast real |
-| RF-14 gráficos | Línea futura, histórico mensual ingresos/egresos, tabla por categorías, obligaciones, movimientos y calendario de recurrencias | Intervalos probabilísticos y QA visual ampliado |
-| RF-15 cold start | Documentado, sin comportamiento final | Cobertura de historial/calidad y nivel mostrado por modelo |
-| RF-16 async | CSV y XML con Celery/Redis y estado consultable | Sincronización de cuentas/facturas por proveedor, recuperación robusta de jobs |
+## Selección de empresa — 4 de noviembre de 2026
 
-## Requisitos no funcionales y seguridad
+Preferencia local validada contra membresías actuales, carga/error/vacío separados y
+reintento de empresas. Respuestas canceladas no sustituyen la sesión nueva; el Resumen
+se vincula a usuario, empresa, horizonte y revisión. Logout fallido visible en Equipo;
+logout correcto limpia la preferencia. [Casos y límites](acceptance/COMPANY_SELECTION_QA.md).
+Docker: PostgreSQL 245 aprobadas + 2 omitidas de 247; frontend 13 aprobadas y build correcto.
+Fixture de hook verifica recuperación, respuesta obsoleta y lista vacía; la aceptación
+integrada de todos los fallos de red, roles y teclado sigue pendiente en T14/T15.
 
-| Requisito | Estado |
+
+## Actualización funcional — 30 de octubre de 2026
+
+[Saldo histórico diario](releases/2026-10-30.md) implementado en Historial y categorías:
+ancla declarada, cobertura común, huecos nulos, tabla exacta y procedencia por cuenta.
+Doce pruebas backend nuevas y cuatro frontend. Verificación local: PostgreSQL 245 aprobadas
++ 2 omitidas de 247; SQLite 240 + 7 de 247; frontend 8 y escritorio 3 aprobadas, build correcto,
+Ruff/formato 210 archivos y sin migraciones nuevas. Escenario visual y reconfirmación aprobados.
+P05 conserva Needs Verification para aceptación más amplia; no se declara cierre de RF-14.
+Los cortes anteriores se conservan a continuación y no se confunden con resultados actuales.
+
+
+Revisión documental: **18 de octubre de 2026**, código base `d795c6b`, rama
+`codex/v1-manual-transactions`. Esta revisión no publica ni certifica el alojamiento.
+Requisitos y brechas: [matriz](ESTADO_Y_PENDIENTES.md). Trabajo pendiente:
+[roadmap único por tareas](ROADMAP_TRABAJO_IA.md).
+
+## Implementado en esta rama
+
+| Comportamiento | Código y pruebas de respaldo |
 |---|---|
-| RNF-01 secretos | Sin tokens bancarios; variables de entorno y demo local. Cifrado de tokens/gestor externo pendiente. |
-| RNF-02 disponibilidad | Sin experimento de disponibilidad del 99%. |
-| RNF-03 rendimiento | Sin medición p95 del dashboard y carga objetivo. |
-| RNF-04 asincronía | Cargas CSV/XML fuera de HTTP; verificación con worker real. |
-| RNF-05 workers horizontales | Locks/idempotencia en implementación; despliegue Linux y prueba concurrente pendientes. |
-| RNF-06 trazabilidad | ImportJob, InvoiceImport, ClassificationChange y AuditLog financiero. Falta auditoría transversal de conexiones/accesos. |
-| RNF-07 aislamiento | Pruebas tenant/rol en módulos actuales. Toda nueva API requiere ampliarlas. |
-| RNF-08 recuperación | Backups automáticos y ensayo de restauración pendientes. |
-| RNF-09 portabilidad | Compose de PostgreSQL/Redis; scripts Windows. Imágenes de app/proxy, CI completa y despliegue pendientes. |
-| RNF-10 accesibilidad | Formularios etiquetados, mensajes, CSS responsive; no se ha completado QA visual/teclado automatizado. |
+| Captura manual: ingreso/egreso, varios movimientos por día, hoy en Colombia por defecto, pasado permitido, futuro rechazado | [Servicio](../backend/apps/banking/manual.py), [regresión](../backend/tests/test_manual_entries.py), [formulario](../frontend/src/ManualMovement.tsx) |
+| Recibo UUID por empresa, reintento 200/201, conflicto 409, roles/CSRF/auditoría | [ManualEntry](../backend/apps/banking/models.py), [concurrencia PostgreSQL](../backend/tests/test_manual_concurrency.py) |
+| Sidebar por Operación, Análisis y Configuración; refresco de vistas | [Interfaz](../frontend/src/main.tsx). Hay evidencia local acotada; falta aceptación transversal de navegación/red/teclado |
+| Resumen afectado por movimientos y obligaciones | [Cálculo](../backend/apps/forecast/views.py), [pruebas](../backend/tests/test_cashflow_fixes.py). Solo movimientos posteriores al corte se suman al saldo declarado; el historial anterior alimenta el promedio sin duplicar caja |
+| Predicción inicial 30/60/90 con historial completo confirmado hasta corte común y mínimo siete días; otros modelos con requisitos propios | [Motor](../backend/apps/forecast/live_baseline.py), [pruebas](../backend/tests/test_live_baseline.py). Promedio orientativo; cuantiles experimentales sin calibración demostrada |
+| Programaciones mensuales con día 1–31, fin de mes, cancelación e idempotencia | [Servicio](../backend/apps/forecast/monthly.py), [pruebas](../backend/tests/test_cashflow_fixes.py). Generan obligaciones, no transferencias |
+| CSV/XLSX/XML/Mock Bank y cola | [Importación](../backend/apps/banking/tasks.py), [pruebas CSV](../backend/tests/test_imports.py), [XLSX](../backend/tests/test_xlsx.py), [XML](../backend/tests/test_invoices.py), [cola](../backend/tests/test_background.py) |
+| Entorno Docker completo y persistente | [Compose](../compose.yaml), [procedimiento](TESTING.md). PostgreSQL, Redis, migraciones, backend, Celery y frontend; SQLite anterior separada |
+| Demo sintética sin borrar datos | [Comando](../backend/apps/accounts/management/commands/prepare_web_demo.py), [pruebas](../backend/tests/test_prepare_web_demo.py). Exclusivo de SQLite en DEBUG; no funciona en el PostgreSQL de Docker |
 
-Pendientes de seguridad: CSP y hardening completo, rate limiting consistente, OAuth/PKCE según proveedor,
-TLS de despliegue, threat model, evaluación ASVS, cifrado, pruebas de fallos/recuperación y concurrentes.
+## Verificación Docker local — 18 de octubre de 2026
 
-## Entregables y evaluación
+Ejecución registrada antes de esta auditoría: **235 pruebas, 233 aprobadas y 2 omitidas**
+(preparación exclusiva de SQLite). Incluye concurrencia PostgreSQL para un UUID enviado
+por propietario y contador. Ruff y formato: 208 archivos; migraciones sin cambios;
+frontend compilado; tres pruebas Node de escritorio aprobadas. Compose arrancó,
+API directa y a través de Vite respondieron, y Celery respondió a `inspect ping`.
+La auditoría documental registra sus propias comprobaciones en [informe](DOCUMENTATION_AUDIT.md).
 
-- Aplicación React, backend Django, PostgreSQL, migraciones y pruebas: en desarrollo.
-- Pipeline: CSV/XML y reglas; faltan proveedores, normalización completa y modelo.
-- Motor híbrido, dataset 100 empresas ×24 meses, rolling-origin y comparación Naive/ARIMA/Prophet: pendientes.
-- Métricas MAE/RMSE/sMAPE/pinball/DLDE, precisión-recall-F1 y reporte comparativo: pendientes.
-- Threat model, manual de usuario final, manual técnico final, OpenAPI: pendientes.
-- Docker Compose: solo infraestructura actual; CI YAML existe, ejecución remota y despliegue no verificados.
-- Anteproyecto/documento de tesis y revisión bibliográfica: entregables académicos del documento original, no demostrados por el código.
-- Usabilidad con empresarios y datos reales anonimizados requieren participantes/autorización; no se han realizado.
+El ejemplo CSV se verificó con carga multipart y worker de BD. El ping de Celery
+verifica disponibilidad del worker, no equivale a un recorrido visual completo de importación.
+El procedimiento reproducible está en [TESTING](TESTING.md).
 
-## Evidencia del corte actual
+## Límites pendientes
 
-84 pruebas backend aprobadas sobre PostgreSQL; Ruff y build TypeScript/Vite aprobados.
-HTTP real con Origin/CSRF verificó crear, conciliar, revertir y cancelar una obligación y conservar
-el saldo bancario. XML multipart procesado por Celery real y confirmado con pendiente explícito.
-Los archivos fuente, migraciones y tests describen el alcance real; estas pruebas no prueban
-rendimiento, cobertura de todos los XML DIAN ni exactitud predictiva.
+No se acredita precisión con empresas reales, cuantiles calibrados, ASVS, disponibilidad,
+rendimiento representativo ni accesibilidad completa. Correo real y aceptación del
+instalador siguen pendientes; escritorio y móvil están aplazados. La rama no está
+desplegada: las pruebas locales no certifican el servidor remoto. Respaldo manual únicamente.
 
-## Dependencias externas aún necesarias
+## Verificación histórica — 16 de octubre
 
-Para demo local basta Docker Desktop + runtimes instalados. Sandbox bancario requiere proveedor,
-acceso autorizado y credenciales (no disponibles todavía). Correo real requiere SMTP. Despliegue HTTPS
-requiere entorno/dominio/certificado. Se puede seguir construyendo el resto sin esas credenciales.
+Las cifras SQLite, recorridos, correcciones y preparación de demo de los cortes anteriores
+se conservan íntegros en el [estado anterior](archive/2026-10-18/IMPLEMENTATION_STATUS.md)
+y las [pruebas anteriores](archive/2026-10-18/TESTING.md). No mezclar esos resultados
+con una ejecución actual ni sumar sus conteos.
 
-Último corte: enlace explícito de XML con obligación existente, sin duplicar pendiente; 41 pruebas SQLite/PostgreSQL y build aprobados. El objetivo completo continúa activo.
+## Correcciones: Resumen, mensualidades e importaciones
 
-Último corte: registro público con CSRF, validación de contraseña, creación atómica de propietario/empresa/cuenta manual y sesión; 45 pruebas PostgreSQL y build aprobados.
+La descripción vigente está consolidada en la tabla superior. La cronología permanece
+en el archivo; las migraciones `banking.0011_manualentry` y `forecast.0007_monthlyschedule_monthlyoccurrence_and_more`
+se aplicaron también al PostgreSQL local de Docker. No se migró la BD remota.
 
-Último corte: recuperación con token Django, correo local asíncrono, expiración/uso único y revocación de sesiones. 51 pruebas PostgreSQL aprobadas. Falta validar entrega con SMTP externo.
+## Avance y verificación — 18 de octubre de 2026
 
-Último corte: pantalla Empresa y equipo, roles/revocación y protección del último propietario activo; 56 pruebas PostgreSQL y build aprobados. El objetivo completo sigue activo.
+Consultar la verificación Docker superior y el roadmap. Los ensayos de red, aceptación
+integral y publicación siguen abiertos; una prueba concurrente aprobada no cierra toda
+la revisión de seguridad de T13.
+
+## Continuación T14/T15 — QA web local
+
+Corregido el reintento de pagos mensuales: conserva UUID y datos originales ante envío
+incierto, bloquea edición/cancelación y libera solo con respuesta definitiva. Cuatro
+regresiones frontend aprobadas; CI incorpora `npm test`. También se corrigieron textos
+de acceso/importación y source-map-js 1.2.1 → 1.2.2, sin otras actualizaciones de dependencias.
+
+Navegador: registro, dos movimientos el mismo día, Resumen 200.000 COP a 30 días antes
+de importar, interrupción/restablecimiento del backend con reintento mensual, CSV completado
+por Celery y logout/reingreso. Suite PostgreSQL repetida: 233 aprobadas y 2 omitidas;
+frontend build, Ruff, migraciones y tres pruebas de escritorio correctos. Auditoría npm
+frontend sin vulnerabilidades conocidas reportadas. [Casos y límites](acceptance/WEB_V1_QA.md).
+T14/T15 continúan abiertos por casos restantes; no se publica ni se acredita ASVS.

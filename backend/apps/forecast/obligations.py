@@ -40,6 +40,11 @@ def audit(request, obligation: Obligation, action: str, before: dict, after: dic
 def obligations(request, company_id):
     if request.method == "GET":
         member = membership(request, company_id)
+        from datetime import timedelta
+
+        from .monthly import materialize_monthly
+
+        materialize_monthly(company_id, timezone.localdate() + timedelta(days=366))
         rows = Obligation.objects.filter(company_id=company_id).order_by(
             "cancelled", "due_date", "id"
         )

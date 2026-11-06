@@ -1,3 +1,5 @@
+> **Documento histórico archivado el 15 de octubre de 2026.** Contiene cortes anteriores y no describe necesariamente el estado actual. Consultar [estado y pendientes](../../ESTADO_Y_PENDIENTES.md).
+
 # Revisión de coherencia — 23 de septiembre de 2026
 
 La arquitectura propuesta es adecuada para una tesis de 24 semanas si se entrega por fases.

@@ -1,0 +1,28 @@
+HORIZONTE
+Adrian Perez Pacheco
+
+Abrir Horizonte_MER_MR_FN3.mdj en StarUML.
+01 MER conceptual: entidades y cardinalidades.
+02 MR normalizado FN3: atributos, tipos, PK, FK y UQ individuales.
+Cada modelo incluye vista general y cuatro detalles conectados.
+Las entidades de las vistas de detalle son las mismas del modelo general.
+
+Leyenda: pata de cuervo = varios; círculo = opcional; barra = uno.
+Relación identificadora continua: la FK forma parte de la PK.
+Relación no identificadora discontinua: la FK no forma parte de la PK.
+La leyenda 2 partes exige emisor y receptor en cada factura.
+
+Claves alternativas compuestas:
+MEMBRESIA: empresa_id, usuario_id (PK).
+CORTE_CUENTA: cuenta_id, fecha (PK).
+PARTE_FACTURA: factura_id, papel (PK).
+TERCERO: empresa_id, nombre_normalizado (UQ).
+MOVIMIENTO: cuenta_id, externo_id (UQ).
+OBLIGACION: empresa_id, referencia (UQ).
+CONCILIACION: obligacion_id, solicitud_id (UQ).
+REGISTRO_FACTURA: empresa_id, factura_id (UQ).
+
+Las comprobaciones de igual empresa, límites de conciliación y exactamente dos partes son reglas adicionales; una FK por sí sola no las impone.
+
+Exportaciones: svg (ampliable sin perder calidad), jpg (fondo blanco) y PNG/png (fondo transparente).
+Documento: 1111043406.

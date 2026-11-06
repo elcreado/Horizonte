@@ -1,4 +1,29 @@
-# Infraestructura local opcional. Backend/frontend se ejecutan con docs/TESTING.md.
+# Entorno local completo. Conserva postgres_data entre arranques.
+x-app: &app
+  build:
+    context: .
+    dockerfile: backend/Dockerfile
+  working_dir: /app
+  environment:
+    DJANGO_DEBUG: "1"
+    PYTHONPATH: /app/backend
+    DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend,testserver
+    POSTGRES_HOST: postgres
+    POSTGRES_DB: liquidity
+    POSTGRES_USER: liquidity
+    POSTGRES_PASSWORD: local-development-only
+    POSTGRES_SSLMODE: disable
+    CELERY_BROKER_URL: redis://redis:6379/0
+    BACKGROUND_MODE: celery
+    DJANGO_LOCAL_WORKER: "0"
+  volumes:
+    - ./backend:/app/backend
+    - ./scripts:/app/scripts:ro
+    - ./docs:/app/docs:ro
+    - ./frontend/public:/app/frontend/public:ro
+    - ./ruff.toml:/app/ruff.toml:ro
+    - ./.local-logs:/app/.local-logs
+
 services:
   postgres:
     image: postgres:16
@@ -19,5 +44,55 @@ services:
     image: redis:7
     ports:
       - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  migrate:
+    <<: *app
+    command: python backend/manage.py migrate --noinput
+    depends_on:
+      postgres:
+        condition: service_healthy
+  backend:
+    <<: *app
+    command: python backend/manage.py runserver 0.0.0.0:8000 --noreload
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+  worker:
+    <<: *app
+    command: celery -A config.celery:app worker --pool=solo --loglevel=info
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      API_PROXY_TARGET: http://backend:8000
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
 volumes:
   postgres_data:

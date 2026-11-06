@@ -116,3 +116,46 @@ class ImportTests(TestCase):
             )
         self.assertEqual(response.status_code, 503)
         self.assertEqual(ImportJob.objects.get().status, "failed")
+
+    def test_identical_rows_in_same_file_count_as_duplicates(self):
+        job = self.job(CSV + "csv-1,2026-09-01,100.10,Venta\n")
+        import_csv(job.pk)
+        job.refresh_from_db()
+        self.assertEqual(job.status, "completed")
+        self.assertEqual(job.created_count, 1)
+        self.assertEqual(job.duplicate_count, 1)
+        self.assertEqual(Transaction.objects.count(), 1)
+
+    def test_bulk_import_uses_bounded_queries_and_preserves_manual_corrections(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        from apps.classify.models import ClassificationRule
+
+        ClassificationRule.objects.create(
+            company=self.company,
+            normalized_description="ADOBE",
+            direction="out",
+            category="Marketing",
+        )
+        content = HEADER + "".join(f"batch-{i},2026-09-01,-10.00,Adobe\n" for i in range(1000))
+        job = self.job(content)
+        with CaptureQueriesContext(connection) as queries:
+            import_csv(job.pk)
+        job.refresh_from_db()
+        self.assertEqual(job.created_count, 1000)
+        self.assertLess(len(queries), 80)
+        self.assertEqual(
+            Transaction.objects.filter(
+                category="Marketing", classification_source="company_rule"
+            ).count(),
+            1000,
+        )
+        movement = Transaction.objects.first()
+        movement.category = "Software"
+        movement.classification_source = "manual"
+        movement.save()
+        import_csv(self.job(content).pk)
+        movement.refresh_from_db()
+        self.assertEqual(movement.category, "Software")
+        self.assertEqual(movement.classification_source, "manual")

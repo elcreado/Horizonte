@@ -1,11 +1,21 @@
 # Plataforma de Inteligencia de Liquidez para Microempresas
 
-> **Estado consolidado vigente:** [matriz de implementación](docs/IMPLEMENTATION_STATUS.md). Incluye obligaciones, conciliación e importación XML; el objetivo completo sigue en desarrollo.
-
-> **Estado v0.1:** base ejecutable con Inicio público, Django/React, sesión, aislamiento por empresa, datos sintéticos y escenario de obligaciones a 30/60/90 días. Este documento describe el alcance objetivo de la tesis, no funcionalidades ya terminadas.
+> **V1 web local — revisión del 18 de octubre de 2026:** captura manual, dashboard por secciones, Resumen con movimientos, pagos mensuales y Docker completo. [Guion](docs/PLAN_DEMO_FUNCIONAL.md), [requisitos y brechas](docs/ESTADO_Y_PENDIENTES.md), [evidencia](docs/IMPLEMENTATION_STATUS.md), [roadmap](docs/ROADMAP_TRABAJO_IA.md) e [índice documental](docs/README.md).
 >
-> **Arranque y acciones externas:** [docs/TESTING.md](docs/TESTING.md). **Convenciones:** [CODESTYLE.md](CODESTYLE.md). **Revisión:** [docs/REVISION.md](docs/REVISION.md). La demo no requiere claves bancarias ni servicios de pago.
+> Las secciones inferiores conservan el alcance académico original y sus metas, no un certificado de implementación. Escritorio, móvil y alojamiento tienen estados separados. [Auditoría documental](docs/DOCUMENTATION_AUDIT.md). Respaldo manual únicamente.
 
+## Pruebas locales con Docker
+
+Con Docker Desktop iniciado, desde CMD en la raíz:
+
+```bat
+docker compose up --build -d --wait
+```
+
+Abrir http://127.0.0.1:5173. Inicia frontend, backend, worker, PostgreSQL y Redis;
+las migraciones se aplican antes de iniciar Django. `docker compose stop` apaga
+el entorno conservando los datos. [Comandos y solución de problemas](docs/USER_MANUAL.md).
+La base SQLite anterior permanece separada, sin transferencia automática.
 
 **Diseño e implementación de una plataforma web de inteligencia de liquidez para microempresas mediante agregación de datos financieros y modelos predictivos de flujo de caja.**
 
@@ -119,7 +129,7 @@ El sistema **NO**:
 | RNF-05 | Escalabilidad | Los workers de procesamiento deben poder ampliarse horizontalmente. |
 | RNF-06 | Trazabilidad | Toda sincronización registra usuario, integración, fecha, resultado y errores. |
 | RNF-07 | Aislamiento | Una empresa nunca puede visualizar información de otra (multi-tenant seguro). |
-| RNF-08 | Recuperación | Backups automáticos de la base de datos. |
+| RNF-08 | Recuperación | Respaldo manual y restauración verificada. El usuario excluyó el respaldo diario automático para esta entrega. |
 | RNF-09 | Portabilidad | Despliegue reproducible con Docker / Docker Compose. |
 | RNF-10 | Accesibilidad | SPA responsiva para escritorio y móvil (web). |
 
@@ -251,31 +261,36 @@ El sistema **NO**:
 ```text
 proyecto/
 ├── README.md          # Este documento
-├── SPECS.md           # Especificación técnica completa
-├── docs/
-│   ├── anteproyecto/  # Documento de tesis (problema, marco teórico, bibliografía)
-│   └── diagramas/     # Arquitectura, modelo E-R, casos de uso
+├── SPECS.md           # Requisitos y arquitectura objetivo
+├── docs/              # Índice, estado, pendientes y manuales vigentes
+│   ├── desktop/       # Entrega Windows y distribución
+│   ├── acceptance/    # Recorridos y criterios de aceptación
+│   ├── operations/    # Hosting, workers, respaldos y administración
+│   ├── security/      # Threat model
+│   ├── research/      # Métodos y resultados experimentales
+│   └── archive/       # Cortes anteriores conservados, no guías vigentes
 ├── backend/           # Django + DRF
 │   ├── apps/
 │   │   ├── accounts/  # Autenticación, empresas, roles
 │   │   ├── banking/   # Conexiones, cuentas, transacciones
 │   │   ├── invoices/  # Facturación recibida/emitida
 │   │   ├── classify/  # Categorización
-│   │   ├── forecast/  # Modelo predictivo y alertas
-│   │   └── integrations/  # Adaptadores Open Finance
+│   │   └── forecast/  # Modelo predictivo, obligaciones y alertas
 │   └── tests/
-├── workers/           # Celery tasks (ETL, forecast)
 ├── frontend/          # React + TypeScript + Vite
-├── data/              # Datasets sintéticos y scripts de generación
-├── ml/                # Notebooks y experimentos predictivos
-├── deploy/            # Docker Compose, Nginx, CI/CD
+├── desktop/           # Electron, pruebas y salida local del instalador
+├── data/              # Datos y salidas experimentales locales
+├── scripts/           # Arranque, build, respaldo y verificaciones
+├── .github/workflows/ # CI SQLite/PostgreSQL/frontend/escritorio
+├── compose.yaml       # PostgreSQL y Redis para desarrollo opcional
+├── render.yaml        # Configuración del servicio alojado
 └── CODESTYLE.md       # Convenciones de implementación
 ```
 
 ---
 
-**CSV implementado:** carga idempotente, validación y procesamiento Celery con registro de resultado. **Siguiente fase:** clasificación, facturación XML, conciliación y baseline estadístico. La estructura anterior es objetivo; los módulos se incorporan por fases. La antigüedad del historial no garantiza precisión: también se evaluarán calidad, cobertura y resultados fuera de muestra.
+**Pipeline implementado:** carga CSV/XLSX idempotente, validación y procesamiento asíncrono con registro de resultado; XML con revisión, obligaciones y conciliación reversible. El servidor gratuito utiliza cola persistente en PostgreSQL; Celery sigue como alternativa de despliegue. El árbol anterior refleja la organización actual. La antigüedad del historial no garantiza precisión: se requieren calidad, cobertura y resultados fuera de muestra.
 
-La importación CSV ya puede probarse desde el dashboard con PostgreSQL/Redis y el worker local. Ver docs/TESTING.md para formato y arranque.
+La aplicación alojada y el instalador permiten probar las importaciones sin Docker ni Redis local. Ver [manual de uso](docs/USER_MANUAL.md); para desarrollo local, [arranque y pruebas](docs/TESTING.md).
 
-**Clasificación implementada:** reglas automáticas en nuevas importaciones, lista paginada, corrección manual por rol y reglas recordadas por empresa. La siguiente fase es facturación XML y conciliación; ML y evaluación estadística siguen pendientes.
+**Clasificación implementada:** reglas automáticas en nuevas importaciones, lista paginada, corrección manual por rol, reglas recordadas por empresa y sugerencias TF-IDF experimentales. La validación con corpus representativo y la exactitud general siguen pendientes.

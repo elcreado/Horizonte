@@ -1,0 +1,1817 @@
+[
+  {
+    "name": "empresa",
+    "purpose": "Identifica cada microempresa y su umbral operativo de liquidez.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador interno"
+      },
+      {
+        "name": "nit",
+        "type": "VARCHAR(30)",
+        "key": "UQ",
+        "desc": "NIT normalizado sin separadores"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(200)",
+        "key": "",
+        "desc": "Nombre de la microempresa"
+      },
+      {
+        "name": "umbral",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Saldo mínimo definido por el propietario"
+      }
+    ],
+    "unique": "",
+    "checks": "umbral >= 0",
+    "note": ""
+  },
+  {
+    "name": "usuario",
+    "purpose": "Representa al usuario autenticado sin repetir sus datos en cada empresa.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de auth_user"
+      },
+      {
+        "name": "username",
+        "type": "VARCHAR(150)",
+        "key": "UQ",
+        "desc": "Nombre único de acceso"
+      },
+      {
+        "name": "password_hash",
+        "type": "VARCHAR(128)",
+        "key": "",
+        "desc": "Hash de autenticación"
+      },
+      {
+        "name": "nombres",
+        "type": "VARCHAR(150)",
+        "key": "",
+        "desc": "Nombres del usuario"
+      },
+      {
+        "name": "apellidos",
+        "type": "VARCHAR(150)",
+        "key": "",
+        "desc": "Apellidos del usuario"
+      },
+      {
+        "name": "email",
+        "type": "VARCHAR(254)",
+        "key": "",
+        "desc": "Correo de recuperación"
+      },
+      {
+        "name": "activo",
+        "type": "BOOLEAN",
+        "key": "",
+        "desc": "Habilitación de la cuenta"
+      },
+      {
+        "name": "superusuario",
+        "type": "BOOLEAN",
+        "key": "",
+        "desc": "Administración global"
+      },
+      {
+        "name": "fecha_registro",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Fecha de alta"
+      },
+      {
+        "name": "ultimo_acceso",
+        "type": "TIMESTAMPTZ",
+        "key": "NULL",
+        "desc": "Último acceso exitoso"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "Proyección funcional de auth_user. Django administra permisos, grupos, sesiones y migraciones como infraestructura, fuera del modelo financiero."
+  },
+  {
+    "name": "rol",
+    "purpose": "Catálogo de responsabilidades dentro de una empresa.",
+    "fields": [
+      {
+        "name": "codigo",
+        "type": "VARCHAR(16)",
+        "key": "PK",
+        "desc": "owner accountant o viewer"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(40)",
+        "key": "UQ",
+        "desc": "Propietario Contador o Consulta"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "membresia",
+    "purpose": "Resuelve la relación muchos a muchos entre usuarios y empresas.",
+    "fields": [
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "PK FK empresa",
+        "desc": "Empresa autorizada"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "PK FK usuario",
+        "desc": "Usuario miembro"
+      },
+      {
+        "name": "rol_codigo",
+        "type": "VARCHAR(16)",
+        "key": "FK rol",
+        "desc": "Rol en esa empresa"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "proveedor",
+    "purpose": "Catálogo de adaptadores bancarios identificados por un código estable.",
+    "fields": [
+      {
+        "name": "codigo",
+        "type": "VARCHAR(40)",
+        "key": "PK",
+        "desc": "Código del adaptador"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(100)",
+        "key": "UQ",
+        "desc": "Nombre del proveedor"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "consentimiento",
+    "purpose": "Conserva quién autorizó el acceso bancario y cuándo lo revocó.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de autorización"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Empresa titular"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "FK usuario",
+        "desc": "Persona que autorizó"
+      },
+      {
+        "name": "otorgado_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Instante de autorización"
+      },
+      {
+        "name": "revocado_en",
+        "type": "TIMESTAMPTZ",
+        "key": "NULL",
+        "desc": "Instante de revocación"
+      }
+    ],
+    "unique": "",
+    "checks": "revocado_en IS NULL OR revocado_en >= otorgado_en",
+    "note": ""
+  },
+  {
+    "name": "alcance",
+    "purpose": "Catálogo de permisos de lectura de una conexión.",
+    "fields": [
+      {
+        "name": "codigo",
+        "type": "VARCHAR(60)",
+        "key": "PK",
+        "desc": "Código del permiso"
+      },
+      {
+        "name": "descripcion",
+        "type": "VARCHAR(150)",
+        "key": "",
+        "desc": "Descripción del alcance"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "consentimiento_alcance",
+    "purpose": "Extrae la lista scopes a una asociación con valores atómicos.",
+    "fields": [
+      {
+        "name": "consentimiento_id",
+        "type": "BIGINT",
+        "key": "PK FK consentimiento",
+        "desc": "Autorización que concede el permiso"
+      },
+      {
+        "name": "alcance_codigo",
+        "type": "VARCHAR(60)",
+        "key": "PK FK alcance",
+        "desc": "Permiso individual"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "conexion",
+    "purpose": "Enlaza una autorización con un adaptador bancario.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de conexión"
+      },
+      {
+        "name": "consentimiento_id",
+        "type": "BIGINT",
+        "key": "UQ FK consentimiento",
+        "desc": "Consentimiento exclusivo"
+      },
+      {
+        "name": "proveedor_codigo",
+        "type": "VARCHAR(40)",
+        "key": "FK proveedor",
+        "desc": "Adaptador utilizado"
+      },
+      {
+        "name": "estado",
+        "type": "VARCHAR(12)",
+        "key": "",
+        "desc": "active o revoked"
+      },
+      {
+        "name": "creada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Creación de la conexión"
+      },
+      {
+        "name": "revocada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "NULL",
+        "desc": "Momento de revocación"
+      }
+    ],
+    "unique": "",
+    "checks": "estado IN ('active','revoked')",
+    "note": "La empresa se obtiene por consentimiento; no se repite. La exclusividad de una conexión activa por empresa y proveedor se valida mediante un trigger con bloqueo de la fila empresa."
+  },
+  {
+    "name": "cuenta",
+    "purpose": "Registra la cuenta bancaria y la cobertura de su historial.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de cuenta"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Titular empresarial"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(120)",
+        "key": "",
+        "desc": "Nombre de la cuenta"
+      },
+      {
+        "name": "historial_desde",
+        "type": "DATE",
+        "key": "NULL",
+        "desc": "Primer día confirmado de cobertura"
+      },
+      {
+        "name": "historial_hasta",
+        "type": "DATE",
+        "key": "NULL",
+        "desc": "Último día confirmado de cobertura"
+      },
+      {
+        "name": "confirmado_en",
+        "type": "TIMESTAMPTZ",
+        "key": "NULL",
+        "desc": "Fecha de validación del historial"
+      },
+      {
+        "name": "confirmado_por",
+        "type": "BIGINT",
+        "key": "NULL FK usuario",
+        "desc": "Usuario que confirmó"
+      }
+    ],
+    "unique": "",
+    "checks": "historial_desde IS NULL OR historial_hasta IS NULL OR historial_desde <= historial_hasta",
+    "note": "Todas las cuentas operan en COP. La asociación opcional con una conexión se conserva en cuenta_conexion."
+  },
+  {
+    "name": "corte_cuenta",
+    "purpose": "Conserva saldos observados por cuenta y fecha sin confundirlos con sumas de movimientos.",
+    "fields": [
+      {
+        "name": "cuenta_id",
+        "type": "BIGINT",
+        "key": "PK FK cuenta",
+        "desc": "Cuenta observada"
+      },
+      {
+        "name": "fecha",
+        "type": "DATE",
+        "key": "PK",
+        "desc": "Fecha del corte"
+      },
+      {
+        "name": "saldo",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Saldo informado en COP"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "Sustituye balance y balance_date. El saldo vigente es el corte de fecha máxima; un saldo negativo puede representar sobregiro."
+  },
+  {
+    "name": "tercero",
+    "purpose": "Identifica comercios normalizados en el contexto de una empresa.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador del comercio"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Empresa que reconoce al tercero"
+      },
+      {
+        "name": "nombre_normalizado",
+        "type": "VARCHAR(250)",
+        "key": "",
+        "desc": "Nombre canónico para comparación"
+      },
+      {
+        "name": "nombre_visible",
+        "type": "VARCHAR(250)",
+        "key": "",
+        "desc": "Nombre de presentación"
+      }
+    ],
+    "unique": "empresa_id,nombre_normalizado",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "alias_tercero",
+    "purpose": "Conserva las variantes de un comercio según el proveedor.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador del alias"
+      },
+      {
+        "name": "tercero_id",
+        "type": "BIGINT",
+        "key": "FK tercero",
+        "desc": "Comercio canónico"
+      },
+      {
+        "name": "proveedor_codigo",
+        "type": "VARCHAR(40)",
+        "key": "FK proveedor",
+        "desc": "Fuente del alias"
+      },
+      {
+        "name": "alias_normalizado",
+        "type": "VARCHAR(250)",
+        "key": "",
+        "desc": "Descripción alternativa"
+      }
+    ],
+    "unique": "tercero_id,proveedor_codigo,alias_normalizado",
+    "checks": "",
+    "note": "La empresa se deriva de tercero. Un trigger impide que el mismo alias del mismo proveedor apunte a terceros distintos de una misma empresa."
+  },
+  {
+    "name": "categoria",
+    "purpose": "Taxonomía compartida de categorías financieras.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de categoría"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(80)",
+        "key": "UQ",
+        "desc": "Nombre único como Software u Otros"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "La dirección del flujo se obtiene del signo del movimiento; una categoría no impone un signo."
+  },
+  {
+    "name": "movimiento",
+    "purpose": "Registra cada ingreso o egreso bancario con deduplicación por cuenta.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de movimiento"
+      },
+      {
+        "name": "cuenta_id",
+        "type": "BIGINT",
+        "key": "FK cuenta",
+        "desc": "Cuenta de origen"
+      },
+      {
+        "name": "externo_id",
+        "type": "VARCHAR(120)",
+        "key": "",
+        "desc": "Identificador en la fuente"
+      },
+      {
+        "name": "fecha",
+        "type": "DATE",
+        "key": "",
+        "desc": "Fecha de negocio"
+      },
+      {
+        "name": "importe",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Valor positivo de ingreso o negativo de egreso"
+      },
+      {
+        "name": "descripcion",
+        "type": "VARCHAR(250)",
+        "key": "",
+        "desc": "Texto original del banco"
+      },
+      {
+        "name": "descripcion_normalizada",
+        "type": "TEXT",
+        "key": "",
+        "desc": "Texto procesado para clasificación"
+      },
+      {
+        "name": "tercero_id",
+        "type": "BIGINT",
+        "key": "NULL FK tercero",
+        "desc": "Comercio reconocido"
+      },
+      {
+        "name": "tercero_original",
+        "type": "VARCHAR(250)",
+        "key": "",
+        "desc": "Nombre recibido de la fuente"
+      },
+      {
+        "name": "categoria_id",
+        "type": "BIGINT",
+        "key": "FK categoria",
+        "desc": "Categoría vigente"
+      },
+      {
+        "name": "fuente_clasificacion",
+        "type": "VARCHAR(16)",
+        "key": "",
+        "desc": "Origen de la clasificación"
+      }
+    ],
+    "unique": "cuenta_id,externo_id",
+    "checks": "importe <> 0",
+    "note": "tercero_original es evidencia inmutable de la fuente y no una copia editable del nombre canónico; no depende de tercero_id."
+  },
+  {
+    "name": "regla_clasificacion",
+    "purpose": "Aprende una categoría por empresa descripción y sentido del flujo.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de regla"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Empresa donde se aplica"
+      },
+      {
+        "name": "descripcion_normalizada",
+        "type": "VARCHAR(250)",
+        "key": "",
+        "desc": "Patrón exacto recordado"
+      },
+      {
+        "name": "direccion",
+        "type": "VARCHAR(3)",
+        "key": "",
+        "desc": "in o out"
+      },
+      {
+        "name": "categoria_id",
+        "type": "BIGINT",
+        "key": "FK categoria",
+        "desc": "Categoría asignada"
+      },
+      {
+        "name": "actualizada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Última modificación"
+      }
+    ],
+    "unique": "empresa_id,descripcion_normalizada,direccion",
+    "checks": "direccion IN ('in','out')",
+    "note": ""
+  },
+  {
+    "name": "cambio_clasificacion",
+    "purpose": "Conserva el historial de correcciones manuales.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador del evento"
+      },
+      {
+        "name": "movimiento_id",
+        "type": "BIGINT",
+        "key": "FK movimiento",
+        "desc": "Movimiento corregido"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "FK usuario",
+        "desc": "Autor de la corrección"
+      },
+      {
+        "name": "categoria_anterior_id",
+        "type": "BIGINT",
+        "key": "FK categoria",
+        "desc": "Categoría antes del cambio"
+      },
+      {
+        "name": "categoria_nueva_id",
+        "type": "BIGINT",
+        "key": "FK categoria",
+        "desc": "Categoría después del cambio"
+      },
+      {
+        "name": "recordado",
+        "type": "BOOLEAN",
+        "key": "",
+        "desc": "Indica si creó o actualizó una regla"
+      },
+      {
+        "name": "creado_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Instante de la corrección"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "importacion_movimiento",
+    "purpose": "Registra los intentos de importación CSV o XLSX.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador del trabajo"
+      },
+      {
+        "name": "cuenta_id",
+        "type": "BIGINT",
+        "key": "FK cuenta",
+        "desc": "Cuenta receptora"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "FK usuario",
+        "desc": "Solicitante"
+      },
+      {
+        "name": "formato",
+        "type": "VARCHAR(4)",
+        "key": "",
+        "desc": "csv o xlsx"
+      },
+      {
+        "name": "checksum",
+        "type": "CHAR(64)",
+        "key": "",
+        "desc": "Huella del archivo sin imponer unicidad"
+      },
+      {
+        "name": "contenido",
+        "type": "TEXT",
+        "key": "NULL",
+        "desc": "Carga temporal eliminada al finalizar"
+      },
+      {
+        "name": "estado",
+        "type": "VARCHAR(12)",
+        "key": "",
+        "desc": "queued completed o failed"
+      },
+      {
+        "name": "creados",
+        "type": "INTEGER",
+        "key": "",
+        "desc": "Movimientos creados en este intento"
+      },
+      {
+        "name": "duplicados",
+        "type": "INTEGER",
+        "key": "",
+        "desc": "Filas omitidas por idempotencia"
+      },
+      {
+        "name": "error",
+        "type": "VARCHAR(300)",
+        "key": "NULL",
+        "desc": "Diagnóstico sin secretos"
+      },
+      {
+        "name": "creada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Fecha de solicitud"
+      },
+      {
+        "name": "finalizada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "NULL",
+        "desc": "Fin del procesamiento"
+      }
+    ],
+    "unique": "",
+    "checks": "formato IN ('csv','xlsx') AND creados >= 0 AND duplicados >= 0",
+    "note": "Los contadores son el resultado del intento, no el total actual de movimientos. El archivo es una unidad documental temporal, no una lista consultable del modelo financiero."
+  },
+  {
+    "name": "sincronizacion",
+    "purpose": "Registra cada ejecución de sincronización bancaria.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de ejecución"
+      },
+      {
+        "name": "conexion_id",
+        "type": "BIGINT",
+        "key": "FK conexion",
+        "desc": "Conexión sincronizada"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "FK usuario",
+        "desc": "Solicitante"
+      },
+      {
+        "name": "estado",
+        "type": "VARCHAR(12)",
+        "key": "",
+        "desc": "Estado de procesamiento"
+      },
+      {
+        "name": "creados",
+        "type": "INTEGER",
+        "key": "",
+        "desc": "Movimientos creados en el intento"
+      },
+      {
+        "name": "duplicados",
+        "type": "INTEGER",
+        "key": "",
+        "desc": "Duplicados detectados"
+      },
+      {
+        "name": "error",
+        "type": "VARCHAR(300)",
+        "key": "NULL",
+        "desc": "Diagnóstico resumido"
+      },
+      {
+        "name": "creada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Inicio"
+      },
+      {
+        "name": "finalizada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "NULL",
+        "desc": "Fin"
+      }
+    ],
+    "unique": "",
+    "checks": "creados >= 0 AND duplicados >= 0",
+    "note": ""
+  },
+  {
+    "name": "obligacion",
+    "purpose": "Representa un cobro o pago esperado antes de su conciliación.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de obligación"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Empresa responsable"
+      },
+      {
+        "name": "referencia",
+        "type": "VARCHAR(120)",
+        "key": "",
+        "desc": "Referencia única por empresa"
+      },
+      {
+        "name": "contraparte_original",
+        "type": "VARCHAR(200)",
+        "key": "",
+        "desc": "Contraparte declarada al registrar"
+      },
+      {
+        "name": "descripcion",
+        "type": "VARCHAR(200)",
+        "key": "",
+        "desc": "Concepto de la obligación"
+      },
+      {
+        "name": "direccion",
+        "type": "VARCHAR(3)",
+        "key": "",
+        "desc": "in para cobro u out para pago"
+      },
+      {
+        "name": "vencimiento",
+        "type": "DATE",
+        "key": "",
+        "desc": "Fecha esperada de caja"
+      },
+      {
+        "name": "importe_base",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Pendiente al registrar la obligación"
+      },
+      {
+        "name": "cancelada",
+        "type": "BOOLEAN",
+        "key": "",
+        "desc": "Anulación operativa"
+      }
+    ],
+    "unique": "empresa_id,referencia",
+    "checks": "importe_base >= 0 AND direccion IN ('in','out')",
+    "note": "El pendiente vigente se calcula restando conciliaciones activas. La contraparte es texto histórico declarado, no un maestro de proveedores."
+  },
+  {
+    "name": "conciliacion",
+    "purpose": "Asocia un abono parcial o total de un movimiento a una obligación.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de aplicación"
+      },
+      {
+        "name": "obligacion_id",
+        "type": "BIGINT",
+        "key": "FK obligacion",
+        "desc": "Cobro o pago aplicado"
+      },
+      {
+        "name": "movimiento_id",
+        "type": "BIGINT",
+        "key": "FK movimiento",
+        "desc": "Movimiento bancario real"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "FK usuario",
+        "desc": "Autor de la aplicación"
+      },
+      {
+        "name": "importe",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Importe positivo aplicado"
+      },
+      {
+        "name": "solicitud_id",
+        "type": "UUID",
+        "key": "",
+        "desc": "Identificador de reintento"
+      },
+      {
+        "name": "creada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Fecha de conciliación"
+      },
+      {
+        "name": "revertida_en",
+        "type": "TIMESTAMPTZ",
+        "key": "NULL",
+        "desc": "Anulación sin borrar evidencia"
+      }
+    ],
+    "unique": "obligacion_id,solicitud_id",
+    "checks": "importe > 0",
+    "note": ""
+  },
+  {
+    "name": "factura",
+    "purpose": "Guarda la cabecera financiera extraída del XML sin repetirla en un JSON.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de factura"
+      },
+      {
+        "name": "cufe",
+        "type": "VARCHAR(150)",
+        "key": "UQ",
+        "desc": "Identificador fiscal del XML"
+      },
+      {
+        "name": "numero",
+        "type": "VARCHAR(100)",
+        "key": "",
+        "desc": "Número declarado en el documento"
+      },
+      {
+        "name": "emision",
+        "type": "DATE",
+        "key": "",
+        "desc": "Fecha de emisión"
+      },
+      {
+        "name": "vencimiento_xml",
+        "type": "DATE",
+        "key": "NULL",
+        "desc": "Vencimiento declarado en el XML"
+      },
+      {
+        "name": "subtotal",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Base antes de impuestos declarada"
+      },
+      {
+        "name": "total",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Total con impuestos declarado"
+      },
+      {
+        "name": "pagadero",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Importe pagadero declarado"
+      },
+      {
+        "name": "creada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Registro del documento"
+      }
+    ],
+    "unique": "",
+    "checks": "subtotal >= 0 AND total >= 0 AND pagadero >= 0",
+    "note": "CUFE es clave candidata global del documento. Su registro por empresa se separa en registro_factura; así un mismo XML no repite sus datos financieros cuando lo registra el emisor y también el receptor. La dirección se deriva del NIT empresarial y las partes históricas."
+  },
+  {
+    "name": "parte_factura",
+    "purpose": "Registra las dos partes históricas del XML como filas atómicas.",
+    "fields": [
+      {
+        "name": "factura_id",
+        "type": "BIGINT",
+        "key": "PK FK factura",
+        "desc": "Documento de origen"
+      },
+      {
+        "name": "papel",
+        "type": "VARCHAR(8)",
+        "key": "PK",
+        "desc": "emisor o receptor"
+      },
+      {
+        "name": "nit_declarado",
+        "type": "VARCHAR(30)",
+        "key": "",
+        "desc": "Identificación histórica del XML"
+      },
+      {
+        "name": "nombre_declarado",
+        "type": "VARCHAR(200)",
+        "key": "",
+        "desc": "Razón social histórica del XML"
+      }
+    ],
+    "unique": "",
+    "checks": "papel IN ('emisor','receptor')",
+    "note": "Cada factura debe tener exactamente un emisor y un receptor. Un NIT no determina universalmente el nombre histórico declarado en documentos de fechas distintas."
+  },
+  {
+    "name": "importacion_factura",
+    "purpose": "Conserva intentos de lectura y validación de XML.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador del intento"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Empresa solicitante"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "FK usuario",
+        "desc": "Autor de la carga"
+      },
+      {
+        "name": "contenido",
+        "type": "TEXT",
+        "key": "NULL",
+        "desc": "XML temporal purgado al finalizar"
+      },
+      {
+        "name": "estado",
+        "type": "VARCHAR(12)",
+        "key": "",
+        "desc": "Estado del procesamiento"
+      },
+      {
+        "name": "error",
+        "type": "VARCHAR(300)",
+        "key": "NULL",
+        "desc": "Diagnóstico de validación"
+      },
+      {
+        "name": "creada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Inicio"
+      },
+      {
+        "name": "finalizada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "NULL",
+        "desc": "Fin"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "El resultado se conserva en resultado_importacion_factura; así factura_id no determina una empresa repetida dentro del intento."
+  },
+  {
+    "name": "revision_recurrencia",
+    "purpose": "Conserva la decisión humana sobre un patrón recurrente.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de revisión"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Empresa analizada"
+      },
+      {
+        "name": "huella",
+        "type": "CHAR(64)",
+        "key": "",
+        "desc": "Huella del patrón en la empresa"
+      },
+      {
+        "name": "estado",
+        "type": "VARCHAR(12)",
+        "key": "",
+        "desc": "pending confirmed o rejected"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "FK usuario",
+        "desc": "Usuario que revisó"
+      },
+      {
+        "name": "actualizada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Instante de revisión"
+      }
+    ],
+    "unique": "empresa_id,huella",
+    "checks": "estado IN ('pending','confirmed','rejected')",
+    "note": ""
+  },
+  {
+    "name": "evidencia_recurrencia",
+    "purpose": "Descompone la evidencia repetida de una recurrencia en movimientos observados.",
+    "fields": [
+      {
+        "name": "revision_id",
+        "type": "BIGINT",
+        "key": "PK FK revision_recurrencia",
+        "desc": "Revisión del patrón"
+      },
+      {
+        "name": "movimiento_id",
+        "type": "BIGINT",
+        "key": "PK FK movimiento",
+        "desc": "Movimiento que sustenta el patrón"
+      },
+      {
+        "name": "fecha_observada",
+        "type": "DATE",
+        "key": "",
+        "desc": "Fecha en la versión evaluada"
+      },
+      {
+        "name": "importe_observado",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Valor en la versión evaluada"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "Los valores observados son snapshots inmutables; no dependen del estado actual del movimiento."
+  },
+  {
+    "name": "ocurrencia_recurrencia",
+    "purpose": "Vincula una materialización del patrón con la obligación generada.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de ocurrencia"
+      },
+      {
+        "name": "revision_id",
+        "type": "BIGINT",
+        "key": "FK revision_recurrencia",
+        "desc": "Patrón de origen"
+      },
+      {
+        "name": "clave",
+        "type": "CHAR(64)",
+        "key": "",
+        "desc": "Huella de materialización dentro del patrón"
+      },
+      {
+        "name": "obligacion_id",
+        "type": "BIGINT",
+        "key": "UQ FK obligacion",
+        "desc": "Obligación generada"
+      }
+    ],
+    "unique": "revision_id,clave",
+    "checks": "",
+    "note": "No repite empresa_id. Un trigger mantiene además la unicidad de clave por empresa, compatible con RecurrenceOccurrence."
+  },
+  {
+    "name": "pronostico",
+    "purpose": "Cabecera inmutable de una ejecución de proyección de caja.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de ejecución"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Empresa evaluada"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "FK usuario",
+        "desc": "Solicitante"
+      },
+      {
+        "name": "huella",
+        "type": "CHAR(64)",
+        "key": "",
+        "desc": "Huella de entradas y configuración"
+      },
+      {
+        "name": "metodo",
+        "type": "VARCHAR(32)",
+        "key": "",
+        "desc": "Método y versión utilizados"
+      },
+      {
+        "name": "horizonte",
+        "type": "SMALLINT",
+        "key": "",
+        "desc": "Días proyectados"
+      },
+      {
+        "name": "fecha_corte",
+        "type": "DATE",
+        "key": "",
+        "desc": "Fecha de referencia"
+      },
+      {
+        "name": "creado_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Instante de cálculo"
+      }
+    ],
+    "unique": "empresa_id,huella",
+    "checks": "horizonte BETWEEN 30 AND 90",
+    "note": ""
+  },
+  {
+    "name": "parametro_pronostico",
+    "purpose": "Registra parámetros escalares de una ejecución reproducible.",
+    "fields": [
+      {
+        "name": "pronostico_id",
+        "type": "BIGINT",
+        "key": "PK FK pronostico",
+        "desc": "Ejecución propietaria"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(80)",
+        "key": "PK",
+        "desc": "Nombre del parámetro"
+      },
+      {
+        "name": "valor",
+        "type": "TEXT",
+        "key": "",
+        "desc": "Valor escalar serializado sin listas"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "punto_pronostico",
+    "purpose": "Almacena el resultado diario por escenario en lugar de un arreglo JSON.",
+    "fields": [
+      {
+        "name": "pronostico_id",
+        "type": "BIGINT",
+        "key": "PK FK pronostico",
+        "desc": "Ejecución de origen"
+      },
+      {
+        "name": "fecha",
+        "type": "DATE",
+        "key": "PK",
+        "desc": "Día proyectado"
+      },
+      {
+        "name": "escenario",
+        "type": "VARCHAR(12)",
+        "key": "PK",
+        "desc": "expected lower o upper"
+      },
+      {
+        "name": "saldo",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Saldo proyectado en COP"
+      }
+    ],
+    "unique": "",
+    "checks": "escenario IN ('expected','lower','upper')",
+    "note": "Los escenarios son salidas del método; lower y upper no se presentan como cuantiles calibrados sin evidencia experimental."
+  },
+  {
+    "name": "entrada_cuenta",
+    "purpose": "Conserva el saldo de entrada de cada cuenta en cada pronóstico.",
+    "fields": [
+      {
+        "name": "pronostico_id",
+        "type": "BIGINT",
+        "key": "PK FK pronostico",
+        "desc": "Ejecución"
+      },
+      {
+        "name": "cuenta_id",
+        "type": "BIGINT",
+        "key": "PK FK cuenta",
+        "desc": "Cuenta utilizada"
+      },
+      {
+        "name": "fecha_observada",
+        "type": "DATE",
+        "key": "",
+        "desc": "Corte utilizado al ejecutar"
+      },
+      {
+        "name": "saldo_observado",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Saldo de entrada inmutable"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "entrada_movimiento",
+    "purpose": "Conserva los valores de movimientos utilizados por cada ejecución.",
+    "fields": [
+      {
+        "name": "pronostico_id",
+        "type": "BIGINT",
+        "key": "PK FK pronostico",
+        "desc": "Ejecución"
+      },
+      {
+        "name": "movimiento_id",
+        "type": "BIGINT",
+        "key": "PK FK movimiento",
+        "desc": "Movimiento utilizado"
+      },
+      {
+        "name": "fecha_observada",
+        "type": "DATE",
+        "key": "",
+        "desc": "Fecha del movimiento al ejecutar"
+      },
+      {
+        "name": "importe_observado",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Valor utilizado"
+      },
+      {
+        "name": "categoria_observada_id",
+        "type": "BIGINT",
+        "key": "FK categoria",
+        "desc": "Categoría utilizada al ejecutar"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "entrada_obligacion",
+    "purpose": "Conserva pendientes y vencimientos tal como fueron proyectados.",
+    "fields": [
+      {
+        "name": "pronostico_id",
+        "type": "BIGINT",
+        "key": "PK FK pronostico",
+        "desc": "Ejecución"
+      },
+      {
+        "name": "obligacion_id",
+        "type": "BIGINT",
+        "key": "PK FK obligacion",
+        "desc": "Obligación utilizada"
+      },
+      {
+        "name": "vencimiento_observado",
+        "type": "DATE",
+        "key": "",
+        "desc": "Vencimiento al ejecutar"
+      },
+      {
+        "name": "pendiente_observado",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Pendiente utilizado"
+      },
+      {
+        "name": "direccion_observada",
+        "type": "VARCHAR(3)",
+        "key": "",
+        "desc": "Sentido utilizado"
+      }
+    ],
+    "unique": "",
+    "checks": "pendiente_observado >= 0 AND direccion_observada IN ('in','out')",
+    "note": ""
+  },
+  {
+    "name": "evaluacion_alerta",
+    "purpose": "Registra una evaluación histórica de riesgo con su umbral de entrada.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de evaluación"
+      },
+      {
+        "name": "pronostico_id",
+        "type": "BIGINT",
+        "key": "FK pronostico",
+        "desc": "Pronóstico evaluado"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "FK usuario",
+        "desc": "Solicitante de la evaluación"
+      },
+      {
+        "name": "huella",
+        "type": "CHAR(64)",
+        "key": "",
+        "desc": "Huella de evaluación"
+      },
+      {
+        "name": "umbral_observado",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Umbral utilizado en ese instante"
+      },
+      {
+        "name": "creada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Instante de evaluación"
+      }
+    ],
+    "unique": "pronostico_id,huella",
+    "checks": "",
+    "note": "La empresa se deriva del pronóstico. La unicidad histórica por empresa y huella del modelo original se conserva mediante trigger con bloqueo de empresa."
+  },
+  {
+    "name": "alerta",
+    "purpose": "Almacena cada hallazgo de una evaluación de riesgo.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de alerta"
+      },
+      {
+        "name": "evaluacion_id",
+        "type": "BIGINT",
+        "key": "FK evaluacion_alerta",
+        "desc": "Evaluación de origen"
+      },
+      {
+        "name": "secuencia",
+        "type": "SMALLINT",
+        "key": "",
+        "desc": "Posición única dentro de la evaluación"
+      },
+      {
+        "name": "nivel",
+        "type": "VARCHAR(12)",
+        "key": "",
+        "desc": "Nivel de riesgo comunicado"
+      },
+      {
+        "name": "fecha_inicio",
+        "type": "DATE",
+        "key": "",
+        "desc": "Inicio del período en riesgo"
+      },
+      {
+        "name": "fecha_fin",
+        "type": "DATE",
+        "key": "",
+        "desc": "Fin del período en riesgo"
+      },
+      {
+        "name": "saldo_minimo",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Mínimo proyectado en el período"
+      },
+      {
+        "name": "mensaje",
+        "type": "TEXT",
+        "key": "",
+        "desc": "Explicación del hallazgo"
+      }
+    ],
+    "unique": "evaluacion_id,secuencia",
+    "checks": "fecha_inicio <= fecha_fin",
+    "note": ""
+  },
+  {
+    "name": "factor_alerta",
+    "purpose": "Separa la lista de factores explicativos de cada alerta.",
+    "fields": [
+      {
+        "name": "alerta_id",
+        "type": "BIGINT",
+        "key": "PK FK alerta",
+        "desc": "Alerta explicada"
+      },
+      {
+        "name": "posicion",
+        "type": "SMALLINT",
+        "key": "PK",
+        "desc": "Orden del factor"
+      },
+      {
+        "name": "descripcion",
+        "type": "VARCHAR(250)",
+        "key": "",
+        "desc": "Factor explicativo en lenguaje natural"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "auditoria",
+    "purpose": "Registra un evento de modificación sin sobrescribir el historial.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador del evento"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Contexto empresarial del evento"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "FK usuario",
+        "desc": "Actor responsable"
+      },
+      {
+        "name": "accion",
+        "type": "VARCHAR(80)",
+        "key": "",
+        "desc": "Operación ejecutada"
+      },
+      {
+        "name": "entidad",
+        "type": "VARCHAR(80)",
+        "key": "",
+        "desc": "Tipo de objeto auditado"
+      },
+      {
+        "name": "objeto_id",
+        "type": "VARCHAR(80)",
+        "key": "",
+        "desc": "Identificador histórico textual"
+      },
+      {
+        "name": "creada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Momento del evento"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "objeto_id es una referencia histórica descriptiva, no una FK polimórfica; conserva eventos aunque el objeto deje de existir. No sustituye las FKs del modelo financiero."
+  },
+  {
+    "name": "detalle_auditoria",
+    "purpose": "Descompone before y after en cambios escalares por atributo.",
+    "fields": [
+      {
+        "name": "auditoria_id",
+        "type": "BIGINT",
+        "key": "PK FK auditoria",
+        "desc": "Evento auditado"
+      },
+      {
+        "name": "campo",
+        "type": "VARCHAR(120)",
+        "key": "PK",
+        "desc": "Ruta de atributo escalar"
+      },
+      {
+        "name": "valor_anterior",
+        "type": "TEXT",
+        "key": "NULL",
+        "desc": "Valor antes del evento"
+      },
+      {
+        "name": "valor_nuevo",
+        "type": "TEXT",
+        "key": "NULL",
+        "desc": "Valor después del evento"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "Las colecciones se expanden por ruta e índice; cada fila representa un cambio elemental y no almacena objetos JSON."
+  },
+  {
+    "name": "tarea",
+    "purpose": "Registra los mensajes persistentes de trabajo en segundo plano.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de mensaje"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(120)",
+        "key": "",
+        "desc": "Función autorizada a ejecutar"
+      },
+      {
+        "name": "estado",
+        "type": "VARCHAR(12)",
+        "key": "",
+        "desc": "Estado de la entrega"
+      },
+      {
+        "name": "intentos",
+        "type": "SMALLINT",
+        "key": "",
+        "desc": "Número de intentos"
+      },
+      {
+        "name": "disponible_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Instante de próximo procesamiento"
+      },
+      {
+        "name": "lease",
+        "type": "UUID",
+        "key": "NULL",
+        "desc": "Identificador del reclamo temporal"
+      },
+      {
+        "name": "creada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Creación"
+      },
+      {
+        "name": "finalizada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "NULL",
+        "desc": "Finalización"
+      }
+    ],
+    "unique": "",
+    "checks": "intentos BETWEEN 0 AND 3",
+    "note": ""
+  },
+  {
+    "name": "parametro_tarea",
+    "purpose": "Representa argumentos escalares posicionales o nombrados de una tarea.",
+    "fields": [
+      {
+        "name": "tarea_id",
+        "type": "BIGINT",
+        "key": "PK FK tarea",
+        "desc": "Mensaje propietario"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(80)",
+        "key": "PK",
+        "desc": "Nombre o posición arg0 arg1"
+      },
+      {
+        "name": "valor",
+        "type": "TEXT",
+        "key": "",
+        "desc": "Valor escalar del argumento"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "El contrato de tareas permite IDs de trabajo y escalares. Se purgan los parámetros al finalizar; el despachador valida nombre y tipo del argumento."
+  },
+  {
+    "name": "limite_solicitud",
+    "purpose": "Conserva contadores persistentes para ventanas de autenticación.",
+    "fields": [
+      {
+        "name": "clave",
+        "type": "CHAR(64)",
+        "key": "PK",
+        "desc": "HMAC de identidad y ventana"
+      },
+      {
+        "name": "solicitudes",
+        "type": "INTEGER",
+        "key": "",
+        "desc": "Peticiones acumuladas"
+      },
+      {
+        "name": "vence_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Fin de la ventana"
+      }
+    ],
+    "unique": "",
+    "checks": "solicitudes >= 0",
+    "note": ""
+  },
+  {
+    "name": "registro_factura",
+    "purpose": "Asocia una factura global con cada empresa que la registra.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador del registro empresarial"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Empresa que incorpora la factura"
+      },
+      {
+        "name": "factura_id",
+        "type": "BIGINT",
+        "key": "FK factura",
+        "desc": "Documento global por CUFE"
+      },
+      {
+        "name": "registrada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Instante del registro empresarial"
+      }
+    ],
+    "unique": "empresa_id,factura_id",
+    "checks": "",
+    "note": "El documento existe una sola vez por CUFE y la pareja empresa factura existe una sola vez. La empresa debe ser emisor o receptor según las partes del XML."
+  },
+  {
+    "name": "cuenta_conexion",
+    "purpose": "Separa la asociación opcional entre una cuenta y una conexión.",
+    "fields": [
+      {
+        "name": "cuenta_id",
+        "type": "BIGINT",
+        "key": "PK FK cuenta",
+        "desc": "Cuenta vinculada"
+      },
+      {
+        "name": "conexion_id",
+        "type": "BIGINT",
+        "key": "UQ FK conexion",
+        "desc": "Conexión exclusiva de la cuenta"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "Ambas columnas son claves candidatas. Un trigger valida que la cuenta y el consentimiento pertenezcan a la misma empresa."
+  },
+  {
+    "name": "factura_obligacion",
+    "purpose": "Separa el vínculo opcional uno a uno entre registro empresarial y obligación.",
+    "fields": [
+      {
+        "name": "registro_id",
+        "type": "BIGINT",
+        "key": "PK FK registro_factura",
+        "desc": "Registro de factura confirmado"
+      },
+      {
+        "name": "obligacion_id",
+        "type": "BIGINT",
+        "key": "UQ FK obligacion",
+        "desc": "Obligación respaldada por el documento"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "Ambas columnas son claves candidatas; la empresa y el sentido se verifican sin repetirlos en esta asociación."
+  },
+  {
+    "name": "resultado_importacion_factura",
+    "purpose": "Registra el documento identificado por un intento exitoso.",
+    "fields": [
+      {
+        "name": "importacion_id",
+        "type": "BIGINT",
+        "key": "PK FK importacion_factura",
+        "desc": "Intento de importación"
+      },
+      {
+        "name": "registro_id",
+        "type": "BIGINT",
+        "key": "FK registro_factura",
+        "desc": "Registro empresarial creado o ya existente"
+      },
+      {
+        "name": "duplicada",
+        "type": "BOOLEAN",
+        "key": "",
+        "desc": "Indica si la factura ya existía al importar"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "Un registro empresarial admite muchos intentos; cada intento tiene a lo sumo un resultado. La empresa de la solicitud debe coincidir con la del registro."
+  }
+]

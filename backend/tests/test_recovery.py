@@ -1,14 +1,20 @@
+import json
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlsplit
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from django.core.cache import cache
-from django.test import TestCase, override_settings
+from django.core.management import call_command
+from django.db import DatabaseError
+from django.test import TransactionTestCase, override_settings
+from django.utils import timezone
 from rest_framework.test import APIClient
 
+from apps.accounts.models import BackgroundTask
 from apps.accounts.tasks import send_password_recovery
 
 
@@ -16,7 +22,97 @@ from apps.accounts.tasks import send_password_recovery
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
     CSRF_TRUSTED_ORIGINS=["http://127.0.0.1:5173"],
 )
-class RecoveryTests(TestCase):
+class RecoveryTests(TransactionTestCase):
+    @override_settings(
+        BACKGROUND_MODE="database",
+        EMAIL_BACKEND="config.email.EmailBackend",
+        RESEND_API_KEY="synthetic-provider-secret",
+        FRONTEND_URL="https://example.com",
+    )
+    @patch("config.email.urlopen")
+    def test_https_delivery_failure_retries_and_scrubs_queue_after_acceptance(self, open_url):
+        open_url.side_effect = HTTPError("private-token", 503, "private-body", {}, None)
+        response = self.post(
+            "recover-password", {"username": self.user.username, "email": self.user.email}
+        )
+        self.assertEqual(response.status_code, 202)
+        call_command("run_background", once=True)
+        queued = BackgroundTask.objects.get()
+        self.assertEqual(queued.status, "queued")
+        self.assertEqual(queued.attempts, 1)
+        self.assertEqual(queued.kwargs["email"], self.user.email)
+        self.assertIsNone(queued.finished_at)
+        queued.available_at = timezone.now()
+        queued.save(update_fields=["available_at"])
+        accepted = MagicMock()
+        accepted.read.return_value = b'{"id":"synthetic-accepted"}'
+        open_url.side_effect = None
+        open_url.return_value.__enter__.return_value = accepted
+        call_command("run_background", once=True)
+        queued.refresh_from_db()
+        self.assertEqual(queued.status, "completed")
+        self.assertEqual(queued.attempts, 2)
+        self.assertEqual(queued.kwargs, {})
+        self.assertEqual(queued.args, [])
+        self.assertIsNotNone(queued.finished_at)
+        self.assertEqual(open_url.call_count, 2)
+        message = json.loads(open_url.call_args.args[0].data)
+        self.assertEqual(message["to"], [self.user.email])
+        link = next(line for line in message["text"].splitlines() if line.startswith("https://"))
+        query = parse_qs(urlsplit(link).fragment.split("?", 1)[1])
+        password = "Recovered-after-https-retry-592!"
+        payload = {
+            "uid": query["uid"][0],
+            "token": query["token"][0],
+            "password": password,
+            "password_confirm": password,
+        }
+        self.assertEqual(self.post("reset-password", payload).status_code, 200)
+        self.assertEqual(self.post("reset-password", payload).status_code, 400)
+
+    # Incluye el comando worker, que renueva conexiones fuera de transacciones activas.
+    @override_settings(BACKGROUND_MODE="database")
+    def test_database_queue_failure_returns_generic_503_without_message(self):
+        with patch(
+            "apps.accounts.models.BackgroundTask.objects.create",
+            side_effect=DatabaseError("private-db-password"),
+        ):
+            for username, email in (
+                (self.user.username, self.user.email),
+                ("missing", "missing@example.com"),
+            ):
+                response = self.post("recover-password", {"username": username, "email": email})
+                self.assertEqual(response.status_code, 503)
+                self.assertNotIn("private-db-password", response.content.decode())
+        self.assertFalse(BackgroundTask.objects.exists())
+        self.assertFalse(mail.outbox)
+
+    @override_settings(BACKGROUND_MODE="database")
+    def test_recovery_flows_through_database_worker_and_reset(self):
+        response = self.post(
+            "recover-password", {"username": self.user.username, "email": self.user.email}
+        )
+        self.assertEqual(response.status_code, 202)
+        self.assertFalse(mail.outbox)
+        call_command("run_background", once=True)
+        queued = BackgroundTask.objects.get()
+        self.assertEqual(queued.status, "completed")
+        self.assertEqual(queued.kwargs, {})
+        self.assertEqual(len(mail.outbox), 1)
+        link = next(line for line in mail.outbox[0].body.splitlines() if line.startswith("http"))
+        query = parse_qs(urlsplit(link).fragment.split("?", 1)[1])
+        password = "Recovered-through-worker-592!"
+        payload = {
+            "uid": query["uid"][0],
+            "token": query["token"][0],
+            "password": password,
+            "password_confirm": password,
+        }
+        self.assertEqual(self.post("reset-password", payload).status_code, 200)
+        self.assertEqual(self.post("reset-password", payload).status_code, 400)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(password))
+
     def setUp(self):
         cache.clear()
         self.user = get_user_model().objects.create_user(

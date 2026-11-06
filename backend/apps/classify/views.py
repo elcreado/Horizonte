@@ -8,13 +8,35 @@ from apps.accounts.models import AuditLog, CompanyMember
 from apps.banking.models import Transaction
 
 from .models import ClassificationChange, ClassificationRule
-from .services import categories, normalize
+from .services import categories, normalize, suggest_category
 
 
 @api_view(["GET"])
+def category_suggestion(request, company_id, transaction_id):
+    get_object_or_404(CompanyMember, company_id=company_id, user=request.user)
+    movement = get_object_or_404(
+        Transaction.objects.select_related("account"),
+        pk=transaction_id,
+        account__company_id=company_id,
+    )
+    try:
+        return Response(suggest_category(company_id, movement))
+    except ValueError as error:
+        return Response({"status": "unavailable", "detail": str(error)}, status=409)
+
+
+@api_view(["GET", "POST"])
 def movements(request, company_id):
     member = get_object_or_404(CompanyMember, company_id=company_id, user=request.user)
-    queryset = Transaction.objects.filter(account__company_id=company_id).order_by("-date", "-id")
+    if request.method == "POST":
+        from apps.banking.manual import create_manual_entry
+
+        return create_manual_entry(request, company_id)
+    queryset = (
+        Transaction.objects.filter(account__company_id=company_id)
+        .select_related("merchant", "account", "manualentry")
+        .order_by("-date", "-id")
+    )
     pagination = PageNumberPagination()
     pagination.page_size = 20
     rows = pagination.paginate_queryset(queryset, request)
@@ -22,10 +44,14 @@ def movements(request, company_id):
         [
             {
                 "id": row.id,
+                "account_name": row.account.name,
+                "entry_source": "manual" if hasattr(row, "manualentry") else "imported",
                 "date": row.date,
                 "description": row.description,
                 "normalized_description": row.normalized_description,
                 "merchant_name": row.merchant_name,
+                "merchant_id": row.merchant_id,
+                "merchant_display_name": row.merchant.display_name if row.merchant_id else None,
                 "amount": str(row.amount),
                 "category": row.category,
                 "source": row.classification_source,

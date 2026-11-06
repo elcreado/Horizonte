@@ -1,6 +1,7 @@
 from datetime import date
 from decimal import Decimal
 
+from django.db import transaction
 from django.db.models import Count, Min, Q, Sum
 from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
@@ -10,11 +11,18 @@ from rest_framework.response import Response
 from apps.accounts.models import CompanyMember
 from apps.banking.models import BankAccount, Transaction
 
+from .balance_history import build_balance_history
+
 
 @api_view(["GET"])
+@transaction.atomic
 def history(request, company_id):
     get_object_or_404(CompanyMember, company_id=company_id, user=request.user)
-    accounts = list(BankAccount.objects.filter(company_id=company_id))
+    # Writers lock the account before changing its balance, coverage or movements.
+    # Keep these observations consistent throughout the reconstruction.
+    accounts = list(
+        BankAccount.objects.select_for_update().filter(company_id=company_id).order_by("pk")
+    )
     dates = {account.balance_date for account in accounts}
     if len(dates) != 1 or any(account.currency != "COP" for account in accounts):
         return Response({"detail": "Se requieren cuentas COP con el mismo corte."}, status=409)
@@ -22,9 +30,10 @@ def history(request, company_id):
     first_month = cutoff.year * 12 + cutoff.month - 12
     start = date(first_month // 12, first_month % 12 + 1, 1)
     rows = Transaction.objects.filter(
-        account__company_id=company_id, date__gte=start, date__lte=cutoff
+        account_id__in=[account.pk for account in accounts], date__gte=start, date__lte=cutoff
     )
     totals = rows.aggregate(count=Count("id"), first=Min("date"))
+    daily_flows = dict(rows.values("date").annotate(net=Sum("amount")).values_list("date", "net"))
     aggregated = (
         rows.annotate(month=TruncMonth("date"))
         .values("month")
@@ -75,6 +84,7 @@ def history(request, company_id):
             "count": totals["count"],
             "months": months,
             "categories": categories,
+            "balance_history": build_balance_history(accounts, start, cutoff, daily_flows),
             "notice": "Solo movimientos registrados: un mes sin datos no demuestra ausencia de actividad. El mes del corte puede estar incompleto. Los flujos netos no equivalen al saldo bancario.",
         }
     )

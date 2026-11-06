@@ -6,12 +6,12 @@ from django.views.decorators.http import require_GET
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
 
 from .models import Company
+from .throttles import PersistentUserThrottle
 
 
-class LoginThrottle(AnonRateThrottle):
+class LoginThrottle(PersistentUserThrottle):
     scope = "login"
 
 
@@ -44,7 +44,13 @@ def logout_view(request):
 
 @api_view(["GET"])
 def me(request):
-    return Response({"username": request.user.username})
+    user = request.user
+    return Response(
+        {
+            "username": user.username,
+            "platform_admin": bool(user.is_active and user.is_staff and user.is_superuser),
+        }
+    )
 
 
 @api_view(["GET"])

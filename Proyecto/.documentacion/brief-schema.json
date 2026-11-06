@@ -1,0 +1,563 @@
+[
+  {
+    "name": "empresa",
+    "purpose": "Identifica cada microempresa y su umbral operativo de liquidez.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador interno"
+      },
+      {
+        "name": "nit",
+        "type": "VARCHAR(30)",
+        "key": "UQ",
+        "desc": "NIT normalizado sin separadores"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(200)",
+        "key": "",
+        "desc": "Nombre de la microempresa"
+      },
+      {
+        "name": "umbral",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Saldo mínimo definido por el propietario"
+      }
+    ],
+    "unique": "",
+    "checks": "umbral >= 0",
+    "note": ""
+  },
+  {
+    "name": "usuario",
+    "purpose": "Identifica a las personas que acceden al sistema.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de auth_user"
+      },
+      {
+        "name": "username",
+        "type": "VARCHAR(150)",
+        "key": "UQ",
+        "desc": "Nombre único de acceso"
+      },
+      {
+        "name": "password_hash",
+        "type": "VARCHAR(128)",
+        "key": "",
+        "desc": "Hash de autenticación"
+      },
+      {
+        "name": "nombres",
+        "type": "VARCHAR(150)",
+        "key": "",
+        "desc": "Nombres del usuario"
+      },
+      {
+        "name": "apellidos",
+        "type": "VARCHAR(150)",
+        "key": "",
+        "desc": "Apellidos del usuario"
+      },
+      {
+        "name": "email",
+        "type": "VARCHAR(254)",
+        "key": "",
+        "desc": "Correo de recuperación"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "Proyección funcional de auth_user. Django administra permisos, grupos, sesiones y migraciones como infraestructura, fuera del modelo financiero."
+  },
+  {
+    "name": "rol",
+    "purpose": "Catálogo de responsabilidades dentro de una empresa.",
+    "fields": [
+      {
+        "name": "codigo",
+        "type": "VARCHAR(16)",
+        "key": "PK",
+        "desc": "owner accountant o viewer"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(40)",
+        "key": "UQ",
+        "desc": "Propietario Contador o Consulta"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "membresia",
+    "purpose": "Resuelve la relación muchos a muchos entre usuarios y empresas.",
+    "fields": [
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "PK FK empresa",
+        "desc": "Empresa autorizada"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "PK FK usuario",
+        "desc": "Usuario miembro"
+      },
+      {
+        "name": "rol_codigo",
+        "type": "VARCHAR(16)",
+        "key": "FK rol",
+        "desc": "Rol en esa empresa"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "cuenta",
+    "purpose": "Identifica cada cuenta bancaria de una empresa.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de cuenta"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Titular empresarial"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(120)",
+        "key": "",
+        "desc": "Nombre de la cuenta"
+      }
+    ],
+    "unique": "",
+    "checks": "historial_desde IS NULL OR historial_hasta IS NULL OR historial_desde <= historial_hasta",
+    "note": "Todas las cuentas operan en COP. La asociación opcional con una conexión se conserva en cuenta_conexion."
+  },
+  {
+    "name": "corte_cuenta",
+    "purpose": "Conserva saldos observados por cuenta y fecha sin confundirlos con sumas de movimientos.",
+    "fields": [
+      {
+        "name": "cuenta_id",
+        "type": "BIGINT",
+        "key": "PK FK cuenta",
+        "desc": "Cuenta observada"
+      },
+      {
+        "name": "fecha",
+        "type": "DATE",
+        "key": "PK",
+        "desc": "Fecha del corte"
+      },
+      {
+        "name": "saldo",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Saldo informado en COP"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "Sustituye balance y balance_date. El saldo vigente es el corte de fecha máxima; un saldo negativo puede representar sobregiro."
+  },
+  {
+    "name": "tercero",
+    "purpose": "Identifica comercios normalizados en el contexto de una empresa.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador del comercio"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Empresa que reconoce al tercero"
+      },
+      {
+        "name": "nombre_normalizado",
+        "type": "VARCHAR(250)",
+        "key": "",
+        "desc": "Nombre canónico para comparación"
+      },
+      {
+        "name": "nombre_visible",
+        "type": "VARCHAR(250)",
+        "key": "",
+        "desc": "Nombre de presentación"
+      }
+    ],
+    "unique": "empresa_id,nombre_normalizado",
+    "checks": "",
+    "note": ""
+  },
+  {
+    "name": "categoria",
+    "purpose": "Taxonomía compartida de categorías financieras.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de categoría"
+      },
+      {
+        "name": "nombre",
+        "type": "VARCHAR(80)",
+        "key": "UQ",
+        "desc": "Nombre único como Software u Otros"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "La dirección del flujo se obtiene del signo del movimiento; una categoría no impone un signo."
+  },
+  {
+    "name": "movimiento",
+    "purpose": "Registra ingresos y egresos bancarios sin duplicarlos.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de movimiento"
+      },
+      {
+        "name": "cuenta_id",
+        "type": "BIGINT",
+        "key": "FK cuenta",
+        "desc": "Cuenta de origen"
+      },
+      {
+        "name": "externo_id",
+        "type": "VARCHAR(120)",
+        "key": "",
+        "desc": "Identificador en la fuente"
+      },
+      {
+        "name": "fecha",
+        "type": "DATE",
+        "key": "",
+        "desc": "Fecha de negocio"
+      },
+      {
+        "name": "importe",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Valor positivo de ingreso o negativo de egreso"
+      },
+      {
+        "name": "descripcion",
+        "type": "VARCHAR(250)",
+        "key": "",
+        "desc": "Texto original del banco"
+      },
+      {
+        "name": "tercero_id",
+        "type": "BIGINT",
+        "key": "NULL FK tercero",
+        "desc": "Comercio reconocido"
+      },
+      {
+        "name": "categoria_id",
+        "type": "BIGINT",
+        "key": "FK categoria",
+        "desc": "Categoría vigente"
+      }
+    ],
+    "unique": "cuenta_id,externo_id",
+    "checks": "importe <> 0",
+    "note": "tercero_original es evidencia inmutable de la fuente y no una copia editable del nombre canónico; no depende de tercero_id."
+  },
+  {
+    "name": "obligacion",
+    "purpose": "Representa un cobro o pago esperado antes de su conciliación.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de obligación"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Empresa responsable"
+      },
+      {
+        "name": "referencia",
+        "type": "VARCHAR(120)",
+        "key": "",
+        "desc": "Referencia única por empresa"
+      },
+      {
+        "name": "contraparte_original",
+        "type": "VARCHAR(200)",
+        "key": "",
+        "desc": "Contraparte declarada al registrar"
+      },
+      {
+        "name": "descripcion",
+        "type": "VARCHAR(200)",
+        "key": "",
+        "desc": "Concepto de la obligación"
+      },
+      {
+        "name": "direccion",
+        "type": "VARCHAR(3)",
+        "key": "",
+        "desc": "in para cobro u out para pago"
+      },
+      {
+        "name": "vencimiento",
+        "type": "DATE",
+        "key": "",
+        "desc": "Fecha esperada de caja"
+      },
+      {
+        "name": "importe_base",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Pendiente al registrar la obligación"
+      },
+      {
+        "name": "cancelada",
+        "type": "BOOLEAN",
+        "key": "",
+        "desc": "Anulación operativa"
+      }
+    ],
+    "unique": "empresa_id,referencia",
+    "checks": "importe_base >= 0 AND direccion IN ('in','out')",
+    "note": "El pendiente vigente se calcula restando conciliaciones activas. La contraparte es texto histórico declarado, no un maestro de proveedores."
+  },
+  {
+    "name": "conciliacion",
+    "purpose": "Asocia un abono parcial o total de un movimiento a una obligación.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de aplicación"
+      },
+      {
+        "name": "obligacion_id",
+        "type": "BIGINT",
+        "key": "FK obligacion",
+        "desc": "Cobro o pago aplicado"
+      },
+      {
+        "name": "movimiento_id",
+        "type": "BIGINT",
+        "key": "FK movimiento",
+        "desc": "Movimiento bancario real"
+      },
+      {
+        "name": "usuario_id",
+        "type": "BIGINT",
+        "key": "FK usuario",
+        "desc": "Autor de la aplicación"
+      },
+      {
+        "name": "importe",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Importe positivo aplicado"
+      },
+      {
+        "name": "solicitud_id",
+        "type": "UUID",
+        "key": "",
+        "desc": "Identificador de reintento"
+      },
+      {
+        "name": "creada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Fecha de conciliación"
+      },
+      {
+        "name": "revertida_en",
+        "type": "TIMESTAMPTZ",
+        "key": "NULL",
+        "desc": "Anulación sin borrar evidencia"
+      }
+    ],
+    "unique": "obligacion_id,solicitud_id",
+    "checks": "importe > 0",
+    "note": ""
+  },
+  {
+    "name": "factura",
+    "purpose": "Guarda la cabecera financiera extraída del XML sin repetirla en un JSON.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador de factura"
+      },
+      {
+        "name": "cufe",
+        "type": "VARCHAR(150)",
+        "key": "UQ",
+        "desc": "Identificador fiscal del XML"
+      },
+      {
+        "name": "numero",
+        "type": "VARCHAR(100)",
+        "key": "",
+        "desc": "Número declarado en el documento"
+      },
+      {
+        "name": "emision",
+        "type": "DATE",
+        "key": "",
+        "desc": "Fecha de emisión"
+      },
+      {
+        "name": "vencimiento_xml",
+        "type": "DATE",
+        "key": "NULL",
+        "desc": "Vencimiento declarado en el XML"
+      },
+      {
+        "name": "subtotal",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Base antes de impuestos declarada"
+      },
+      {
+        "name": "total",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Total con impuestos declarado"
+      },
+      {
+        "name": "pagadero",
+        "type": "NUMERIC(18,2)",
+        "key": "",
+        "desc": "Importe pagadero declarado"
+      },
+      {
+        "name": "creada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Registro del documento"
+      }
+    ],
+    "unique": "",
+    "checks": "subtotal >= 0 AND total >= 0 AND pagadero >= 0",
+    "note": "CUFE es clave candidata global del documento. Su registro por empresa se separa en registro_factura; así un mismo XML no repite sus datos financieros cuando lo registra el emisor y también el receptor. La dirección se deriva del NIT empresarial y las partes históricas."
+  },
+  {
+    "name": "parte_factura",
+    "purpose": "Registra las dos partes históricas del XML como filas atómicas.",
+    "fields": [
+      {
+        "name": "factura_id",
+        "type": "BIGINT",
+        "key": "PK FK factura",
+        "desc": "Documento de origen"
+      },
+      {
+        "name": "papel",
+        "type": "VARCHAR(8)",
+        "key": "PK",
+        "desc": "emisor o receptor"
+      },
+      {
+        "name": "nit_declarado",
+        "type": "VARCHAR(30)",
+        "key": "",
+        "desc": "Identificación histórica del XML"
+      },
+      {
+        "name": "nombre_declarado",
+        "type": "VARCHAR(200)",
+        "key": "",
+        "desc": "Razón social histórica del XML"
+      }
+    ],
+    "unique": "",
+    "checks": "papel IN ('emisor','receptor')",
+    "note": "Cada factura debe tener exactamente un emisor y un receptor. Un NIT no determina universalmente el nombre histórico declarado en documentos de fechas distintas."
+  },
+  {
+    "name": "registro_factura",
+    "purpose": "Asocia una factura global con cada empresa que la registra.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "BIGINT",
+        "key": "PK",
+        "desc": "Identificador del registro empresarial"
+      },
+      {
+        "name": "empresa_id",
+        "type": "BIGINT",
+        "key": "FK empresa",
+        "desc": "Empresa que incorpora la factura"
+      },
+      {
+        "name": "factura_id",
+        "type": "BIGINT",
+        "key": "FK factura",
+        "desc": "Documento global por CUFE"
+      },
+      {
+        "name": "registrada_en",
+        "type": "TIMESTAMPTZ",
+        "key": "",
+        "desc": "Instante del registro empresarial"
+      }
+    ],
+    "unique": "empresa_id,factura_id",
+    "checks": "",
+    "note": "El documento existe una sola vez por CUFE y la pareja empresa factura existe una sola vez. La empresa debe ser emisor o receptor según las partes del XML."
+  },
+  {
+    "name": "factura_obligacion",
+    "purpose": "Separa el vínculo opcional uno a uno entre registro empresarial y obligación.",
+    "fields": [
+      {
+        "name": "registro_id",
+        "type": "BIGINT",
+        "key": "PK FK registro_factura",
+        "desc": "Registro de factura confirmado"
+      },
+      {
+        "name": "obligacion_id",
+        "type": "BIGINT",
+        "key": "UQ FK obligacion",
+        "desc": "Obligación respaldada por el documento"
+      }
+    ],
+    "unique": "",
+    "checks": "",
+    "note": "Ambas columnas son claves candidatas; la empresa y el sentido se verifican sin repetirlos en esta asociación."
+  }
+]
